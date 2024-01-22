@@ -430,7 +430,7 @@
 <span class="sd">        sampler (Sampler, optional): the sampler to be used. If none is provided</span>
 <span class="sd">            a default RandomSampler() will be used.</span>
 <span class="sd">        writer (Writer, optional): the writer to be used. If none is provided</span>
-<span class="sd">            a default RoundRobinWriter() will be used.</span>
+<span class="sd">            a default :class:`~torchrl.data.replay_buffers.writers.ImmutableDatasetWriter` will be used.</span>
 <span class="sd">        collate_fn (callable, optional): merges a list of samples to form a</span>
 <span class="sd">            mini-batch of Tensor(s)/outputs.  Used when using batched</span>
 <span class="sd">            loading from a map-style dataset.</span>
@@ -439,15 +439,13 @@
 <span class="sd">        prefetch (int, optional): number of next batches to be prefetched</span>
 <span class="sd">            using multithreading.</span>
 <span class="sd">        transform (Transform, optional): Transform to be executed when sample() is called.</span>
-<span class="sd">            To chain transforms use the :obj:`Compose` class.</span>
+<span class="sd">            To chain transforms use the :class:`~torchrl.envs.transforms.transforms.Compose` class.</span>
 <span class="sd">        split_trajs (bool, optional): if ``True``, the trajectories will be split</span>
 <span class="sd">            along the first dimension and padded to have a matching shape.</span>
 <span class="sd">            To split the trajectories, the ``&quot;done&quot;`` signal will be used, which</span>
 <span class="sd">            is recovered via ``done = truncated | terminated``. In other words,</span>
 <span class="sd">            it is assumed that any ``truncated`` or ``terminated`` signal is</span>
-<span class="sd">            equivalent to the end of a trajectory. For some datasets from</span>
-<span class="sd">            ``D4RL``, this may not be true. It is up to the user to make</span>
-<span class="sd">            accurate choices regarding this usage of ``split_trajs``.</span>
+<span class="sd">            equivalent to the end of a trajectory.</span>
 <span class="sd">            Defaults to ``False``.</span>
 
 <span class="sd">    Attributes:</span>

@@ -410,7 +410,7 @@ in which case the downloaded data will be overwritten.</p></li>
 <li><p><strong>sampler</strong> (<a class="reference internal" href="torchrl.data.replay_buffers.Sampler.html#torchrl.data.replay_buffers.Sampler" title="torchrl.data.replay_buffers.Sampler"><em>Sampler</em></a><em>, </em><em>optional</em>) – the sampler to be used. If none is provided
 a default RandomSampler() will be used.</p></li>
 <li><p><strong>writer</strong> (<a class="reference internal" href="torchrl.data.replay_buffers.Writer.html#torchrl.data.replay_buffers.Writer" title="torchrl.data.replay_buffers.Writer"><em>Writer</em></a><em>, </em><em>optional</em>) – the writer to be used. If none is provided
-a default RoundRobinWriter() will be used.</p></li>
+a default <a class="reference internal" href="torchrl.data.replay_buffers.ImmutableDatasetWriter.html#torchrl.data.replay_buffers.ImmutableDatasetWriter" title="torchrl.data.replay_buffers.writers.ImmutableDatasetWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImmutableDatasetWriter</span></code></a> will be used.</p></li>
 <li><p><strong>collate_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – merges a list of samples to form a
 mini-batch of Tensor(s)/outputs.  Used when using batched
 loading from a map-style dataset.</p></li>
@@ -419,7 +419,7 @@ samples.</p></li>
 <li><p><strong>prefetch</strong> (<em>int</em><em>, </em><em>optional</em>) – number of next batches to be prefetched
 using multithreading.</p></li>
 <li><p><strong>transform</strong> (<a class="reference internal" href="torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform" title="torchrl.envs.transforms.Transform"><em>Transform</em></a><em>, </em><em>optional</em>) – Transform to be executed when sample() is called.
-To chain transforms use the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Compose</span></code> class.</p></li>
+To chain transforms use the <a class="reference internal" href="torchrl.envs.transforms.Compose.html#torchrl.envs.transforms.Compose" title="torchrl.envs.transforms.transforms.Compose"><code class="xref py py-class docutils literal notranslate"><span class="pre">Compose</span></code></a> class.</p></li>
 <li><p><strong>split_trajs</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the trajectories will be split
 along the first dimension and padded to have a matching shape.
 To split the trajectories, the <code class="docutils literal notranslate"><span class="pre">&quot;done&quot;</span></code> signal will be used, which
@@ -639,6 +639,33 @@ is a tuple (data, info). If False, the result is the data.</p></li>
 A tuple containing this tensordict and info if return_info flag is set to True.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.data.datasets.VD4RLExperienceReplay.set_sampler">
+<span class="sig-name descname"><span class="pre">set_sampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.replay_buffers.Sampler.html#torchrl.data.replay_buffers.Sampler" title="torchrl.data.replay_buffers.samplers.Sampler"><span class="pre">Sampler</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchrl.data.datasets.VD4RLExperienceReplay.set_sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a new sampler in the replay buffer and returns the previous sampler.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.data.datasets.VD4RLExperienceReplay.set_storage">
+<span class="sig-name descname"><span class="pre">set_storage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage" title="torchrl.data.replay_buffers.Storage"><span class="pre">Storage</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchrl.data.datasets.VD4RLExperienceReplay.set_storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a new storage in the replay buffer and returns the previous storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage</strong> (<a class="reference internal" href="torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage" title="torchrl.data.replay_buffers.Storage"><em>Storage</em></a>) – the new storage for the buffer.</p></li>
+<li><p><strong>collate_fn</strong> (<em>callable</em><em>, </em><em>optional</em>) – if provided, the collate_fn is set to this
+value. Otherwise it is reset to a default value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.data.datasets.VD4RLExperienceReplay.set_writer">
+<span class="sig-name descname"><span class="pre">set_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.replay_buffers.Writer.html#torchrl.data.replay_buffers.Writer" title="torchrl.data.replay_buffers.writers.Writer"><span class="pre">Writer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchrl.data.datasets.VD4RLExperienceReplay.set_writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a new writer in the replay buffer and returns the previous writer.</p>
 </dd></dl>
 
 </dd></dl>

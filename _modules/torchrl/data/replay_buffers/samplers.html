@@ -895,6 +895,14 @@
 <span class="sd">            trajectory (or episode). Defaults to ``(&quot;next&quot;, &quot;done&quot;)``.</span>
 <span class="sd">        traj_key (NestedKey, optional): the key indicating the trajectories.</span>
 <span class="sd">            Defaults to ``&quot;episode&quot;`` (commonly used across datasets in TorchRL).</span>
+<span class="sd">        ends (torch.Tensor, optional): a 1d boolean tensor containing the end of run signals.</span>
+<span class="sd">            To be used whenever the ``end_key`` or ``traj_key`` is expensive to get,</span>
+<span class="sd">            or when this signal is readily available. Must be used with ``cache_values=True``</span>
+<span class="sd">            and cannot be used in conjunction with ``end_key`` or ``traj_key``.</span>
+<span class="sd">        trajectories (torch.Tensor, optional): a 1d integer tensor containing the run ids.</span>
+<span class="sd">            To be used whenever the ``end_key`` or ``traj_key`` is expensive to get,</span>
+<span class="sd">            or when this signal is readily available. Must be used with ``cache_values=True``</span>
+<span class="sd">            and cannot be used in conjunction with ``end_key`` or ``traj_key``.</span>
 <span class="sd">        cache_values (bool, optional): to be used with static datasets.</span>
 <span class="sd">            Will cache the start and end signal of the trajectory.</span>
 <span class="sd">        truncated_key (NestedKey, optional): If not ``None``, this argument</span>
@@ -983,19 +991,12 @@
         <span class="n">slice_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">end_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">traj_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ends</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">trajectories</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">truncated_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;truncated&quot;</span><span class="p">),</span>
         <span class="n">strict_length</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">end_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">end_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">traj_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">traj_key</span> <span class="o">=</span> <span class="s2">&quot;episode&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">num_slices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">slice_len</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Either num_slices or slice_len must be not None, and not both. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Got num_slices=</span><span class="si">{</span><span class="n">num_slices</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span> <span class="o">=</span> <span class="n">num_slices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span> <span class="o">=</span> <span class="n">slice_len</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span> <span class="o">=</span> <span class="n">end_key</span>
@@ -1006,6 +1007,47 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_uses_data_prefix</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span> <span class="o">=</span> <span class="n">strict_length</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">trajectories</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">traj_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">end_key</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;`trajectories` and `end_key` or `traj_key` are exclusive arguments.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">ends</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;trajectories and ends are exclusive arguments.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_values</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;To be used, trajectories requires `cache_values` to be set to `True`.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="n">trajectories</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s2">&quot;stop-and-length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
+
+        <span class="k">elif</span> <span class="n">ends</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">traj_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">end_key</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;`ends` and `end_key` or `traj_key` are exclusive arguments.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">trajectories</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;trajectories and ends are exclusive arguments.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_values</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;To be used, ends requires `cache_values` to be set to `True`.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="n">ends</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s2">&quot;stop-and-length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">end_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">traj_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">traj_key</span> <span class="o">=</span> <span class="s2">&quot;run&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span> <span class="o">=</span> <span class="n">end_key</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span> <span class="o">=</span> <span class="n">traj_key</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">num_slices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">slice_len</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Either num_slices or slice_len must be not None, and not both. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got num_slices=</span><span class="si">{</span><span class="n">num_slices</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_find_start_stop_traj</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1067,16 +1109,24 @@
                 <span class="c1"># In the future, this may be deprecated, and we don&#39;t want to mess</span>
                 <span class="c1"># with the keys provided by the user so we fall back on a proxy to</span>
                 <span class="c1"># the traj key.</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">))</span>
-                    <span class="c1"># cache that value for future use</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_uses_data_prefix</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_data&quot;</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">TensorStorage</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">))</span>
+                        <span class="c1"># cache that value for future use</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_uses_data_prefix</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_data&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="s2">&quot;Could not get a tensordict out of the storage, which is required for SliceSampler to compute the trajectories.&quot;</span>
+                        <span class="p">)</span>
                 <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="n">trajectory</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)])</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_values</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s2">&quot;stop-and-length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
@@ -1093,16 +1143,24 @@
                 <span class="c1"># In the future, this may be deprecated, and we don&#39;t want to mess</span>
                 <span class="c1"># with the keys provided by the user so we fall back on a proxy to</span>
                 <span class="c1"># the traj key.</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">done</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="n">done</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="p">))</span>
-                    <span class="c1"># cache that value for future use</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_uses_data_prefix</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_data&quot;</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">TensorStorage</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">done</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">done</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="p">))</span>
+                        <span class="c1"># cache that value for future use</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_uses_data_prefix</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_end_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_data&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">done</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="s2">&quot;Could not get a tensordict out of the storage, which is required for SliceSampler to compute the trajectories.&quot;</span>
+                        <span class="p">)</span>
                 <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="n">done</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)]</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_values</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s2">&quot;stop-and-length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
@@ -1131,11 +1189,6 @@
         <span class="k">return</span> <span class="n">seq_length</span><span class="p">,</span> <span class="n">num_slices</span>
 
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">:</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">TensorStorage</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> can only sample from TensorStorage subclasses, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span><span class="si">}</span><span class="s2"> instead.&quot;</span>
-            <span class="p">)</span>
-
         <span class="c1"># pick up as many trajs as we need</span>
         <span class="n">start_idx</span><span class="p">,</span> <span class="n">stop_idx</span><span class="p">,</span> <span class="n">lengths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_stop_and_length</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span>
         <span class="n">seq_length</span><span class="p">,</span> <span class="n">num_slices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjusted_batch_size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
@@ -1260,6 +1313,14 @@
 <span class="sd">            trajectory (or episode). Defaults to ``(&quot;next&quot;, &quot;done&quot;)``.</span>
 <span class="sd">        traj_key (NestedKey, optional): the key indicating the trajectories.</span>
 <span class="sd">            Defaults to ``&quot;episode&quot;`` (commonly used across datasets in TorchRL).</span>
+<span class="sd">        ends (torch.Tensor, optional): a 1d boolean tensor containing the end of run signals.</span>
+<span class="sd">            To be used whenever the ``end_key`` or ``traj_key`` is expensive to get,</span>
+<span class="sd">            or when this signal is readily available. Must be used with ``cache_values=True``</span>
+<span class="sd">            and cannot be used in conjunction with ``end_key`` or ``traj_key``.</span>
+<span class="sd">        trajectories (torch.Tensor, optional): a 1d integer tensor containing the run ids.</span>
+<span class="sd">            To be used whenever the ``end_key`` or ``traj_key`` is expensive to get,</span>
+<span class="sd">            or when this signal is readily available. Must be used with ``cache_values=True``</span>
+<span class="sd">            and cannot be used in conjunction with ``end_key`` or ``traj_key``.</span>
 <span class="sd">        truncated_key (NestedKey, optional): If not ``None``, this argument</span>
 <span class="sd">            indicates where a truncated signal should be written in the output</span>
 <span class="sd">            data. This is used to indicate to value estimators where the provided</span>
@@ -1344,6 +1405,8 @@
         <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">end_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">traj_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ends</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">trajectories</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">truncated_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;truncated&quot;</span><span class="p">),</span>
         <span class="n">strict_length</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -1357,6 +1420,8 @@
             <span class="n">cache_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">truncated_key</span><span class="o">=</span><span class="n">truncated_key</span><span class="p">,</span>
             <span class="n">strict_length</span><span class="o">=</span><span class="n">strict_length</span><span class="p">,</span>
+            <span class="n">ends</span><span class="o">=</span><span class="n">ends</span><span class="p">,</span>
+            <span class="n">trajectories</span><span class="o">=</span><span class="n">trajectories</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">SamplerWithoutReplacement</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">)</span>
 

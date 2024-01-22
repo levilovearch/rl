@@ -485,10 +485,10 @@
 <span class="sd">            0s. If another value is provided, it will be used for padding. If</span>
 <span class="sd">            ``False`` or ``None`` (default) any encounter with a trajectory of</span>
 <span class="sd">            insufficient length will raise an exception.</span>
-<span class="sd">        root (Path or str, optional): The Minari dataset root directory.</span>
+<span class="sd">        root (Path or str, optional): The OpenX dataset root directory.</span>
 <span class="sd">            The actual dataset memory-mapped files will be saved under</span>
 <span class="sd">            `&lt;root&gt;/&lt;dataset_id&gt;`. If none is provided, it defaults to</span>
-<span class="sd">            ``~/.cache/torchrl/minari`.</span>
+<span class="sd">            ``~/.cache/torchrl/openx`.</span>
 <span class="sd">        streaming (bool, optional): if ``True``, the data won&#39;t be downloaded but</span>
 <span class="sd">            read from a stream instead.</span>
 
@@ -510,7 +510,7 @@
 <span class="sd">        sampler (Sampler, optional): the sampler to be used. If none is provided</span>
 <span class="sd">            a default RandomSampler() will be used.</span>
 <span class="sd">        writer (Writer, optional): the writer to be used. If none is provided</span>
-<span class="sd">            a default RoundRobinWriter() will be used.</span>
+<span class="sd">            a default :class:`~torchrl.data.replay_buffers.writers.ImmutableDatasetWriter` will be used.</span>
 <span class="sd">        collate_fn (callable, optional): merges a list of samples to form a</span>
 <span class="sd">            mini-batch of Tensor(s)/outputs.  Used when using batched</span>
 <span class="sd">            loading from a map-style dataset.</span>
@@ -519,15 +519,13 @@
 <span class="sd">        prefetch (int, optional): number of next batches to be prefetched</span>
 <span class="sd">            using multithreading.</span>
 <span class="sd">        transform (Transform, optional): Transform to be executed when sample() is called.</span>
-<span class="sd">            To chain transforms use the :obj:`Compose` class.</span>
+<span class="sd">            To chain transforms use the :class:`~torchrl.envs.transforms.transforms.Compose` class.</span>
 <span class="sd">        split_trajs (bool, optional): if ``True``, the trajectories will be split</span>
 <span class="sd">            along the first dimension and padded to have a matching shape.</span>
 <span class="sd">            To split the trajectories, the ``&quot;done&quot;`` signal will be used, which</span>
 <span class="sd">            is recovered via ``done = truncated | terminated``. In other words,</span>
 <span class="sd">            it is assumed that any ``truncated`` or ``terminated`` signal is</span>
-<span class="sd">            equivalent to the end of a trajectory. For some datasets from</span>
-<span class="sd">            ``D4RL``, this may not be true. It is up to the user to make</span>
-<span class="sd">            accurate choices regarding this usage of ``split_trajs``.</span>
+<span class="sd">            equivalent to the end of a trajectory.</span>
 <span class="sd">            Defaults to ``False``.</span>
 <span class="sd">        strict_length (bool, optional): if ``False``, trajectories of length</span>
 <span class="sd">            shorter than `slice_len` (or `batch_size // num_slices`) will be</span>
