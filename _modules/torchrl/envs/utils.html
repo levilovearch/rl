@@ -1,0 +1,1245 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>torchrl.envs.utils &mdash; torchrl main documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <!-- Google Analytics -->
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117752657-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-117752657-2');
+    </script>
+  
+  <!-- End Google Analytics -->
+  
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="../../../_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../../_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../../_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../../_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../../_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../../_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css" integrity="sha384-vSIIfh2YWi9wW0r9iZe7RJPrKwp6bG+s9QZMoITbCckVJqGCCRhc+ccxNcdpHuYu" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://pytorch.org/" aria-label="PyTorch"></a>
+
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://pytorch.org/get-started">Get Started</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/ecosystem">Ecosystem</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/mobile">Mobile</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/blog/">Blog</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/tutorials">Tutorials</a>
+          </li>
+
+          <li>
+            <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
+              <a class="resource-option with-down-orange-arrow">
+                Docs
+              </a>
+              <div class="resources-dropdown-menu">
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/docs/stable/index.html">
+                  <span class="dropdown-title">PyTorch</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/audio/stable/index.html">
+                  <span class="dropdown-title">torchaudio</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/text/stable/index.html">
+                  <span class="dropdown-title">torchtext</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/vision/stable/index.html">
+                  <span class="dropdown-title">torchvision</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/torcharrow">
+                  <span class="dropdown-title">torcharrow</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/data">
+                  <span class="dropdown-title">TorchData</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/torchrec">
+                  <span class="dropdown-title">TorchRec</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/serve/">
+                  <span class="dropdown-title">TorchServe</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/torchx/">
+                  <span class="dropdown-title">TorchX</span>
+                  <p></p>
+                </a>
+                <a class="doc-dropdown-option nav-dropdown-item" href="https://pytorch.org/xla">
+                  <span class="dropdown-title">PyTorch on XLA Devices</span>
+                  <p></p>
+                </a>
+            </div>
+          </li>
+
+          <li>
+            <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
+              <a class="resource-option with-down-arrow">
+                Resources
+              </a>
+              <div class="resources-dropdown-menu">
+                <a class="nav-dropdown-item" href="https://pytorch.org/features">
+                  <span class="dropdown-title">About</span>
+                  <p>Learn about PyTorch’s features and capabilities</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/foundation">
+                  <span class="dropdown-title">PyTorch Foundation</span>
+                  <p>Learn about the PyTorch foundation</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/#community-module">
+                  <span class="dropdown-title">Community</span>
+                  <p>Join the PyTorch developer community to contribute, learn, and get your questions answered.</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/community-stories">
+                  <span class="dropdown-title">Community Stories</span>
+                  <p>Learn how our community solves real, everyday machine learning problems with PyTorch.</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/resources">
+                  <span class="dropdown-title">Developer Resources</span>
+                  <p>Find resources and get questions answered</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/events">
+                  <span class="dropdown-title">Events</span>
+                  <p>Find events, webinars, and podcasts</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://discuss.pytorch.org/" target="_blank">
+                  <span class="dropdown-title">Forums</span>
+                  <p>A place to discuss PyTorch code, issues, install, research</p>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/hub">
+                  <span class="dropdown-title">Models (Beta)</span>
+                  <p>Discover, publish, and reuse pre-trained models</p>
+                </a>
+              </div>
+            </div>
+          </li>
+
+          <li>
+            <a href="https://github.com/pytorch/pytorch">GitHub</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+  </div>
+</div>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  main (None )
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/coding_ppo.html">Reinforcement Learning (PPO) with TorchRL Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/pendulum.html">Pendulum: Writing your environment and transforms with TorchRL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/torchrl_demo.html">Introduction to TorchRL</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/multiagent_ppo.html">Multi-Agent Reinforcement Learning (PPO) with TorchRL Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/torchrl_envs.html">TorchRL envs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/pretrained_models.html">Using pretrained models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/dqn_with_rnn.html">Recurrent DQN: Training recurrent policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/rb_tutorial.html">Using Replay Buffers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/multi_task.html">Task-specific policy in multi-task environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/coding_ddpg.html">TorchRL objectives: Coding a DDPG loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/coding_dqn.html">TorchRL trainer: A DQN example</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/knowledge_base.html">Knowledge Base</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../../../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="../../index.html">Module code</a> &gt;</li>
+        
+      <li>torchrl.envs.utils</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+
+        
+          <div class="pytorch-call-to-action-links">
+            <div id="tutorial-type">_modules/torchrl/envs/utils</div>
+
+            <div id="google-colab-link">
+              <img class="call-to-action-img" src="../../../_static/images/pytorch-colab.svg"/>
+              <div class="call-to-action-desktop-view">Run in Google Colab</div>
+              <div class="call-to-action-mobile-view">Colab</div>
+            </div>
+            <div id="download-notebook-link">
+              <img class="call-to-action-notebook-img" src="../../../_static/images/pytorch-download.svg"/>
+              <div class="call-to-action-desktop-view">Download Notebook</div>
+              <div class="call-to-action-mobile-view">Notebook</div>
+            </div>
+            <div id="github-view-link">
+              <img class="call-to-action-img" src="../../../_static/images/pytorch-github.svg"/>
+              <div class="call-to-action-desktop-view">View on GitHub</div>
+              <div class="call-to-action-mobile-view">GitHub</div>
+            </div>
+          </div>
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <h1>Source code for torchrl.envs.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Meta Platforms, Inc. and affiliates.</span>
+<span class="c1">#</span>
+<span class="c1"># This source code is licensed under the MIT license found in the</span>
+<span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">importlib.util</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">unravel_key</span>
+<span class="kn">from</span> <span class="nn">tensordict.nn.probabilistic</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa</span>
+    <span class="c1"># Note: the `set_interaction_mode` and their associated arg `default_interaction_mode` are being deprecated!</span>
+    <span class="c1">#       Please use the `set_/interaction_type` ones above with the InteractionType enum instead.</span>
+    <span class="c1">#       See more details: https://github.com/pytorch/rl/issues/1016</span>
+    <span class="n">interaction_mode</span> <span class="k">as</span> <span class="n">exploration_mode</span><span class="p">,</span>
+    <span class="n">interaction_type</span> <span class="k">as</span> <span class="n">exploration_type</span><span class="p">,</span>
+    <span class="n">InteractionType</span> <span class="k">as</span> <span class="n">ExplorationType</span><span class="p">,</span>
+    <span class="n">set_interaction_mode</span> <span class="k">as</span> <span class="n">set_exploration_mode</span><span class="p">,</span>
+    <span class="n">set_interaction_type</span> <span class="k">as</span> <span class="n">set_exploration_type</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">LazyStackedTensorDict</span><span class="p">,</span> <span class="n">NestedKey</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;exploration_mode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;exploration_type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;set_exploration_mode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;set_exploration_type&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ExplorationType&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;check_env_specs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;step_mdp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;make_composite_from_td&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">CompositeSpec</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">check_no_exclusive_keys</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_exploration_type</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">exploration_mode</span><span class="p">,</span> <span class="n">exploration_type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">exploration_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ExplorationType</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="n">exploration_mode</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exploration_type</span>
+
+
+<span class="k">class</span> <span class="nc">_classproperty</span><span class="p">(</span><span class="nb">property</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">classmethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="p">)</span><span class="o">.</span><span class="fm">__get__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner</span><span class="p">)()</span>
+
+
+<div class="viewcode-block" id="step_mdp"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.utils.step_mdp.html#torchrl.envs.utils.step_mdp">[docs]</a><span class="k">def</span> <span class="nf">step_mdp</span><span class="p">(</span>
+    <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+    <span class="n">next_tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">keep_other</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">exclude_reward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">exclude_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">exclude_action</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">reward_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;reward&quot;</span><span class="p">,</span>
+    <span class="n">done_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;done&quot;</span><span class="p">,</span>
+    <span class="n">action_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a new tensordict that reflects a step in time of the input tensordict.</span>
+
+<span class="sd">    Given a tensordict retrieved after a step, returns the :obj:`&quot;next&quot;` indexed-tensordict.</span>
+<span class="sd">    The arguments allow for a precise control over what should be kept and what</span>
+<span class="sd">    should be copied from the ``&quot;next&quot;`` entry. The default behaviour is:</span>
+<span class="sd">    move the observation entries, reward and done states to the root, exclude</span>
+<span class="sd">    the current action and keep all extra keys (non-action, non-done, non-reward).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tensordict (TensorDictBase): tensordict with keys to be renamed</span>
+<span class="sd">        next_tensordict (TensorDictBase, optional): destination tensordict</span>
+<span class="sd">        keep_other (bool, optional): if ``True``, all keys that do not start with :obj:`&#39;next_&#39;` will be kept.</span>
+<span class="sd">            Default is ``True``.</span>
+<span class="sd">        exclude_reward (bool, optional): if ``True``, the :obj:`&quot;reward&quot;` key will be discarded</span>
+<span class="sd">            from the resulting tensordict. If ``False``, it will be copied (and replaced)</span>
+<span class="sd">            from the ``&quot;next&quot;`` entry (if present).</span>
+<span class="sd">            Default is ``True``.</span>
+<span class="sd">        exclude_done (bool, optional): if ``True``, the :obj:`&quot;done&quot;` key will be discarded</span>
+<span class="sd">            from the resulting tensordict. If ``False``, it will be copied (and replaced)</span>
+<span class="sd">            from the ``&quot;next&quot;`` entry (if present).</span>
+<span class="sd">            Default is ``False``.</span>
+<span class="sd">        exclude_action (bool, optional): if ``True``, the :obj:`&quot;action&quot;` key will</span>
+<span class="sd">            be discarded from the resulting tensordict. If ``False``, it will</span>
+<span class="sd">            be kept in the root tensordict (since it should not be present in</span>
+<span class="sd">            the ``&quot;next&quot;`` entry).</span>
+<span class="sd">            Default is ``True``.</span>
+<span class="sd">        reward_key (key, optional): the key where the reward is written. Defaults</span>
+<span class="sd">            to &quot;reward&quot;.</span>
+<span class="sd">        done_key (key, optional): the key where the done is written. Defaults</span>
+<span class="sd">            to &quot;done&quot;.</span>
+<span class="sd">        action_key (key, optional): the key where the action is written. Defaults</span>
+<span class="sd">            to &quot;action&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">         A new tensordict (or next_tensordict) containing the tensors of the t+1 step.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    This funtion allows for this kind of loop to be used:</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; td = TensorDict({</span>
+<span class="sd">        ...     &quot;done&quot;: torch.zeros((), dtype=torch.bool),</span>
+<span class="sd">        ...     &quot;reward&quot;: torch.zeros(()),</span>
+<span class="sd">        ...     &quot;extra&quot;: torch.zeros(()),</span>
+<span class="sd">        ...     &quot;next&quot;: TensorDict({</span>
+<span class="sd">        ...         &quot;done&quot;: torch.zeros((), dtype=torch.bool),</span>
+<span class="sd">        ...         &quot;reward&quot;: torch.zeros(()),</span>
+<span class="sd">        ...         &quot;obs&quot;: torch.zeros(()),</span>
+<span class="sd">        ...     }, []),</span>
+<span class="sd">        ...     &quot;obs&quot;: torch.zeros(()),</span>
+<span class="sd">        ...     &quot;action&quot;: torch.zeros(()),</span>
+<span class="sd">        ... }, [])</span>
+<span class="sd">        &gt;&gt;&gt; print(step_mdp(td))</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                done: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                extra: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; print(step_mdp(td, exclude_done=True))  # &quot;done&quot; is dropped</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                extra: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; print(step_mdp(td, exclude_reward=False))  # &quot;reward&quot; is kept</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                done: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                extra: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                reward: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; print(step_mdp(td, exclude_action=False))  # &quot;action&quot; persists at the root</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                extra: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; print(step_mdp(td, keep_other=False))  # &quot;extra&quot; is missing</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                done: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">next_tensordict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">next_tensordicts</span> <span class="o">=</span> <span class="n">next_tensordict</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">stack_dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">next_tensordicts</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">step_mdp</span><span class="p">(</span>
+                    <span class="n">td</span><span class="p">,</span>
+                    <span class="n">next_tensordict</span><span class="o">=</span><span class="n">ntd</span><span class="p">,</span>
+                    <span class="n">keep_other</span><span class="o">=</span><span class="n">keep_other</span><span class="p">,</span>
+                    <span class="n">exclude_reward</span><span class="o">=</span><span class="n">exclude_reward</span><span class="p">,</span>
+                    <span class="n">exclude_done</span><span class="o">=</span><span class="n">exclude_done</span><span class="p">,</span>
+                    <span class="n">exclude_action</span><span class="o">=</span><span class="n">exclude_action</span><span class="p">,</span>
+                    <span class="n">reward_key</span><span class="o">=</span><span class="n">reward_key</span><span class="p">,</span>
+                    <span class="n">done_key</span><span class="o">=</span><span class="n">done_key</span><span class="p">,</span>
+                    <span class="n">action_key</span><span class="o">=</span><span class="n">action_key</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">td</span><span class="p">,</span> <span class="n">ntd</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">next_tensordicts</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">stack_dim</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">next_tensordict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">next_tensordict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">next_tensordict</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="n">action_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">action_key</span><span class="p">)</span>
+    <span class="n">done_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">done_key</span><span class="p">)</span>
+    <span class="n">reward_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">reward_key</span><span class="p">)</span>
+
+    <span class="n">excluded</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">exclude_reward</span><span class="p">:</span>
+        <span class="n">excluded</span> <span class="o">=</span> <span class="p">{</span><span class="n">reward_key</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">exclude_done</span><span class="p">:</span>
+        <span class="n">excluded</span> <span class="o">=</span> <span class="n">excluded</span><span class="o">.</span><span class="n">union</span><span class="p">({</span><span class="n">done_key</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">exclude_action</span><span class="p">:</span>
+        <span class="n">excluded</span> <span class="o">=</span> <span class="n">excluded</span><span class="o">.</span><span class="n">union</span><span class="p">({</span><span class="n">action_key</span><span class="p">})</span>
+    <span class="n">next_td</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+
+    <span class="n">total_key</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">if</span> <span class="n">keep_other</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;next&quot;</span><span class="p">:</span>
+                <span class="n">_set</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">total_key</span><span class="p">,</span> <span class="n">excluded</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">exclude_action</span><span class="p">:</span>
+        <span class="n">_set_single_key</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">action_key</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">next_td</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_set</span><span class="p">(</span><span class="n">next_td</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">total_key</span><span class="p">,</span> <span class="n">excluded</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">next_tensordict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">next_tensordict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="k">def</span> <span class="nf">_set_single_key</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">clone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># key should be already unraveled</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="n">new_val</span> <span class="o">=</span> <span class="n">dest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">new_val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+                    <span class="c1"># dest.set(k, new_val)</span>
+                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">val</span>
+                <span class="n">dest</span> <span class="o">=</span> <span class="n">new_val</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">clone</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+                <span class="c1"># dest.set(k, val)</span>
+                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># This is a temporary solution to understand if a key is heterogeneous</span>
+        <span class="c1"># while not having performance impact when the exception is not raised</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Found more than one unique shape in the tensors&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)):</span>
+                <span class="c1"># this is a het key</span>
+                <span class="k">for</span> <span class="n">s_td</span><span class="p">,</span> <span class="n">d_td</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">dest</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">):</span>
+                    <span class="n">_set_single_key</span><span class="p">(</span><span class="n">s_td</span><span class="p">,</span> <span class="n">d_td</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">clone</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span>
+
+
+<span class="k">def</span> <span class="nf">_set</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">total_key</span><span class="p">,</span> <span class="n">excluded</span><span class="p">):</span>
+    <span class="n">total_key</span> <span class="o">=</span> <span class="n">total_key</span> <span class="o">+</span> <span class="p">(</span><span class="n">key</span><span class="p">,)</span>
+    <span class="n">non_empty</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">total_key</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">excluded</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="n">new_val</span> <span class="o">=</span> <span class="n">dest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">new_val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+                <span class="n">non_empty_local</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">subkey</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">non_empty_local</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">_set</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">subkey</span><span class="p">,</span> <span class="n">total_key</span><span class="p">,</span> <span class="n">excluded</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="n">non_empty_local</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">non_empty_local</span><span class="p">:</span>
+                    <span class="c1"># dest.set(key, new_val)</span>
+                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">non_empty</span> <span class="o">=</span> <span class="n">non_empty_local</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">non_empty</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># dest.set(key, val)</span>
+                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># This is a temporary solution to understand if a key is heterogeneous</span>
+        <span class="c1"># while not having performance impact when the exception is not raised</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Found more than one unique shape in the tensors&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)):</span>
+                <span class="c1"># this is a het key</span>
+                <span class="n">non_empty_local</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">s_td</span><span class="p">,</span> <span class="n">d_td</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">dest</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">):</span>
+                    <span class="n">non_empty_local</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">_set</span><span class="p">(</span><span class="n">s_td</span><span class="p">,</span> <span class="n">d_td</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">total_key</span><span class="p">,</span> <span class="n">excluded</span><span class="p">)</span> <span class="ow">or</span> <span class="n">non_empty_local</span>
+                    <span class="p">)</span>
+                <span class="n">non_empty</span> <span class="o">=</span> <span class="n">non_empty_local</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span>
+
+    <span class="k">return</span> <span class="n">non_empty</span>
+
+
+<div class="viewcode-block" id="get_available_libraries"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.utils.get_available_libraries.html#torchrl.envs.utils.get_available_libraries">[docs]</a><span class="k">def</span> <span class="nf">get_available_libraries</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all the supported libraries.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">SUPPORTED_LIBRARIES</span></div>
+
+
+<span class="k">def</span> <span class="nf">_check_gym</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the gym library is installed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_check_gym_atari</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the gym library is installed and atari envs can be found.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_gym</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;atari-py&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_check_mario</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the &quot;gym-super-mario-bros&quot; library is installed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;gym-super-mario-bros&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_check_dmcontrol</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the &quot;dm-control&quot; library is installed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;dm_control&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_check_dmlab</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the &quot;deepmind-lab&quot; library is installed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;deepmind_lab&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="n">SUPPORTED_LIBRARIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;gym&quot;</span><span class="p">:</span> <span class="n">_check_gym</span><span class="p">(),</span>  <span class="c1"># OpenAI</span>
+    <span class="s2">&quot;gym[atari]&quot;</span><span class="p">:</span> <span class="n">_check_gym_atari</span><span class="p">(),</span>  <span class="c1">#</span>
+    <span class="s2">&quot;dm_control&quot;</span><span class="p">:</span> <span class="n">_check_dmcontrol</span><span class="p">(),</span>
+    <span class="s2">&quot;habitat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">&quot;gym-super-mario-bros&quot;</span><span class="p">:</span> <span class="n">_check_mario</span><span class="p">(),</span>
+    <span class="c1"># &quot;vizdoom&quot;: None,  # gym based, https://github.com/mwydmuch/ViZDoom</span>
+    <span class="c1"># &quot;openspiel&quot;: None,  # DM, https://github.com/deepmind/open_spiel</span>
+    <span class="c1"># &quot;pysc2&quot;: None,  # DM, https://github.com/deepmind/pysc2</span>
+    <span class="c1"># &quot;deepmind_lab&quot;: _check_dmlab(),</span>
+    <span class="c1"># DM, https://github.com/deepmind/lab, https://github.com/deepmind/lab/tree/master/python/pip_package</span>
+    <span class="c1"># &quot;serpent.ai&quot;: None,  # https://github.com/SerpentAI/SerpentAI</span>
+    <span class="c1"># &quot;gfootball&quot;: None,  # 2.8k G, https://github.com/google-research/football</span>
+    <span class="c1"># DM, https://github.com/deepmind/dm_control</span>
+    <span class="c1"># FB, https://github.com/facebookresearch/habitat-sim</span>
+    <span class="c1"># &quot;meta-world&quot;: None,  # https://github.com/rlworkgroup/metaworld</span>
+    <span class="c1"># &quot;minerl&quot;: None,  # https://github.com/minerllabs/minerl</span>
+    <span class="c1"># &quot;multi-agent-emergence-environments&quot;: None,</span>
+    <span class="c1"># OpenAI, https://github.com/openai/multi-agent-emergence-environments</span>
+    <span class="c1"># &quot;procgen&quot;: None,  # OpenAI, https://github.com/openai/procgen</span>
+    <span class="c1"># &quot;pybullet&quot;: None,  # https://github.com/benelot/pybullet-gym</span>
+    <span class="c1"># &quot;realworld_rl_suite&quot;: None,</span>
+    <span class="c1"># G, https://github.com/google-research/realworldrl_suite</span>
+    <span class="c1"># &quot;rlcard&quot;: None,  # https://github.com/datamllab/rlcard</span>
+    <span class="c1"># &quot;screeps&quot;: None,  # https://github.com/screeps/screeps</span>
+    <span class="c1"># &quot;ml-agents&quot;: None,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_per_level_env_check</span><span class="p">(</span><span class="n">data0</span><span class="p">,</span> <span class="n">data1</span><span class="p">,</span> <span class="n">check_dtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks shape and dtype of two tensordicts, accounting for lazy stacks.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data0</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">data1</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">data0</span><span class="o">.</span><span class="n">stack_dim</span> <span class="o">!=</span> <span class="n">data1</span><span class="o">.</span><span class="n">stack_dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stack dimension mismatch: </span><span class="si">{</span><span class="n">data0</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">data1</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_data0</span><span class="p">,</span> <span class="n">_data1</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data0</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">data1</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">):</span>
+            <span class="n">_per_level_env_check</span><span class="p">(</span><span class="n">_data0</span><span class="p">,</span> <span class="n">_data1</span><span class="p">,</span> <span class="n">check_dtype</span><span class="o">=</span><span class="n">check_dtype</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">keys0</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data0</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">keys1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">keys0</span> <span class="o">!=</span> <span class="n">keys1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keys mismatch: </span><span class="si">{</span><span class="n">keys0</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">keys1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys0</span><span class="p">:</span>
+            <span class="n">_data0</span> <span class="o">=</span> <span class="n">data0</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">_data1</span> <span class="o">=</span> <span class="n">data1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">_data0</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">_data1</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The shapes of the real and fake tensordict don&#39;t match for key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Got fake=</span><span class="si">{</span><span class="n">_data0</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and real=</span><span class="si">{</span><span class="n">_data0</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_data0</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">):</span>
+                <span class="n">_per_level_env_check</span><span class="p">(</span><span class="n">_data0</span><span class="p">,</span> <span class="n">_data1</span><span class="p">,</span> <span class="n">check_dtype</span><span class="o">=</span><span class="n">check_dtype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">check_dtype</span> <span class="ow">and</span> <span class="p">(</span><span class="n">_data0</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">_data1</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The dtypes of the real and fake tensordict don&#39;t match for key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Got fake=</span><span class="si">{</span><span class="n">_data0</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> and real=</span><span class="si">{</span><span class="n">_data1</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="check_env_specs"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.utils.check_env_specs.html#torchrl.envs.utils.check_env_specs">[docs]</a><span class="k">def</span> <span class="nf">check_env_specs</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_dtype</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tests an environment specs against the results of short rollout.</span>
+
+<span class="sd">    This test function should be used as a sanity check for an env wrapped with</span>
+<span class="sd">    torchrl&#39;s EnvBase subclasses: any discrepancy between the expected data and</span>
+<span class="sd">    the data collected should raise an assertion error.</span>
+
+<span class="sd">    A broken environment spec will likely make it impossible to use parallel</span>
+<span class="sd">    environments.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env (EnvBase): the env for which the specs have to be checked against data.</span>
+<span class="sd">        return_contiguous (bool, optional): if ``True``, the random rollout will be called with</span>
+<span class="sd">            return_contiguous=True. This will fail in some cases (e.g. heterogeneous shapes</span>
+<span class="sd">            of inputs/outputs). Defaults to True.</span>
+<span class="sd">        check_dtype (bool, optional): if False, dtype checks will be skipped.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        seed (int, optional): for reproducibility, a seed is set.</span>
+
+<span class="sd">    Caution: this function resets the env seed. It should be used &quot;offline&quot; to</span>
+<span class="sd">    check that an env is adequately constructed, but it may affect the seeding</span>
+<span class="sd">    of an experiment and as such should be kept out of training scripts.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">fake_tensordict</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">fake_tensordict</span><span class="p">()</span>
+    <span class="n">real_tensordict</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="n">return_contiguous</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_contiguous</span><span class="p">:</span>
+        <span class="n">fake_tensordict</span> <span class="o">=</span> <span class="n">fake_tensordict</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">real_tensordict</span><span class="o">.</span><span class="n">batch_dims</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">fake_tensordict</span> <span class="o">=</span> <span class="n">fake_tensordict</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">*</span><span class="n">real_tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fake_tensordict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">fake_tensordict</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">fake_tensordict</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="o">!=</span> <span class="n">real_tensordict</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+            <span class="s2">&quot;zeroing the two tensordicts did not make them identical. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Check for discrepancies:</span><span class="se">\n</span><span class="s2">Fake=</span><span class="se">\n</span><span class="si">{</span><span class="n">fake_tensordict</span><span class="si">}</span><span class="se">\n</span><span class="s2">Real=</span><span class="se">\n</span><span class="si">{</span><span class="n">real_tensordict</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Checks shapes and eventually dtypes of keys at all nesting levels</span>
+    <span class="n">_per_level_env_check</span><span class="p">(</span><span class="n">fake_tensordict</span><span class="p">,</span> <span class="n">real_tensordict</span><span class="p">,</span> <span class="n">check_dtype</span><span class="o">=</span><span class="n">check_dtype</span><span class="p">)</span>
+
+    <span class="c1"># Check specs</span>
+    <span class="n">last_td</span> <span class="o">=</span> <span class="n">real_tensordict</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">_action_spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">input_spec</span><span class="p">[</span><span class="s2">&quot;_action_spec&quot;</span><span class="p">]</span>
+    <span class="n">_state_spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">input_spec</span><span class="p">[</span><span class="s2">&quot;_state_spec&quot;</span><span class="p">]</span>
+    <span class="n">_obs_spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_observation_spec&quot;</span><span class="p">]</span>
+    <span class="n">_reward_spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_reward_spec&quot;</span><span class="p">]</span>
+    <span class="n">_done_spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_done_spec&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="n">_action_spec</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="n">_state_spec</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="n">_done_spec</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="n">_obs_spec</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_no_exclusive_keys</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;It appears you are using some LazyStackedCompositeSpecs with exclusive keys &quot;</span>
+                <span class="s2">&quot;(keys present in some but not all of the stacked specs). To use such heterogeneous specs, &quot;</span>
+                <span class="s2">&quot;you will need to first pass your stack through `torchrl.data.consolidate_spec`.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">td</span> <span class="o">=</span> <span class="n">last_td</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">td</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;spec check failed at root for spec </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">spec</span><span class="si">}</span><span class="s2"> and data </span><span class="si">{</span><span class="n">td</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;reward&quot;</span><span class="p">,</span> <span class="n">_reward_spec</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="n">_done_spec</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="n">_obs_spec</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">td</span> <span class="o">=</span> <span class="n">last_td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">td</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;spec check failed at root for spec </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">spec</span><span class="si">}</span><span class="s2"> and data </span><span class="si">{</span><span class="n">td</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;check_env_specs succeeded!&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_selective_unsqueeze</span><span class="p">(</span><span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">shape_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shape_len</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Tensor has less dims than batch_size. shape:</span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, batch_size: </span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">batch_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Tensor does not have given batch_size. shape:</span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, batch_size: </span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shape_len</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tensor</span>
+
+
+<span class="k">class</span> <span class="nc">classproperty</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class-property object.</span>
+
+<span class="sd">    Usage: Allows for iterators coded as properties.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fget</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fget</span> <span class="o">=</span> <span class="n">fget</span>
+
+    <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner_self</span><span class="p">,</span> <span class="n">owner_cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="p">(</span><span class="n">owner_cls</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_sort_keys</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;_-|-_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">element</span>
+
+
+<div class="viewcode-block" id="make_composite_from_td"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.utils.make_composite_from_td.html#torchrl.envs.utils.make_composite_from_td">[docs]</a><span class="k">def</span> <span class="nf">make_composite_from_td</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a CompositeSpec instance from a tensordict, assuming all values are unbounded.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (tensordict.TensorDict): a tensordict to be mapped onto a CompositeSpec.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; data = TensorDict({</span>
+<span class="sd">        ...     &quot;obs&quot;: torch.randn(3),</span>
+<span class="sd">        ...     &quot;action&quot;: torch.zeros(2, dtype=torch.int),</span>
+<span class="sd">        ...     &quot;next&quot;: {&quot;obs&quot;: torch.randn(3), &quot;reward&quot;: torch.randn(1)}</span>
+<span class="sd">        ... }, [])</span>
+<span class="sd">        &gt;&gt;&gt; spec = make_composite_from_td(data)</span>
+<span class="sd">        &gt;&gt;&gt; print(spec)</span>
+<span class="sd">        CompositeSpec(</span>
+<span class="sd">            obs: UnboundedContinuousTensorSpec(</span>
+<span class="sd">                 shape=torch.Size([3]), space=None, device=cpu, dtype=torch.float32, domain=continuous),</span>
+<span class="sd">            action: UnboundedContinuousTensorSpec(</span>
+<span class="sd">                 shape=torch.Size([2]), space=None, device=cpu, dtype=torch.int32, domain=continuous),</span>
+<span class="sd">            next: CompositeSpec(</span>
+<span class="sd">                obs: UnboundedContinuousTensorSpec(</span>
+<span class="sd">                     shape=torch.Size([3]), space=None, device=cpu, dtype=torch.float32, domain=continuous),</span>
+<span class="sd">                reward: UnboundedContinuousTensorSpec(</span>
+<span class="sd">                     shape=torch.Size([1]), space=ContinuousBox(minimum=Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, contiguous=True), maximum=Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, contiguous=True)), device=cpu, dtype=torch.float32, domain=continuous), device=cpu, shape=torch.Size([])), device=cpu, shape=torch.Size([]))</span>
+<span class="sd">        &gt;&gt;&gt; assert (spec.zero() == data.zero_()).all()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">CompositeSpec</span><span class="p">,</span> <span class="n">UnboundedContinuousTensorSpec</span>
+
+    <span class="c1"># custom funtion to convert a tensordict in a similar spec structure</span>
+    <span class="c1"># of unbounded values.</span>
+    <span class="n">composite</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">make_composite_from_td</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">UnboundedContinuousTensorSpec</span><span class="p">(</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">},</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">composite</span></div>
+</pre></div>
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Meta.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+         <script src="../../../_static/jquery.js"></script>
+         <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../../_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <div class="container-fluid docs-tutorials-resources" id="docs-tutorials-resources">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 text-center">
+          <h2>Docs</h2>
+          <p>Access comprehensive developer documentation for PyTorch</p>
+          <a class="with-right-arrow" href="https://pytorch.org/docs/stable/index.html">View Docs</a>
+        </div>
+
+        <div class="col-md-4 text-center">
+          <h2>Tutorials</h2>
+          <p>Get in-depth tutorials for beginners and advanced developers</p>
+          <a class="with-right-arrow" href="https://pytorch.org/tutorials">View Tutorials</a>
+        </div>
+
+        <div class="col-md-4 text-center">
+          <h2>Resources</h2>
+          <p>Find development resources and get your questions answered</p>
+          <a class="with-right-arrow" href="https://pytorch.org/resources">View Resources</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://pytorch.org/" class="footer-logo"></a>
+      </div>
+
+      <div class="footer-links-wrapper">
+        <div class="footer-links-col">
+          <ul>
+            <li class="list-title"><a href="https://pytorch.org/">PyTorch</a></li>
+            <li><a href="https://pytorch.org/get-started">Get Started</a></li>
+            <li><a href="https://pytorch.org/features">Features</a></li>
+            <li><a href="https://pytorch.org/ecosystem">Ecosystem</a></li>
+            <li><a href="https://pytorch.org/blog/">Blog</a></li>
+            <li><a href="https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md">Contributing</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <ul>
+            <li class="list-title"><a href="https://pytorch.org/resources">Resources</a></li>
+            <li><a href="https://pytorch.org/tutorials">Tutorials</a></li>
+            <li><a href="https://pytorch.org/docs/stable/index.html">Docs</a></li>
+            <li><a href="https://discuss.pytorch.org" target="_blank">Discuss</a></li>
+            <li><a href="https://github.com/pytorch/pytorch/issues" target="_blank">Github Issues</a></li>
+            <li><a href="https://pytorch.org/assets/brand-guidelines/PyTorch-Brand-Guidelines.pdf" target="_blank">Brand Guidelines</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <ul>
+            <li class="list-title">Stay up to date</li>
+            <li><a href="https://www.facebook.com/pytorch" target="_blank">Facebook</a></li>
+            <li><a href="https://twitter.com/pytorch" target="_blank">Twitter</a></li>
+            <li><a href="https://www.youtube.com/pytorch" target="_blank">YouTube</a></li>
+            <li><a href="https://www.linkedin.com/company/pytorch" target="_blank">LinkedIn</a></li>
+          </ul>
+          </div>
+
+        <div class="footer-links-col">
+          <ul>
+            <li class="list-title">PyTorch Podcasts</li>
+            <li><a href="https://open.spotify.com/show/6UzHKeiy368jKfQMKKvJY5" target="_blank">Spotify</a></li>
+            <li><a href="https://podcasts.apple.com/us/podcast/pytorch-developer-podcast/id1566080008" target="_blank">Apple</a></li>
+            <li><a href="https://www.google.com/podcasts?feed=aHR0cHM6Ly9mZWVkcy5zaW1wbGVjYXN0LmNvbS9PQjVGa0lsOA%3D%3D" target="_blank">Google</a></li>
+            <li><a href="https://music.amazon.com/podcasts/7a4e6f0e-26c2-49e9-a478-41bd244197d0/PyTorch-Developer-Podcast?" target="_blank">Amazon</a></li>
+          </ul>
+         </div>
+        </div>
+
+        <div class="privacy-policy">
+          <ul>
+            <li class="privacy-policy-links"><a href="https://www.linuxfoundation.org/terms/" target="_blank">Terms</a></li>
+            <li class="privacy-policy-links">|</li>
+            <li class="privacy-policy-links"><a href="https://www.linuxfoundation.org/privacy-policy/" target="_blank">Privacy</a></li>
+          </ul>
+        </div>
+        <div class="copyright">
+        <p>© Copyright The Linux Foundation. The PyTorch Foundation is a project of The Linux Foundation.
+          For web site terms of use, trademark policy and other policies applicable to The PyTorch Foundation please see
+          <a href="www.linuxfoundation.org/policies/">www.linuxfoundation.org/policies/</a>. The PyTorch Foundation supports the PyTorch open source
+          project, which has been established as PyTorch Project a Series of LF Projects, LLC. For policies applicable to the PyTorch Project a Series of LF Projects, LLC,
+          please see <a href="www.lfprojects.org/policies/">www.lfprojects.org/policies/</a>.</p>
+      </div>
+     </div>
+
+  </footer>
+
+  <div class="cookie-banner-wrapper">
+  <div class="container">
+    <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
+    <img class="close-button" src="../../../_static/images/pytorch-x.svg">
+  </div>
+</div>
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://pytorch.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://pytorch.org/get-started">Get Started</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/ecosystem">Ecosystem</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/mobile">Mobile</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/blog/">Blog</a>
+          </li>
+
+          <li>
+            <a href="https://pytorch.org/tutorials">Tutorials</a>
+          </li>
+
+          <li class="resources-mobile-menu-title">
+            Docs
+          </li>
+
+          <ul class="resources-mobile-menu-items">
+            <li>
+              <a href="https://pytorch.org/docs/stable/index.html">PyTorch</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/audio/stable/index.html">torchaudio</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/text/stable/index.html">torchtext</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/vision/stable/index.html">torchvision</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/torcharrow">torcharrow</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/data">TorchData</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/torchrec">TorchRec</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/serve/">TorchServe</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/torchx/">TorchX</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/xla">PyTorch on XLA Devices</a>
+            </li>
+          </ul>
+
+          <li class="resources-mobile-menu-title">
+            Resources
+          </li>
+
+           <ul class="resources-mobile-menu-items">
+
+            <li>
+              <a href="https://pytorch.org/features">About</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/foundation">PyTorch Foundation</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/#community-module">Community</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/community-stories">Community Stories</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/resources">Developer Resources</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/events">Events</a>
+            </li>
+
+            <li>
+              <a href="https://discuss.pytorch.org/">Forums</a>
+            </li>
+
+            <li>
+              <a href="https://pytorch.org/hub">Models (Beta)</a>
+            </li>
+          </ul>
+
+          <li>
+            <a href="https://github.com/pytorch/pytorch">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../../../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
