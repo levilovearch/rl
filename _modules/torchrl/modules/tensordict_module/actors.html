@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -377,7 +378,7 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">unravel_key</span>
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">dispatch</span><span class="p">,</span>
     <span class="n">TensorDictModule</span><span class="p">,</span>
@@ -390,6 +391,7 @@
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Categorical</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">CompositeSpec</span><span class="p">,</span> <span class="n">TensorSpec</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">_process_action_space_spec</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.models.models</span> <span class="kn">import</span> <span class="n">DistributionalDQNnet</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.common</span> <span class="kn">import</span> <span class="n">SafeModule</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.probabilistic</span> <span class="kn">import</span> <span class="p">(</span>
@@ -397,7 +399,6 @@
     <span class="n">SafeProbabilisticTensorDictSequential</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.sequence</span> <span class="kn">import</span> <span class="n">SafeSequential</span>
-<span class="kn">from</span> <span class="nn">torchrl.modules.utils.utils</span> <span class="kn">import</span> <span class="n">_find_action_space</span>
 
 
 <div class="viewcode-block" id="Actor"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.Actor.html#torchrl.modules.Actor">[docs]</a><span class="k">class</span> <span class="nc">Actor</span><span class="p">(</span><span class="n">SafeModule</span><span class="p">):</span>
@@ -553,12 +554,12 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule, make_functional</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data import BoundedTensorSpec</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules import ProbabilisticActor, NormalParamWrapper, TanhNormal</span>
 <span class="sd">        &gt;&gt;&gt; td = TensorDict({&quot;observation&quot;: torch.randn(3, 4)}, [3,])</span>
 <span class="sd">        &gt;&gt;&gt; action_spec = BoundedTensorSpec(shape=torch.Size([4]),</span>
-<span class="sd">        ...    minimum=-1, maximum=1)</span>
+<span class="sd">        ...    low=-1, high=1)</span>
 <span class="sd">        &gt;&gt;&gt; module = NormalParamWrapper(torch.nn.Linear(4, 8))</span>
 <span class="sd">        &gt;&gt;&gt; tensordict_module = TensorDictModule(module, in_keys=[&quot;observation&quot;], out_keys=[&quot;loc&quot;, &quot;scale&quot;])</span>
 <span class="sd">        &gt;&gt;&gt; td_module = ProbabilisticActor(</span>
@@ -567,8 +568,9 @@
 <span class="sd">        ...    in_keys=[&quot;loc&quot;, &quot;scale&quot;],</span>
 <span class="sd">        ...    distribution_class=TanhNormal,</span>
 <span class="sd">        ...    )</span>
-<span class="sd">        &gt;&gt;&gt; params = make_functional(td_module)</span>
-<span class="sd">        &gt;&gt;&gt; td = td_module(td, params=params)</span>
+<span class="sd">        &gt;&gt;&gt; params = TensorDict.from_module(td_module)</span>
+<span class="sd">        &gt;&gt;&gt; with params.to_module(td_module):</span>
+<span class="sd">        ...     td = td_module(td)</span>
 <span class="sd">        &gt;&gt;&gt; td</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
@@ -577,6 +579,62 @@
 <span class="sd">                observation: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="sd">                scale: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
 <span class="sd">            batch_size=torch.Size([3]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+
+<span class="sd">    Probabilistic actors also support compound actions through the</span>
+<span class="sd">    :class:`tensordict.nn.CompositeDistribution` class. This distribution takes</span>
+<span class="sd">    a tensordict as input (typically `&quot;params&quot;`) and reads it as a whole: the</span>
+<span class="sd">    content of this tensordict is the input to the distributions contained in the</span>
+<span class="sd">    compound one.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import CompositeDistribution, TensorDictModule</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules import ProbabilisticActor</span>
+<span class="sd">        &gt;&gt;&gt; from torch import nn, distributions as d</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; class Module(nn.Module):</span>
+<span class="sd">        ...     def forward(self, x):</span>
+<span class="sd">        ...         return x[..., :3], x[..., 3:6], x[..., 6:]</span>
+<span class="sd">        &gt;&gt;&gt; module = TensorDictModule(Module(),</span>
+<span class="sd">        ...                           in_keys=[&quot;x&quot;],</span>
+<span class="sd">        ...                           out_keys=[(&quot;params&quot;, &quot;normal&quot;, &quot;loc&quot;),</span>
+<span class="sd">        ...                              (&quot;params&quot;, &quot;normal&quot;, &quot;scale&quot;),</span>
+<span class="sd">        ...                              (&quot;params&quot;, &quot;categ&quot;, &quot;logits&quot;)])</span>
+<span class="sd">        &gt;&gt;&gt; actor = ProbabilisticActor(module,</span>
+<span class="sd">        ...                            in_keys=[&quot;params&quot;],</span>
+<span class="sd">        ...                            distribution_class=CompositeDistribution,</span>
+<span class="sd">        ...                            distribution_kwargs={&quot;distribution_map&quot;: {</span>
+<span class="sd">        ...                                 &quot;normal&quot;: d.Normal, &quot;categ&quot;: d.Categorical}}</span>
+<span class="sd">        ...                           )</span>
+<span class="sd">        &gt;&gt;&gt; data = TensorDict({&quot;x&quot;: torch.rand(10)}, [])</span>
+<span class="sd">        &gt;&gt;&gt; actor(data)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                categ: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                normal: Tensor(shape=torch.Size([3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                params: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        categ: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                logits: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=None,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        normal: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                loc: Tensor(shape=torch.Size([3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                scale: Tensor(shape=torch.Size([3]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=None,</span>
+<span class="sd">                            is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                x: Tensor(shape=torch.Size([10]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
 <span class="sd">            device=None,</span>
 <span class="sd">            is_shared=False)</span>
 
@@ -633,7 +691,6 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict.nn import make_functional</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data import UnboundedContinuousTensorSpec</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules import ValueOperator</span>
@@ -648,8 +705,9 @@
 <span class="sd">        &gt;&gt;&gt; td_module = ValueOperator(</span>
 <span class="sd">        ...    in_keys=[&quot;observation&quot;, &quot;action&quot;], module=module</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; params = make_functional(td_module)</span>
-<span class="sd">        &gt;&gt;&gt; td = td_module(td, params=params)</span>
+<span class="sd">        &gt;&gt;&gt; params = TensorDict.from_module(td_module)</span>
+<span class="sd">        &gt;&gt;&gt; with params.to_module(td_module):</span>
+<span class="sd">        ...     td = td_module(td)</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
@@ -669,7 +727,6 @@
         <span class="n">in_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
         <span class="k">if</span> <span class="n">in_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">in_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">out_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -698,6 +755,8 @@
 <span class="sd">            conditions the action_space.</span>
 <span class="sd">        action_value_key (str or tuple of str, optional): The input key</span>
 <span class="sd">            representing the action value. Defaults to ``&quot;action_value&quot;``.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 <span class="sd">        out_keys (list of str or tuple of str, optional): The output keys</span>
 <span class="sd">            representing the actions, action values and chosen action value.</span>
 <span class="sd">            Defaults to ``[&quot;action&quot;, &quot;action_value&quot;, &quot;chosen_action_value&quot;]``.</span>
@@ -749,6 +808,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">action_space</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">action_value_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">var_nums</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorSpec</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -778,7 +838,11 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">action_value_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">action_value_key</span> <span class="o">=</span> <span class="s2">&quot;action_value&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">action_value_key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span> <span class="o">=</span> <span class="n">action_mask_key</span>
+        <span class="n">in_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">action_value_key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">in_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span> <span class="o">=</span> <span class="n">in_keys</span>
         <span class="k">if</span> <span class="n">out_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="n">action_value_key</span><span class="p">,</span> <span class="s2">&quot;chosen_action_value&quot;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">action_value_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out_keys</span><span class="p">:</span>
@@ -816,6 +880,15 @@
         <span class="k">if</span> <span class="n">action_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Action value key </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_value_key</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">tensordict</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">action_mask</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">action_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Action mask key </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">tensordict</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">action_values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">action_mask</span><span class="p">,</span> <span class="n">action_values</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">action_values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>
             <span class="p">)</span>
 
         <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_func_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">](</span><span class="n">action_values</span><span class="p">)</span>
@@ -899,6 +972,8 @@
 <span class="sd">        support (torch.Tensor): support of the action values.</span>
 <span class="sd">        action_value_key (str or tuple of str, optional): The input key</span>
 <span class="sd">            representing the action value. Defaults to ``&quot;action_value&quot;``.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 <span class="sd">        out_keys (list of str or tuple of str, optional): The output keys</span>
 <span class="sd">            representing the actions and action values.</span>
 <span class="sd">            Defaults to ``[&quot;action&quot;, &quot;action_value&quot;]``.</span>
@@ -954,6 +1029,7 @@
         <span class="n">action_space</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">support</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">action_value_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">var_nums</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">spec</span><span class="p">:</span> <span class="n">TensorSpec</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -966,6 +1042,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
             <span class="n">action_value_key</span><span class="o">=</span><span class="n">action_value_key</span><span class="p">,</span>
+            <span class="n">action_mask_key</span><span class="o">=</span><span class="n">action_mask_key</span><span class="p">,</span>
             <span class="n">out_keys</span><span class="o">=</span><span class="n">out_keys</span><span class="p">,</span>
             <span class="n">var_nums</span><span class="o">=</span><span class="n">var_nums</span><span class="p">,</span>
             <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span>
@@ -979,6 +1056,15 @@
         <span class="k">if</span> <span class="n">action_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Action value key </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_value_key</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">tensordict</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">action_mask</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">action_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Action mask key </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_mask_key</span><span class="si">}</span><span class="s2"> not found in </span><span class="si">{</span><span class="n">tensordict</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">action_values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">action_mask</span><span class="p">,</span> <span class="n">action_values</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">action_values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>
             <span class="p">)</span>
 
         <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_func_mapping</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">](</span><span class="n">action_values</span><span class="p">)</span>
@@ -1052,59 +1138,6 @@
         <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_process_action_space_spec</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-    <span class="n">original_spec</span> <span class="o">=</span> <span class="n">spec</span>
-    <span class="n">composite_spec</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
-        <span class="c1"># this will break whenever our action is more complex than a single tensor</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;action&quot;</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">_key</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># the first key is the action</span>
-                <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">KeyError</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">_key</span><span class="p">]</span>
-            <span class="n">composite_spec</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                <span class="s2">&quot;action could not be found in the spec. Make sure &quot;</span>
-                <span class="s2">&quot;you pass a spec that is either a native action spec or a composite action spec &quot;</span>
-                <span class="s2">&quot;with a leaf &#39;action&#39; entry. Otherwise, simply remove the spec and use the action_space only.&quot;</span>
-            <span class="p">)</span>
-    <span class="k">if</span> <span class="n">action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;action_space cannot be of type CompositeSpec.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="n">action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">spec</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Passing an action_space as a TensorSpec and a spec isn&#39;t allowed, unless they match.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">action_space</span>
-        <span class="n">action_space</span> <span class="o">=</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span>
-        <span class="c1"># check that the spec and action_space match</span>
-        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span> <span class="o">!=</span> <span class="n">action_space</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The action spec and the action space do not match: got action_space=</span><span class="si">{</span><span class="n">action_space</span><span class="si">}</span><span class="s2"> and spec=</span><span class="si">{</span><span class="n">spec</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">action_space</span> <span class="o">=</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;Neither action_space nor spec was defined. The action space cannot be inferred.&quot;</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">composite_spec</span><span class="p">:</span>
-        <span class="n">spec</span> <span class="o">=</span> <span class="n">original_spec</span>
-    <span class="k">return</span> <span class="n">action_space</span><span class="p">,</span> <span class="n">spec</span>
-
-
 <div class="viewcode-block" id="QValueHook"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.QValueHook.html#torchrl.modules.QValueHook">[docs]</a><span class="k">class</span> <span class="nc">QValueHook</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Q-Value hook for Q-value policies.</span>
 
@@ -1122,6 +1155,8 @@
 <span class="sd">        action_value_key (str or tuple of str, optional): to be used when hooked on</span>
 <span class="sd">            a TensorDictModule. The input key representing the action value. Defaults</span>
 <span class="sd">            to ``&quot;action_value&quot;``.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 <span class="sd">        out_keys (list of str or tuple of str, optional): to be used when hooked on</span>
 <span class="sd">            a TensorDictModule. The output keys representing the actions, action values</span>
 <span class="sd">            and chosen action value. Defaults to ``[&quot;action&quot;, &quot;action_value&quot;, &quot;chosen_action_value&quot;]``.</span>
@@ -1129,7 +1164,6 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict.nn.functional_modules import make_functional</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data import OneHotDiscreteTensorSpec</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import QValueHook, Actor</span>
@@ -1157,6 +1191,7 @@
         <span class="n">action_space</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">var_nums</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_value_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
@@ -1171,6 +1206,7 @@
             <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
             <span class="n">var_nums</span><span class="o">=</span><span class="n">var_nums</span><span class="p">,</span>
             <span class="n">action_value_key</span><span class="o">=</span><span class="n">action_value_key</span><span class="p">,</span>
+            <span class="n">action_mask_key</span><span class="o">=</span><span class="n">action_mask_key</span><span class="p">,</span>
             <span class="n">out_keys</span><span class="o">=</span><span class="n">out_keys</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">action_value_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qvalue_model</span><span class="o">.</span><span class="n">in_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1200,6 +1236,11 @@
 <span class="sd">    Args:</span>
 <span class="sd">        action_space (str): Action space. Must be one of</span>
 <span class="sd">            ``&quot;one-hot&quot;``, ``&quot;mult-one-hot&quot;``, ``&quot;binary&quot;`` or ``&quot;categorical&quot;``.</span>
+<span class="sd">        action_value_key (str or tuple of str, optional): to be used when hooked on</span>
+<span class="sd">            a TensorDictModule. The input key representing the action value. Defaults</span>
+<span class="sd">            to ``&quot;action_value&quot;``.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 <span class="sd">        support (torch.Tensor): support of the action values.</span>
 <span class="sd">        var_nums (int, optional): if ``action_space = &quot;mult-one-hot&quot;``, this</span>
 <span class="sd">            value represents the cardinality of each</span>
@@ -1208,7 +1249,6 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict.nn.functional_modules import make_functional</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data import OneHotDiscreteTensorSpec</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import DistributionalQValueHook, Actor</span>
@@ -1223,12 +1263,13 @@
 <span class="sd">        ...         return self.linear(x).view(-1, nbins, 4).log_softmax(-2)</span>
 <span class="sd">        ...</span>
 <span class="sd">        &gt;&gt;&gt; module = CustomDistributionalQval()</span>
-<span class="sd">        &gt;&gt;&gt; params = make_functional(module)</span>
+<span class="sd">        &gt;&gt;&gt; params = TensorDict.from_module(module)</span>
 <span class="sd">        &gt;&gt;&gt; action_spec = OneHotDiscreteTensorSpec(4)</span>
 <span class="sd">        &gt;&gt;&gt; hook = DistributionalQValueHook(&quot;one_hot&quot;, support = torch.arange(nbins))</span>
 <span class="sd">        &gt;&gt;&gt; module.register_forward_hook(hook)</span>
 <span class="sd">        &gt;&gt;&gt; qvalue_actor = Actor(module=module, spec=action_spec, out_keys=[&quot;action&quot;, &quot;action_value&quot;])</span>
-<span class="sd">        &gt;&gt;&gt; qvalue_actor(td, params=params)</span>
+<span class="sd">        &gt;&gt;&gt; with params.to_module(module):</span>
+<span class="sd">        ...     qvalue_actor(td)</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
@@ -1247,6 +1288,7 @@
         <span class="n">support</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">var_nums</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_value_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">out_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
@@ -1261,6 +1303,7 @@
             <span class="n">var_nums</span><span class="o">=</span><span class="n">var_nums</span><span class="p">,</span>
             <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
             <span class="n">action_value_key</span><span class="o">=</span><span class="n">action_value_key</span><span class="p">,</span>
+            <span class="n">action_mask_key</span><span class="o">=</span><span class="n">action_mask_key</span><span class="p">,</span>
             <span class="n">out_keys</span><span class="o">=</span><span class="n">out_keys</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">action_value_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qvalue_model</span><span class="o">.</span><span class="n">in_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1308,6 +1351,8 @@
 <span class="sd">            is a :class:`tensordict.nn.TensorDictModuleBase` instance, it must</span>
 <span class="sd">            match one of its output keys. Otherwise, this string represents</span>
 <span class="sd">            the name of the action-value entry in the output tensordict.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 
 <span class="sd">    .. note::</span>
 <span class="sd">        ``out_keys`` cannot be passed. If the module is a :class:`tensordict.nn.TensorDictModule`</span>
@@ -1318,7 +1363,6 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict.nn.functional_modules import make_functional</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data import OneHotDiscreteTensorSpec</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import QValueActor</span>
@@ -1366,6 +1410,7 @@
         <span class="n">safe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">action_space</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_value_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -1411,6 +1456,7 @@
             <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span>
             <span class="n">safe</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
             <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
+            <span class="n">action_mask_key</span><span class="o">=</span><span class="n">action_mask_key</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">qvalue</span><span class="p">)</span></div>
@@ -1459,6 +1505,12 @@
 <span class="sd">        make_log_softmax (bool, optional): if ``True`` and if the module is not</span>
 <span class="sd">            of type :class:`torchrl.modules.DistributionalDQNnet`, a log-softmax</span>
 <span class="sd">            operation will be applied along dimension -2 of the action value tensor.</span>
+<span class="sd">        action_value_key (str or tuple of str, optional): if the input module</span>
+<span class="sd">            is a :class:`tensordict.nn.TensorDictModuleBase` instance, it must</span>
+<span class="sd">            match one of its output keys. Otherwise, this string represents</span>
+<span class="sd">            the name of the action-value entry in the output tensordict.</span>
+<span class="sd">        action_mask_key (str or tuple of str, optional): The input key</span>
+<span class="sd">            representing the action mask. Defaults to ``&quot;None&quot;`` (equivalent to no masking).</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -1503,6 +1555,7 @@
         <span class="n">var_nums</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_space</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_value_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;action_value&quot;</span><span class="p">,</span>
+        <span class="n">action_mask_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">make_log_softmax</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
@@ -1545,6 +1598,7 @@
             <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span>
             <span class="n">safe</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
             <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
+            <span class="n">action_mask_key</span><span class="o">=</span><span class="n">action_mask_key</span><span class="p">,</span>
             <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">,</span>
             <span class="n">var_nums</span><span class="o">=</span><span class="n">var_nums</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1988,6 +2042,224 @@
     <span class="n">get_value_head</span> <span class="o">=</span> <span class="n">get_value_operator</span></div>
 
 
+<div class="viewcode-block" id="DecisionTransformerInferenceWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper.html#torchrl.modules.DecisionTransformerInferenceWrapper">[docs]</a><span class="k">class</span> <span class="nc">DecisionTransformerInferenceWrapper</span><span class="p">(</span><span class="n">TensorDictModuleWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inference Action Wrapper for the Decision Transformer.</span>
+
+<span class="sd">    A wrapper specifically designed for the Decision Transformer, which will mask the</span>
+<span class="sd">    input tensordict sequences to the inferece context.</span>
+<span class="sd">    The output will be a TensorDict with the same keys as the input, but with only the last</span>
+<span class="sd">    action of the predicted action sequence and the last return to go.</span>
+
+<span class="sd">    This module creates returns a modified copy of the tensordict, ie. it does</span>
+<span class="sd">    **not** modify the tensordict in-place.</span>
+
+<span class="sd">    .. note:: If the action, observation or reward-to-go key is not standard,</span>
+<span class="sd">        the method :meth:`~.set_tensor_keys` should be used, e.g.</span>
+
+<span class="sd">            &gt;&gt;&gt; dt_inference_wrapper.set_tensor_keys(action=&quot;foo&quot;, observation=&quot;bar&quot;, return_to_go=&quot;baz&quot;)</span>
+
+<span class="sd">    The in_keys are the observation, action and return-to-go keys. The out-keys</span>
+<span class="sd">    match the in-keys, with the addition of any other out-key from the policy</span>
+<span class="sd">    (eg., parameters of the distribution or hidden values).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        policy (TensorDictModule): The policy module that takes in</span>
+<span class="sd">            observations and produces an action value</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        inference_context (int): The number of previous actions that will not be masked in the context.</span>
+<span class="sd">            For example for an observation input of shape [batch_size, context, obs_dim] with context=20 and inference_context=5, the first 15 entries</span>
+<span class="sd">            of the context will be masked. Defaults to 5.</span>
+<span class="sd">        spec (Optional[TensorSpec]): The spec of the input TensorDict. If None, it will be inferred from the policy module.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules import (</span>
+<span class="sd">        ...      ProbabilisticActor,</span>
+<span class="sd">        ...      TanhDelta,</span>
+<span class="sd">        ...      DTActor,</span>
+<span class="sd">        ...      DecisionTransformerInferenceWrapper,</span>
+<span class="sd">        ...  )</span>
+<span class="sd">        &gt;&gt;&gt; dtactor = DTActor(state_dim=4, action_dim=2,</span>
+<span class="sd">        ...             transformer_config=DTActor.default_config()</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; actor_module = TensorDictModule(</span>
+<span class="sd">        ...         dtactor,</span>
+<span class="sd">        ...         in_keys=[&quot;observation&quot;, &quot;action&quot;, &quot;return_to_go&quot;],</span>
+<span class="sd">        ...         out_keys=[&quot;param&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; dist_class = TanhDelta</span>
+<span class="sd">        &gt;&gt;&gt; dist_kwargs = {</span>
+<span class="sd">        ...     &quot;min&quot;: -1.0,</span>
+<span class="sd">        ...     &quot;max&quot;: 1.0,</span>
+<span class="sd">        ... }</span>
+<span class="sd">        &gt;&gt;&gt; actor = ProbabilisticActor(</span>
+<span class="sd">        ...     in_keys=[&quot;param&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;action&quot;],</span>
+<span class="sd">        ...     module=actor_module,</span>
+<span class="sd">        ...     distribution_class=dist_class,</span>
+<span class="sd">        ...     distribution_kwargs=dist_kwargs)</span>
+<span class="sd">        &gt;&gt;&gt; inference_actor = DecisionTransformerInferenceWrapper(actor)</span>
+<span class="sd">        &gt;&gt;&gt; sequence_length = 20</span>
+<span class="sd">        &gt;&gt;&gt; td = TensorDict({&quot;observation&quot;: torch.randn(1, sequence_length, 4),</span>
+<span class="sd">        ...                 &quot;action&quot;: torch.randn(1, sequence_length, 2),</span>
+<span class="sd">        ...                 &quot;return_to_go&quot;: torch.randn(1, sequence_length, 1)}, [1,])</span>
+<span class="sd">        &gt;&gt;&gt; result = inference_actor(td)</span>
+<span class="sd">        &gt;&gt;&gt; print(result)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([1, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                observation: Tensor(shape=torch.Size([1, 20, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                param: Tensor(shape=torch.Size([1, 20, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                return_to_go: Tensor(shape=torch.Size([1, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([1]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">policy</span><span class="p">:</span> <span class="n">TensorDictModule</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">inference_context</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorSpec</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span> <span class="o">=</span> <span class="s2">&quot;observation&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_action_key</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span> <span class="o">=</span> <span class="s2">&quot;return_to_go&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inference_context</span> <span class="o">=</span> <span class="n">inference_context</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_keys</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">:</span> <span class="n">spec</span><span class="p">},</span> <span class="n">shape</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="p">,</span> <span class="s2">&quot;_spec&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="p">,</span> <span class="s2">&quot;spec&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">policy</span><span class="o">.</span><span class="n">out_keys</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checked</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">in_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">out_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">out_keys</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">}</span>
+            <span class="p">),</span>
+            <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="DecisionTransformerInferenceWrapper.set_tensor_keys"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper.html#torchrl.modules.DecisionTransformerInferenceWrapper.set_tensor_keys">[docs]</a>    <span class="k">def</span> <span class="nf">set_tensor_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the input keys of the module.</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            observation (NestedKey, optional): The observation key.</span>
+<span class="sd">            action (NestedKey, optional): The action key (input to the network).</span>
+<span class="sd">            return_to_go (NestedKey, optional): The return_to_go key.</span>
+<span class="sd">            out_action (NestedKey, optional): The action key (output of the network).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observation_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;observation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">))</span>
+        <span class="n">action_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">))</span>
+        <span class="n">out_action_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;out_action&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_action_key</span><span class="p">))</span>
+        <span class="n">return_to_go_key</span> <span class="o">=</span> <span class="n">unravel_key</span><span class="p">(</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;return_to_go&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Got unknown input(s) </span><span class="si">{</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">. Accepted keys are &#39;action&#39;, &#39;return_to_go&#39; and &#39;observation&#39;.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span> <span class="o">=</span> <span class="n">observation_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_key</span> <span class="o">=</span> <span class="n">action_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span> <span class="o">=</span> <span class="n">return_to_go_key</span>
+        <span class="k">if</span> <span class="n">out_action_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">out_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The value of out_action_key (</span><span class="si">{</span><span class="n">out_action_key</span><span class="si">}</span><span class="s2">) must be &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;within the actor output keys (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">out_keys</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_action_key</span> <span class="o">=</span> <span class="n">out_action_key</span></div>
+
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_tensor_dims</span><span class="p">(</span><span class="n">reward</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">reward</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">obs</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">action</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Mismatched tensor dimensions. This is not supported yet, file an issue on torchrl&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="DecisionTransformerInferenceWrapper.mask_context"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper.html#torchrl.modules.DecisionTransformerInferenceWrapper.mask_context">[docs]</a>    <span class="k">def</span> <span class="nf">mask_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mask the context of the input sequences.&quot;&quot;&quot;</span>
+        <span class="n">observation</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">return_to_go</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_tensor_dims</span><span class="p">(</span><span class="n">return_to_go</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+        <span class="n">observation</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_context</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">action</span><span class="p">[</span>
+            <span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_context</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">:</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># as we add zeros to the end of the action</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">action</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:],</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">action</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">device</span>
+                <span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">return_to_go</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">inference_context</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_key</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">,</span> <span class="n">return_to_go</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span></div>
+
+    <span class="k">def</span> <span class="nf">check_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># an exception will be raised if the action key mismatch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_tensor_keys</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checked</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="DecisionTransformerInferenceWrapper.forward"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper.html#torchrl.modules.DecisionTransformerInferenceWrapper.forward">[docs]</a>    <span class="nd">@dispatch</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_keys</span><span class="p">()</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the inference wrapper.&quot;&quot;&quot;</span>
+        <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">)</span>
+        <span class="c1"># Mask the context of the input sequences</span>
+        <span class="n">tensordict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_context</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="c1"># forward pass</span>
+        <span class="n">tensordict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">td_module</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="c1"># get last action prediction</span>
+        <span class="n">out_action</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_action_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">out_action</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># then time dimension is in the TD&#39;s dimensions, and we must get rid of it</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">batch_size</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">out_action</span> <span class="o">=</span> <span class="n">out_action</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_action_key</span><span class="p">,</span> <span class="n">out_action</span><span class="p">)</span>
+
+        <span class="n">out_rtg</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">)</span>
+        <span class="n">out_rtg</span> <span class="o">=</span> <span class="n">out_rtg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">return_to_go_key</span><span class="p">,</span> <span class="n">out_rtg</span><span class="p">)</span>
+
+        <span class="c1"># set unmasked observation</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_key</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span></div></div>
+
+
 <div class="viewcode-block" id="TanhModule"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.TanhModule.html#torchrl.modules.TanhModule">[docs]</a><span class="k">class</span> <span class="nc">TanhModule</span><span class="p">(</span><span class="n">TensorDictModuleBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A Tanh module for deterministic policies with bounded action space.</span>
 
@@ -2116,22 +2388,22 @@
         <span class="k">if</span> <span class="n">low</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">leaf_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">low</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(())</span>
         <span class="k">elif</span> <span class="n">low</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">low</span> <span class="o">=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span>
+            <span class="n">low</span> <span class="o">=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span>
         <span class="k">elif</span> <span class="n">leaf_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">low</span> <span class="o">!=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">low</span> <span class="o">!=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The minimum value (</span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">) provided to </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not match the action spec one (</span><span class="si">{</span><span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span><span class="si">}</span><span class="s2">).&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The minimum value (</span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">) provided to </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not match the action spec one (</span><span class="si">{</span><span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span><span class="si">}</span><span class="s2">).&quot;</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">low</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">low</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">high</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">leaf_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">high</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(())</span>
         <span class="k">elif</span> <span class="n">high</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">high</span> <span class="o">=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span>
+            <span class="n">high</span> <span class="o">=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span>
         <span class="k">elif</span> <span class="n">leaf_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">high</span> <span class="o">!=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">high</span> <span class="o">!=</span> <span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The maximum value (</span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">) provided to </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not match the action spec one (</span><span class="si">{</span><span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span><span class="si">}</span><span class="s2">).&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The maximum value (</span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">) provided to </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not match the action spec one (</span><span class="si">{</span><span class="n">leaf_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span><span class="si">}</span><span class="s2">).&quot;</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">high</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">high</span><span class="p">)</span>
@@ -2198,7 +2470,7 @@
             <span class="n">value_head</span><span class="p">,</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;state_value&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">actor_head</span><span class="p">,</span> <span class="n">value_head</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">actor_head</span><span class="p">,</span> <span class="n">value_head</span><span class="p">)</span></div>
 </pre></div>
 
              </article>
@@ -2252,6 +2524,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -2394,7 +2667,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

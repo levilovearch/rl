@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,12 +373,16 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">import</span> <span class="nn">importlib.util</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_classproperty</span>
+
+<span class="n">_has_jumanji</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;jumanji&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoundedTensorSpec</span><span class="p">,</span>
@@ -390,31 +395,23 @@
     <span class="n">UnboundedDiscreteTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">numpy_to_torch_dtype_dict</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">GymLikeEnv</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.gym_like</span> <span class="kn">import</span> <span class="n">GymLikeEnv</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">jax</span>
-    <span class="kn">import</span> <span class="nn">jumanji</span>
-    <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">jnp</span>
-    <span class="kn">from</span> <span class="nn">torchrl.envs.libs.jax_utils</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">_extract_spec</span><span class="p">,</span>
-        <span class="n">_ndarray_to_tensor</span><span class="p">,</span>
-        <span class="n">_object_to_tensordict</span><span class="p">,</span>
-        <span class="n">_tensordict_to_object</span><span class="p">,</span>
-        <span class="n">_tree_flatten</span><span class="p">,</span>
-        <span class="n">_tree_reshape</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">_has_jumanji</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-    <span class="n">_has_jumanji</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.libs.jax_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_extract_spec</span><span class="p">,</span>
+    <span class="n">_ndarray_to_tensor</span><span class="p">,</span>
+    <span class="n">_object_to_tensordict</span><span class="p">,</span>
+    <span class="n">_tensordict_to_object</span><span class="p">,</span>
+    <span class="n">_tree_flatten</span><span class="p">,</span>
+    <span class="n">_tree_reshape</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_get_envs</span><span class="p">():</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_jumanji</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Jumanji is not installed in your virtual environment.&quot;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">jumanji</span>
+
     <span class="k">return</span> <span class="n">jumanji</span><span class="o">.</span><span class="n">registered_environments</span><span class="p">()</span>
 
 
@@ -424,6 +421,8 @@
     <span class="n">device</span><span class="p">:</span> <span class="n">DEVICE_TYPING</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">categorical_action_encoding</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">jumanji</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">jumanji</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">DiscreteArray</span><span class="p">):</span>
         <span class="n">action_space_cls</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">DiscreteTensorSpec</span>
@@ -439,8 +438,8 @@
             <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_to_torch_dtype_dict</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">BoundedTensorSpec</span><span class="p">(</span>
             <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
-            <span class="n">minimum</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">minimum</span><span class="p">),</span>
-            <span class="n">maximum</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">maximum</span><span class="p">),</span>
+            <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">minimum</span><span class="p">),</span>
+            <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">maximum</span><span class="p">),</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
@@ -470,50 +469,222 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported spec type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="JumanjiWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.jumanji.JumanjiWrapper.html#torchrl.envs.libs.jumanji.JumanjiWrapper">[docs]</a><span class="k">class</span> <span class="nc">JumanjiWrapper</span><span class="p">(</span><span class="n">GymLikeEnv</span><span class="p">):</span>
+<div class="viewcode-block" id="JumanjiWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.JumanjiWrapper.html#torchrl.envs.JumanjiWrapper">[docs]</a><span class="k">class</span> <span class="nc">JumanjiWrapper</span><span class="p">(</span><span class="n">GymLikeEnv</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Jumanji environment wrapper.</span>
 
+<span class="sd">    Jumanji offers a vectorized simulation framework based on Jax.</span>
+<span class="sd">    TorchRL&#39;s wrapper incurs some overhead for the jax-to-torch conversion,</span>
+<span class="sd">    but computational graphs can still be built on top of the simulated trajectories,</span>
+<span class="sd">    allowing for backpropagation through the rollout.</span>
+
+<span class="sd">    GitHub: https://github.com/instadeepai/jumanji</span>
+
+<span class="sd">    Doc: https://instadeepai.github.io/jumanji/</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2306.09884</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env (jumanji.env.Environment): the env to wrap.</span>
+<span class="sd">        categorical_action_encoding (bool, optional): if ``True``, categorical</span>
+<span class="sd">            specs will be converted to the TorchRL equivalent (:class:`torchrl.data.DiscreteTensorSpec`),</span>
+<span class="sd">            otherwise a one-hot encoding will be used (:class:`torchrl.data.OneHotTensorSpec`).</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): Not yet supported.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            With ``jumanji``, this indicates the number of vectorized environments.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs: environments availalbe to build</span>
+
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; env = jumanji.make(&quot;Snake-6x6-v0&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; env = JumanjiWrapper(env)</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import jumanji</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import JumanjiWrapper</span>
+<span class="sd">        &gt;&gt;&gt; base_env = jumanji.make(&quot;Snake-v1&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env = JumanjiWrapper(base_env)</span>
 <span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
 <span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
 <span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
 <span class="sd">        &gt;&gt;&gt; td = env.step(td)</span>
-<span class="sd">        &gt;&gt;&gt; print(td1)</span>
+<span class="sd">        &gt;&gt;&gt; print(td)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
-<span class="sd">                action: Tensor(torch.Size([1]), dtype=torch.int32),</span>
-<span class="sd">                done: Tensor(torch.Size([1]), dtype=torch.bool),</span>
+<span class="sd">                action: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                grid: Tensor(shape=torch.Size([12, 12, 5]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="sd">                next: TensorDict(</span>
 <span class="sd">                    fields={</span>
-<span class="sd">                        observation: Tensor(torch.Size([6, 6, 5]), dtype=torch.float32)},</span>
+<span class="sd">                        action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        grid: Tensor(shape=torch.Size([12, 12, 5]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        state: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                                body: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                                body_state: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                fruit_position: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                        row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                head_position: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                        row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                key: Tensor(shape=torch.Size([2]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                length: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                tail: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">                    batch_size=torch.Size([]),</span>
 <span class="sd">                    device=cpu,</span>
 <span class="sd">                    is_shared=False),</span>
-<span class="sd">                observation: Tensor(torch.Size([6, 6, 5]), dtype=torch.float32),</span>
-<span class="sd">                reward: Tensor(torch.Size([1]), dtype=torch.float32),</span>
-<span class="sd">                state: TensorDict(...)},</span>
+<span class="sd">                state: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        body: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        body_state: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        fruit_position: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        head_position: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        key: Tensor(shape=torch.Size([2]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        length: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        tail: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">            batch_size=torch.Size([]),</span>
 <span class="sd">            device=cpu,</span>
 <span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
-<span class="sd">        [&#39;Snake-6x6-v0&#39;, &#39;Snake-12x12-v0&#39;, &#39;TSP50-v0&#39;, &#39;TSP100-v0&#39;, ...]</span>
+<span class="sd">        [&#39;Game2048-v1&#39;,</span>
+<span class="sd">         &#39;Maze-v0&#39;,</span>
+<span class="sd">         &#39;Cleaner-v0&#39;,</span>
+<span class="sd">         &#39;CVRP-v1&#39;,</span>
+<span class="sd">         &#39;MultiCVRP-v0&#39;,</span>
+<span class="sd">         &#39;Minesweeper-v0&#39;,</span>
+<span class="sd">         &#39;RubiksCube-v0&#39;,</span>
+<span class="sd">         &#39;Knapsack-v1&#39;,</span>
+<span class="sd">         &#39;Sudoku-v0&#39;,</span>
+<span class="sd">         &#39;Snake-v1&#39;,</span>
+<span class="sd">         &#39;TSP-v1&#39;,</span>
+<span class="sd">         &#39;Connector-v2&#39;,</span>
+<span class="sd">         &#39;MMST-v0&#39;,</span>
+<span class="sd">         &#39;GraphColoring-v0&#39;,</span>
+<span class="sd">         &#39;RubiksCube-partly-scrambled-v0&#39;,</span>
+<span class="sd">         &#39;RobotWarehouse-v0&#39;,</span>
+<span class="sd">         &#39;Tetris-v0&#39;,</span>
+<span class="sd">         &#39;BinPack-v2&#39;,</span>
+<span class="sd">         &#39;Sudoku-very-easy-v0&#39;,</span>
+<span class="sd">         &#39;JobShop-v0&#39;]</span>
+
+<span class="sd">    To take advante of Jumanji, one usually executes multiple environments at the</span>
+<span class="sd">    same time.</span>
+
+<span class="sd">        &gt;&gt;&gt; import jumanji</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import JumanjiWrapper</span>
+<span class="sd">        &gt;&gt;&gt; base_env = jumanji.make(&quot;Snake-v1&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env = JumanjiWrapper(base_env, batch_size=[10])</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
+<span class="sd">        &gt;&gt;&gt; td = env.step(td)</span>
+
+<span class="sd">    In the following example, we iteratively test different batch sizes</span>
+<span class="sd">    and report the execution time for a short rollout:</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torch.utils.benchmark import Timer</span>
+<span class="sd">        &gt;&gt;&gt; for batch_size in [4, 16, 128]:</span>
+<span class="sd">        ...     timer = Timer(</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ... env.rollout(100)</span>
+<span class="sd">        ... &#39;&#39;&#39;,</span>
+<span class="sd">        ... setup=f&#39;&#39;&#39;</span>
+<span class="sd">        ... from torchrl.envs import JumanjiWrapper</span>
+<span class="sd">        ... import jumanji</span>
+<span class="sd">        ... env = JumanjiWrapper(jumanji.make(&#39;Snake-v1&#39;), batch_size=[{batch_size}])</span>
+<span class="sd">        ... env.set_seed(0)</span>
+<span class="sd">        ... env.rollout(2)</span>
+<span class="sd">        ... &#39;&#39;&#39;)</span>
+<span class="sd">        ...     print(batch_size, timer.timeit(number=10))</span>
+<span class="sd">        4</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        Median: 122.40 ms</span>
+<span class="sd">        2 measurements, 1 runs per measurement, 1 thread</span>
+
+<span class="sd">        16</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        Median: 134.39 ms</span>
+<span class="sd">        2 measurements, 1 runs per measurement, 1 thread</span>
+
+<span class="sd">        128</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        Median: 172.31 ms</span>
+<span class="sd">        2 measurements, 1 runs per measurement, 1 thread</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">git_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/instadeepai/jumanji&quot;</span>
-    <span class="n">available_envs</span> <span class="o">=</span> <span class="n">_get_envs</span><span class="p">()</span>
     <span class="n">libname</span> <span class="o">=</span> <span class="s2">&quot;jumanji&quot;</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">available_envs</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_jumanji</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_get_envs</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">jumanji</span>
+
         <span class="k">return</span> <span class="n">jumanji</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;jumanji.env.Environment&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;jumanji.env.Environment&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># noqa: F821</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_jumanji</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="s2">&quot;jumanji is not installed or importing it failed. Consider checking your installation.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">IMPORT_ERR</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -536,6 +707,9 @@
         <span class="k">return</span> <span class="n">env</span>
 
     <span class="k">def</span> <span class="nf">_make_state_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
+        <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">jnp</span>
+
         <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="o">.</span><span class="n">numel</span><span class="p">())</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">)(</span><span class="n">jnp</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
@@ -543,6 +717,8 @@
         <span class="k">return</span> <span class="n">state</span>
 
     <span class="k">def</span> <span class="nf">_make_state_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
+
         <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="n">state_dict</span> <span class="o">=</span> <span class="n">_object_to_tensordict</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">())</span>
@@ -557,6 +733,8 @@
         <span class="k">return</span> <span class="n">action_spec</span>
 
     <span class="k">def</span> <span class="nf">_make_observation_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
+        <span class="n">jumanji</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
+
         <span class="n">spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">()</span>
         <span class="n">new_spec</span> <span class="o">=</span> <span class="n">_jumanji_to_torchrl_spec_transform</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">jumanji</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
@@ -592,6 +770,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_state_example</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_state_example</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="n">jumanji</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
         <span class="k">if</span> <span class="s2">&quot;env&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Could not find environment key &#39;env&#39; in kwargs.&quot;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span>
@@ -601,7 +780,22 @@
     <span class="k">def</span> <span class="nf">_init_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_key&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;the env.key attribute wasn&#39;t found. Make sure to call `env.set_seed(seed)` before any interaction.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span>
+
+    <span class="nd">@key</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">value</span>
+
     <span class="k">def</span> <span class="nf">_set_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
+
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Jumanji requires an integer seed.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -611,6 +805,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_spec</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">state_dict</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">read_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">jnp</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
             <span class="n">obs_dict</span> <span class="o">=</span> <span class="n">_ndarray_to_tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -618,11 +814,11 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">obs_dict</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
 
         <span class="c1"># prepare inputs</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">_tensordict_to_object</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_example</span><span class="p">)</span>
         <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_action</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">))</span>
-        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_spec</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
 
         <span class="c1"># flatten batch size into vector</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">_tree_flatten</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
@@ -638,7 +834,7 @@
         <span class="c1"># collect outputs</span>
         <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">obs_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">timestep</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span>
-        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_reward</span><span class="p">(</span><span class="n">reward</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">timestep</span><span class="o">.</span><span class="n">reward</span><span class="p">))</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_reward</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">timestep</span><span class="o">.</span><span class="n">reward</span><span class="p">))</span>
         <span class="n">done</span> <span class="o">=</span> <span class="n">timestep</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">StepType</span><span class="o">.</span><span class="n">LAST</span>
         <span class="n">done</span> <span class="o">=</span> <span class="n">_ndarray_to_tensor</span><span class="p">(</span><span class="n">done</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
@@ -650,13 +846,17 @@
         <span class="p">)</span>
         <span class="n">tensordict_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;reward&quot;</span><span class="p">,</span> <span class="n">reward</span><span class="p">)</span>
         <span class="n">tensordict_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
+        <span class="n">tensordict_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;terminated&quot;</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
+        <span class="c1"># tensordict_out.set(&quot;terminated&quot;, done)</span>
         <span class="n">tensordict_out</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_dict</span>
 
-        <span class="k">return</span> <span class="n">tensordict_out</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">tensordict_out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict_out</span>
 
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorDictBase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
+        <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">jnp</span>
 
         <span class="c1"># generate random keys</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">keys</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -671,7 +871,7 @@
         <span class="c1"># collect outputs</span>
         <span class="n">state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">obs_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">timestep</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span>
-        <span class="n">done</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+        <span class="n">done_td</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_done_spec</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
 
         <span class="c1"># build results</span>
         <span class="n">tensordict_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
@@ -679,20 +879,203 @@
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">tensordict_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
+        <span class="n">tensordict_out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">done_td</span><span class="p">)</span>
         <span class="n">tensordict_out</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_dict</span>
 
-        <span class="k">return</span> <span class="n">tensordict_out</span></div>
+        <span class="k">return</span> <span class="n">tensordict_out</span>
+
+    <span class="k">def</span> <span class="nf">_output_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_outputs_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">_reset_output_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_outputs_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="o">...</span></div>
 
 
-<div class="viewcode-block" id="JumanjiEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.jumanji.JumanjiEnv.html#torchrl.envs.libs.jumanji.JumanjiEnv">[docs]</a><span class="k">class</span> <span class="nc">JumanjiEnv</span><span class="p">(</span><span class="n">JumanjiWrapper</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jumanji environment wrapper.</span>
+<div class="viewcode-block" id="JumanjiEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.JumanjiEnv.html#torchrl.envs.JumanjiEnv">[docs]</a><span class="k">class</span> <span class="nc">JumanjiEnv</span><span class="p">(</span><span class="n">JumanjiWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jumanji environment wrapper built with the environment name.</span>
+
+<span class="sd">    Jumanji offers a vectorized simulation framework based on Jax.</span>
+<span class="sd">    TorchRL&#39;s wrapper incurs some overhead for the jax-to-torch conversion,</span>
+<span class="sd">    but computational graphs can still be built on top of the simulated trajectories,</span>
+<span class="sd">    allowing for backpropagation through the rollout.</span>
+
+<span class="sd">    GitHub: https://github.com/instadeepai/jumanji</span>
+
+<span class="sd">    Doc: https://instadeepai.github.io/jumanji/</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2306.09884</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env_name (str): the name of the environment to wrap. Must be part of :attr:`~.available_envs`.</span>
+<span class="sd">        categorical_action_encoding (bool, optional): if ``True``, categorical</span>
+<span class="sd">            specs will be converted to the TorchRL equivalent (:class:`torchrl.data.DiscreteTensorSpec`),</span>
+<span class="sd">            otherwise a one-hot encoding will be used (:class:`torchrl.data.OneHotTensorSpec`).</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): Not yet supported.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            With ``jumanji``, this indicates the number of vectorized environments.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs: environments availalbe to build</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; env = JumanjiEnv(env_name=&quot;Snake-6x6-v0&quot;, frame_skip=4)</span>
-<span class="sd">        &gt;&gt;&gt; td = env.rand_step()</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import JumanjiEnv</span>
+<span class="sd">        &gt;&gt;&gt; env = JumanjiEnv(&quot;Snake-v1&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
+<span class="sd">        &gt;&gt;&gt; td = env.step(td)</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                grid: Tensor(shape=torch.Size([12, 12, 5]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        grid: Tensor(shape=torch.Size([12, 12, 5]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        state: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                                body: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                                body_state: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                fruit_position: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                        row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                head_position: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                        row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                key: Tensor(shape=torch.Size([2]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                length: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                tail: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                state: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        action_mask: Tensor(shape=torch.Size([4]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        body: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        body_state: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        fruit_position: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        head_position: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                col: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                                row: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        key: Tensor(shape=torch.Size([2]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        length: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                        tail: Tensor(shape=torch.Size([12, 12]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                step_count: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
+<span class="sd">        [&#39;Game2048-v1&#39;,</span>
+<span class="sd">         &#39;Maze-v0&#39;,</span>
+<span class="sd">         &#39;Cleaner-v0&#39;,</span>
+<span class="sd">         &#39;CVRP-v1&#39;,</span>
+<span class="sd">         &#39;MultiCVRP-v0&#39;,</span>
+<span class="sd">         &#39;Minesweeper-v0&#39;,</span>
+<span class="sd">         &#39;RubiksCube-v0&#39;,</span>
+<span class="sd">         &#39;Knapsack-v1&#39;,</span>
+<span class="sd">         &#39;Sudoku-v0&#39;,</span>
+<span class="sd">         &#39;Snake-v1&#39;,</span>
+<span class="sd">         &#39;TSP-v1&#39;,</span>
+<span class="sd">         &#39;Connector-v2&#39;,</span>
+<span class="sd">         &#39;MMST-v0&#39;,</span>
+<span class="sd">         &#39;GraphColoring-v0&#39;,</span>
+<span class="sd">         &#39;RubiksCube-partly-scrambled-v0&#39;,</span>
+<span class="sd">         &#39;RobotWarehouse-v0&#39;,</span>
+<span class="sd">         &#39;Tetris-v0&#39;,</span>
+<span class="sd">         &#39;BinPack-v2&#39;,</span>
+<span class="sd">         &#39;Sudoku-very-easy-v0&#39;,</span>
+<span class="sd">         &#39;JobShop-v0&#39;]</span>
+
+<span class="sd">    To take advante of Jumanji, one usually executes multiple environments at the</span>
+<span class="sd">    same time.</span>
+
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import JumanjiEnv</span>
+<span class="sd">        &gt;&gt;&gt; env = JumanjiEnv(&quot;Snake-v1&quot;, batch_size=[10])</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
+<span class="sd">        &gt;&gt;&gt; td = env.step(td)</span>
+
+<span class="sd">    In the following example, we iteratively test different batch sizes</span>
+<span class="sd">    and report the execution time for a short rollout:</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torch.utils.benchmark import Timer</span>
+<span class="sd">        &gt;&gt;&gt; for batch_size in [4, 16, 128]:</span>
+<span class="sd">        ...     timer = Timer(</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ... env.rollout(100)</span>
+<span class="sd">        ... &#39;&#39;&#39;,</span>
+<span class="sd">        ... setup=f&#39;&#39;&#39;</span>
+<span class="sd">        ... from torchrl.envs import JumanjiEnv</span>
+<span class="sd">        ... env = JumanjiEnv(&#39;Snake-v1&#39;, batch_size=[{batch_size}])</span>
+<span class="sd">        ... env.set_seed(0)</span>
+<span class="sd">        ... env.rollout(2)</span>
+<span class="sd">        ... &#39;&#39;&#39;)</span>
+<span class="sd">        ...     print(batch_size, timer.timeit(number=10))</span>
+<span class="sd">        4 &lt;torch.utils.benchmark.utils.common.Measurement object at 0x1fca91910&gt;</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">          Median: 122.40 ms</span>
+<span class="sd">          2 measurements, 1 runs per measurement, 1 thread</span>
+<span class="sd">        16 &lt;torch.utils.benchmark.utils.common.Measurement object at 0x1ff9baee0&gt;</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">          Median: 134.39 ms</span>
+<span class="sd">          2 measurements, 1 runs per measurement, 1 thread</span>
+<span class="sd">        128 &lt;torch.utils.benchmark.utils.common.Measurement object at 0x1ff9ba7c0&gt;</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">          Median: 172.31 ms</span>
+<span class="sd">          2 measurements, 1 runs per measurement, 1 thread</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -703,13 +1086,13 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;jumanji.env.Environment&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;jumanji.env.Environment&quot;</span><span class="p">:</span>  <span class="c1"># noqa: F821</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_jumanji</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;jumanji not found, unable to create </span><span class="si">{</span><span class="n">env_name</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Consider installing jumanji. More info:&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">git_url</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">IMPORT_ERR</span>
+            <span class="p">)</span>
         <span class="n">from_pixels</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;from_pixels&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">pixels_only</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pixels_only&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -781,6 +1164,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -923,7 +1307,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

@@ -34,12 +34,13 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="TD3Loss" href="torchrl.objectives.TD3Loss.html" />
-    <link rel="prev" title="IQLLoss" href="torchrl.objectives.IQLLoss.html" />
+    <link rel="next" title="DiscreteCQLLoss" href="torchrl.objectives.DiscreteCQLLoss.html" />
+    <link rel="prev" title="DiscreteIQLLoss" href="torchrl.objectives.DiscreteIQLLoss.html" />
   <!-- Google Analytics -->
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117752657-2"></script>
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -381,7 +382,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="torchrl.objectives.CQLLoss">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.objectives.</span></span><span class="sig-name descname"><span class="pre">CQLLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/objectives/cql.html#CQLLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.CQLLoss" title="Permalink to this definition">¶</a></dt>
-<dd><p>TorchRL implementation of the CQL loss.</p>
+<dd><p>TorchRL implementation of the continuous CQL loss.</p>
 <p>Presented in “Conservative Q-Learning for Offline Reinforcement Learning” <a class="reference external" href="https://arxiv.org/abs/2006.04779">https://arxiv.org/abs/2006.04779</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -428,9 +429,6 @@ Default is 10.</p></li>
 <li><p><strong>with_lagrange</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use the Lagrange multiplier.
 Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>lagrange_thresh</strong> (<a class="reference internal" href="torchrl.data.MultiStep.html#torchrl.data.MultiStep.float" title="torchrl.data.MultiStep.float"><em>float</em></a><em>, </em><em>optional</em>) – Lagrange threshold. Default is 0.0.</p></li>
-<li><p><strong>priority_key</strong> (<em>str</em><em>, </em><em>optional</em>) – [Deprecated, use .set_keys(priority_key=priority_key) instead]
-Tensordict key where to write the
-priority (for prioritized replay buffer usage). Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;td_error&quot;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -469,6 +467,7 @@ priority (for prioritized replay buffer usage). Defaults to <code class="docutil
 <span class="gp">... </span>        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">},</span> <span class="n">batch</span><span class="p">)</span>
@@ -489,7 +488,7 @@ priority (for prioritized replay buffer usage). Defaults to <code class="docutil
 <p>This class is compatible with non-tensordict based modules too and can be
 used without recurring to any tensordict-related primitive. In this case,
 the expected keyword arguments are:
-<code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;]</span></code> + in_keys of the actor, value, and qvalue network.
+<code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;,</span> <span class="pre">&quot;next_terminated&quot;]</span></code> + in_keys of the actor, value, and qvalue network.
 The return value is a tuple of tensors in the following order:
 <code class="docutils literal notranslate"><span class="pre">[&quot;loss_actor&quot;,</span> <span class="pre">&quot;loss_qvalue&quot;,</span> <span class="pre">&quot;loss_alpha&quot;,</span> <span class="pre">&quot;loss_alpha_prime&quot;,</span> <span class="pre">&quot;alpha&quot;,</span> <span class="pre">&quot;entropy&quot;]</span></code>.</p>
 <p class="rubric">Examples</p>
@@ -527,6 +526,7 @@ The return value is a tuple of tensors in the following order:
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_done</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">next_terminated</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_reward</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -540,6 +540,7 @@ method.</p>
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_done</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">next_terminated</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_reward</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -547,7 +548,7 @@ method.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.objectives.CQLLoss.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/cql.html#CQLLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.CQLLoss.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/cql.html#CQLLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.CQLLoss.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>It is designed to read an input TensorDict and return another tensordict with loss keys named “loss*”.</p>
 <p>Splitting the loss in its component can then be used by the trainer to log the various loss values throughout
 training. Other scalars present in the output tensordict will be logged too.</p>
@@ -613,10 +614,10 @@ used.</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchrl.objectives.TD3Loss.html" class="btn btn-neutral float-right" title="TD3Loss" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchrl.objectives.DiscreteCQLLoss.html" class="btn btn-neutral float-right" title="DiscreteCQLLoss" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchrl.objectives.IQLLoss.html" class="btn btn-neutral" title="IQLLoss" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchrl.objectives.DiscreteIQLLoss.html" class="btn btn-neutral" title="DiscreteIQLLoss" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -669,6 +670,7 @@ used.</p></li>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -811,7 +813,7 @@ used.</p></li>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

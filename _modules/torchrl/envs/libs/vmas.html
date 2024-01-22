@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -368,59 +369,162 @@
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
   <h1>Source code for torchrl.envs.libs.vmas</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="c1"># Copyright (c) Meta Platforms, Inc. and affiliates.</span>
+<span class="c1">#</span>
+<span class="c1"># This source code is licensed under the MIT license found in the</span>
+<span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">importlib.util</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 
-<span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoundedTensorSpec</span><span class="p">,</span>
     <span class="n">CompositeSpec</span><span class="p">,</span>
     <span class="n">DEVICE_TYPING</span><span class="p">,</span>
     <span class="n">DiscreteTensorSpec</span><span class="p">,</span>
     <span class="n">LazyStackedCompositeSpec</span><span class="p">,</span>
+    <span class="n">MultiDiscreteTensorSpec</span><span class="p">,</span>
+    <span class="n">MultiOneHotDiscreteTensorSpec</span><span class="p">,</span>
+    <span class="n">OneHotDiscreteTensorSpec</span><span class="p">,</span>
+    <span class="n">TensorSpec</span><span class="p">,</span>
     <span class="n">UnboundedContinuousTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">numpy_to_torch_dtype_dict</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_EnvWrapper</span><span class="p">,</span> <span class="n">EnvBase</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.libs.gym</span> <span class="kn">import</span> <span class="n">_gym_to_torchrl_spec_transform</span><span class="p">,</span> <span class="n">set_gym_backend</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_selective_unsqueeze</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.libs.gym</span> <span class="kn">import</span> <span class="n">gym_backend</span><span class="p">,</span> <span class="n">set_gym_backend</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_classproperty</span><span class="p">,</span>
+    <span class="n">_selective_unsqueeze</span><span class="p">,</span>
+    <span class="n">check_marl_grouping</span><span class="p">,</span>
+    <span class="n">MarlGroupMapType</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">vmas</span>
+<span class="n">_has_vmas</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;vmas&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-    <span class="n">_has_vmas</span> <span class="o">=</span> <span class="kc">True</span>
-
-<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-    <span class="n">_has_vmas</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="n">err</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;VmasWrapper&quot;</span><span class="p">,</span> <span class="s2">&quot;VmasEnv&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_get_envs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_get_envs</span><span class="p">():</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_vmas</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;VMAS is not installed in your virtual environment.&quot;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">vmas</span>
+
     <span class="n">all_scenarios</span> <span class="o">=</span> <span class="n">vmas</span><span class="o">.</span><span class="n">scenarios</span> <span class="o">+</span> <span class="n">vmas</span><span class="o">.</span><span class="n">mpe_scenarios</span> <span class="o">+</span> <span class="n">vmas</span><span class="o">.</span><span class="n">debug_scenarios</span>
-    <span class="c1"># TODO heterogenous spaces</span>
-    <span class="c1"># For now torchrl does not support heterogenous spaces (Tple(Box)) so many OpenAI MPE scenarios do not work</span>
-    <span class="n">heterogenous_spaces_scenarios</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;simple_adversary&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simple_crypto&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simple_push&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simple_speaker_listener&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simple_tag&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;simple_world_comm&quot;</span><span class="p">,</span>
-    <span class="p">]</span>
 
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">scenario</span>
-        <span class="k">for</span> <span class="n">scenario</span> <span class="ow">in</span> <span class="n">all_scenarios</span>
-        <span class="k">if</span> <span class="n">scenario</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heterogenous_spaces_scenarios</span>
-    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">all_scenarios</span>
 
 
-<div class="viewcode-block" id="VmasWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.vmas.VmasWrapper.html#torchrl.envs.libs.vmas.VmasWrapper">[docs]</a><span class="k">class</span> <span class="nc">VmasWrapper</span><span class="p">(</span><span class="n">_EnvWrapper</span><span class="p">):</span>
+<span class="nd">@set_gym_backend</span><span class="p">(</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_vmas_to_torchrl_spec_transform</span><span class="p">(</span>
+    <span class="n">spec</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">,</span>
+    <span class="n">categorical_action_encoding</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
+    <span class="n">gym_spaces</span> <span class="o">=</span> <span class="n">gym_backend</span><span class="p">(</span><span class="s2">&quot;spaces&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">gym_spaces</span><span class="o">.</span><span class="n">discrete</span><span class="o">.</span><span class="n">Discrete</span><span class="p">):</span>
+        <span class="n">action_space_cls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">DiscreteTensorSpec</span>
+            <span class="k">if</span> <span class="n">categorical_action_encoding</span>
+            <span class="k">else</span> <span class="n">OneHotDiscreteTensorSpec</span>
+        <span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">numpy_to_torch_dtype_dict</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">categorical_action_encoding</span>
+            <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">action_space_cls</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">gym_spaces</span><span class="o">.</span><span class="n">multi_discrete</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">numpy_to_torch_dtype_dict</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">categorical_action_encoding</span>
+            <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">MultiDiscreteTensorSpec</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">nvec</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">categorical_action_encoding</span>
+            <span class="k">else</span> <span class="n">MultiOneHotDiscreteTensorSpec</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">nvec</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">gym_spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_to_torch_dtype_dict</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">is_unbounded</span> <span class="o">=</span> <span class="n">low</span><span class="o">.</span><span class="n">isinf</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">high</span><span class="o">.</span><span class="n">isinf</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">UnboundedContinuousTensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_unbounded</span>
+            <span class="k">else</span> <span class="n">BoundedTensorSpec</span><span class="p">(</span>
+                <span class="n">low</span><span class="p">,</span>
+                <span class="n">high</span><span class="p">,</span>
+                <span class="n">shape</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;spec of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is currently unaccounted for vmas&quot;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="VmasWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.VmasWrapper.html#torchrl.envs.VmasWrapper">[docs]</a><span class="k">class</span> <span class="nc">VmasWrapper</span><span class="p">(</span><span class="n">_EnvWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Vmas environment wrapper.</span>
+
+<span class="sd">    GitHub: https://github.com/proroklab/VectorizedMultiAgentSimulator</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2207.03530</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env (``vmas.simulator.environment.environment.Environment``): the vmas environment to wrap.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        num_envs (int): Number of vectorized simulation environments. VMAS perfroms vectorized simulations using PyTorch.</span>
+<span class="sd">            This argument indicates the number of vectorized environments that should be simulated in a batch. It will also</span>
+<span class="sd">            determine the batch size of the environment.</span>
+<span class="sd">        device (torch.device, optional): Device for simulation. Defaults to the default device. All the tensors created by VMAS</span>
+<span class="sd">            will be placed on this device.</span>
+<span class="sd">        continuous_actions (bool, optional): Whether to use continuous actions. Defaults to ``True``. If ``False``, actions</span>
+<span class="sd">            will be discrete. The number of actions and their size will depend on the chosen scenario.</span>
+<span class="sd">            See the VMAS repository for more info.</span>
+<span class="sd">        max_steps (int, optional): Horizon of the task. Defaults to ``None`` (infinite horizon). Each VMAS scenario can</span>
+<span class="sd">            be terminating or not. If ``max_steps`` is specified,</span>
+<span class="sd">            the scenario is also terminated (and the ``&quot;terminated&quot;`` flag is set) whenever this horizon is reached.</span>
+<span class="sd">            Unlike gym&#39;s ``TimeLimit`` transform or torchrl&#39;s :class:`~torchrl.envs.transforms.StepCounter`,</span>
+<span class="sd">            this argument will not set the ``&quot;truncated&quot;`` entry in the tensordict.</span>
+<span class="sd">        categorical_actions (bool, optional): if the environment actions are discrete, whether to transform</span>
+<span class="sd">            them to categorical or one-hot. Defaults to ``True``.</span>
+<span class="sd">        group_map (MarlGroupMapType or Dict[str, List[str]], optional): how to group agents in tensordicts for</span>
+<span class="sd">            input/output. By default, if the agent names follow the ``&quot;&lt;name&gt;_&lt;int&gt;&quot;``</span>
+<span class="sd">            convention, they will be grouped by ``&quot;&lt;name&gt;&quot;``. If they do not follow this convention, they will be all put</span>
+<span class="sd">            in one group named ``&quot;agents&quot;``.</span>
+<span class="sd">            Otherwise, a group map can be specified or selected from some premade options.</span>
+<span class="sd">            See :class:`~torchrl.envs.utils.MarlGroupMapType` for more info.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        group_map (Dict[str, List[str]]): how to group agents in tensordicts for</span>
+<span class="sd">            input/output. See :class:`~torchrl.envs.utils.MarlGroupMapType` for more info.</span>
+<span class="sd">        agent_names (list of str): names of the agent in the environment</span>
+<span class="sd">        agent_names_to_indices_map (Dict[str, int]): dictionary mapping agent names to their index in the enviornment</span>
+<span class="sd">        unbatched_action_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        unbatched_observation_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        unbatched_reward_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        het_specs (bool): whether the enviornment has any lazy spec</span>
+<span class="sd">        het_specs_map (Dict[str, bool]): dictionary mapping each group to a flag representing of the group has lazy specs</span>
+<span class="sd">        available_envs (List[str]): the list of the scenarios available to build.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        VMAS returns a single ``done`` flag which does not distinguish between</span>
+<span class="sd">        when the env reached ``max_steps`` and termination.</span>
+<span class="sd">        If you deem the ``truncation`` signal necessary, set ``max_steps`` to</span>
+<span class="sd">        ``None`` and use a :class:`~torchrl.envs.transforms.StepCounter` transform.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt;  env = VmasWrapper(</span>
@@ -438,18 +542,9 @@
 <span class="sd">        &gt;&gt;&gt;  print(env.rollout(10))</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
-<span class="sd">                action: Tensor(shape=torch.Size([32, 10, 5, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                done: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
-<span class="sd">                info: TensorDict(</span>
+<span class="sd">                agents: TensorDict(</span>
 <span class="sd">                    fields={</span>
-<span class="sd">                        agent_collision_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                        agent_distance_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
-<span class="sd">                    batch_size=torch.Size([32, 10, 5]),</span>
-<span class="sd">                    device=cpu,</span>
-<span class="sd">                    is_shared=False),</span>
-<span class="sd">                next: TensorDict(</span>
-<span class="sd">                    fields={</span>
-<span class="sd">                        done: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        action: Tensor(shape=torch.Size([32, 10, 5, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="sd">                        info: TensorDict(</span>
 <span class="sd">                            fields={</span>
 <span class="sd">                                agent_collision_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
@@ -457,40 +552,72 @@
 <span class="sd">                            batch_size=torch.Size([32, 10, 5]),</span>
 <span class="sd">                            device=cpu,</span>
 <span class="sd">                            is_shared=False),</span>
-<span class="sd">                        observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                        reward: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                        observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([32, 10, 5]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        agents: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                info: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        agent_collision_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                        agent_distance_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([32, 10, 5]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                reward: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([32, 10, 5]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">                    batch_size=torch.Size([32, 10]),</span>
 <span class="sd">                    device=cpu,</span>
 <span class="sd">                    is_shared=False),</span>
-<span class="sd">                observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                reward: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">            batch_size=torch.Size([32, 10]),</span>
 <span class="sd">            device=cpu,</span>
 <span class="sd">            is_shared=False)</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">git_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/proroklab/VectorizedMultiAgentSimulator&quot;</span>
     <span class="n">libname</span> <span class="o">=</span> <span class="s2">&quot;vmas&quot;</span>
-    <span class="n">available_envs</span> <span class="o">=</span> <span class="n">_get_envs</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">vmas</span>
+
+        <span class="k">return</span> <span class="n">vmas</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">available_envs</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_vmas</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_get_envs</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># noqa</span>
+        <span class="n">categorical_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">group_map</span><span class="p">:</span> <span class="n">MarlGroupMapType</span> <span class="o">|</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
             <span class="k">if</span> <span class="s2">&quot;device&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">device</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Env device is different from vmas device&quot;</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">vmas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span> <span class="o">=</span> <span class="n">group_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">categorical_actions</span> <span class="o">=</span> <span class="n">categorical_actions</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">allow_done_after_reset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_build_env</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span><span class="p">,</span>
+        <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span><span class="p">,</span>  <span class="c1"># noqa</span>
         <span class="n">from_pixels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">pixels_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -518,26 +645,118 @@
 
         <span class="k">return</span> <span class="n">env</span>
 
-    <span class="nd">@set_gym_backend</span><span class="p">(</span><span class="s2">&quot;gym&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_make_specs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO heterogenous spaces</span>
+    <span class="k">def</span> <span class="nf">_get_default_group_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="c1"># This function performs the default grouping in vmas.</span>
+        <span class="c1"># Agents with names &quot;&lt;name&gt;_&lt;int&gt;&quot; will be grouped in group name &quot;&lt;name&gt;&quot;.</span>
+        <span class="c1"># If any of the agents does not follow the naming convention, we fall back</span>
+        <span class="c1"># back on having all agents in one group named &quot;agents&quot;.</span>
+        <span class="n">group_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">follows_convention</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">agent_name</span> <span class="ow">in</span> <span class="n">agent_names</span><span class="p">:</span>
+            <span class="c1"># See if the agent follows the convention &quot;&lt;name&gt;_&lt;int&gt;&quot;</span>
+            <span class="n">agent_name_split</span> <span class="o">=</span> <span class="n">agent_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">agent_name_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">follows_convention</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">follows_convention</span> <span class="o">=</span> <span class="n">follows_convention</span> <span class="ow">and</span> <span class="n">agent_name_split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
 
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">follows_convention</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="c1"># Group it with other agents that follow the same convention</span>
+            <span class="n">group_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agent_name_split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">group_name</span> <span class="ow">in</span> <span class="n">group_map</span><span class="p">:</span>
+                <span class="n">group_map</span><span class="p">[</span><span class="n">group_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">group_map</span><span class="p">[</span><span class="n">group_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">agent_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">follows_convention</span><span class="p">:</span>
+            <span class="n">group_map</span> <span class="o">=</span> <span class="n">MarlGroupMapType</span><span class="o">.</span><span class="n">ALL_IN_ONE_GROUP</span><span class="o">.</span><span class="n">get_group_map</span><span class="p">(</span><span class="n">agent_names</span><span class="p">)</span>
+
+        <span class="c1"># For BC-compatibility rename the &quot;agent&quot; group to &quot;agents&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;agent&quot;</span> <span class="ow">in</span> <span class="n">group_map</span><span class="p">:</span>
+            <span class="n">agent_group</span> <span class="o">=</span> <span class="n">group_map</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
+            <span class="n">group_map</span><span class="p">[</span><span class="s2">&quot;agents&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_group</span>
+            <span class="k">del</span> <span class="n">group_map</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">group_map</span>
+
+    <span class="k">def</span> <span class="nf">_make_specs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span>  <span class="c1"># noqa</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Create and check group map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent_names_to_indices_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_default_group_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_names</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="p">,</span> <span class="n">MarlGroupMapType</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">get_group_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_names</span><span class="p">)</span>
+        <span class="n">check_marl_grouping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_names</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">het_specs_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="p">(</span>
+                <span class="n">group_observation_spec</span><span class="p">,</span>
+                <span class="n">group_action_spec</span><span class="p">,</span>
+                <span class="n">group_reward_spec</span><span class="p">,</span>
+                <span class="n">group_info_spec</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_unbatched_group_specs</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_action_spec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_observation_spec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_reward_spec</span>
+            <span class="k">if</span> <span class="n">group_info_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="p">[(</span><span class="n">group</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">group_info_spec</span>
+            <span class="n">group_het_specs</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">group_observation_spec</span><span class="p">,</span> <span class="n">LazyStackedCompositeSpec</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_action_spec</span><span class="p">,</span> <span class="n">LazyStackedCompositeSpec</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">het_specs_map</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_het_specs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span> <span class="ow">or</span> <span class="n">group_het_specs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">DiscreteTensorSpec</span><span class="p">(</span>
+                    <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="mi">1</span><span class="p">,)),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_unbatched_group_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="c1"># Agent specs</span>
         <span class="n">action_specs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">observation_specs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">reward_specs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">info_specs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">agent_index</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">agent_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+            <span class="n">agent_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_names_to_indices_map</span><span class="p">[</span><span class="n">agent_name</span><span class="p">]</span>
+            <span class="n">agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">agent_index</span><span class="p">]</span>
             <span class="n">action_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">CompositeSpec</span><span class="p">(</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">_gym_to_torchrl_spec_transform</span><span class="p">(</span>
+                        <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">_vmas_to_torchrl_spec_transform</span><span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="n">agent_index</span><span class="p">],</span>
-                            <span class="n">categorical_action_encoding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">categorical_action_encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">categorical_actions</span><span class="p">,</span>
                             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-                            <span class="n">remap_state_to_observation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="p">)</span>  <span class="c1"># shape = (n_actions_per_agent,)</span>
                     <span class="p">},</span>
                 <span class="p">)</span>
@@ -545,10 +764,10 @@
             <span class="n">observation_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">CompositeSpec</span><span class="p">(</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">_gym_to_torchrl_spec_transform</span><span class="p">(</span>
+                        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">_vmas_to_torchrl_spec_transform</span><span class="p">(</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="n">agent_index</span><span class="p">],</span>
                             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-                            <span class="n">remap_state_to_observation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">categorical_action_encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">categorical_actions</span><span class="p">,</span>
                         <span class="p">)</span>  <span class="c1"># shape = (n_obs_per_agent,)</span>
                     <span class="p">},</span>
                 <span class="p">)</span>
@@ -581,52 +800,27 @@
                 <span class="p">)</span>
 
         <span class="c1"># Create multi-agent specs</span>
-        <span class="n">multi_agent_action_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="n">group_action_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
             <span class="n">action_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>  <span class="c1"># shape = (n_agents, n_actions_per_agent)</span>
-        <span class="n">multi_agent_observation_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="n">group_observation_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
             <span class="n">observation_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>  <span class="c1"># shape = (n_agents, n_obs_per_agent)</span>
-        <span class="n">multi_agent_reward_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-            <span class="n">reward_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
-        <span class="p">)</span>  <span class="c1"># shape = (n_agents, 1)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">multi_agent_observation_spec</span><span class="p">,</span> <span class="n">LazyStackedCompositeSpec</span>
-        <span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multi_agent_action_spec</span><span class="p">,</span> <span class="n">LazyStackedCompositeSpec</span><span class="p">)</span>
-
-        <span class="n">done_spec</span> <span class="o">=</span> <span class="n">DiscreteTensorSpec</span><span class="p">(</span>
-            <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">((</span><span class="mi">1</span><span class="p">,)),</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
-            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-        <span class="p">)</span>  <span class="c1"># shape = (1,)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">({</span><span class="s2">&quot;agents&quot;</span><span class="p">:</span> <span class="n">multi_agent_action_spec</span><span class="p">})</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;agents&quot;</span><span class="p">:</span> <span class="n">multi_agent_observation_spec</span><span class="p">}</span>
-        <span class="p">)</span>
+        <span class="n">group_reward_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">reward_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># shape = (n_agents, 1)</span>
+        <span class="n">group_info_spec</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">info_specs</span><span class="p">):</span>
-            <span class="n">multi_agent_info_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">info_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">multi_agent_info_spec</span>
+            <span class="n">group_info_spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">info_specs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">({</span><span class="s2">&quot;agents&quot;</span><span class="p">:</span> <span class="n">multi_agent_reward_spec</span><span class="p">})</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span> <span class="o">=</span> <span class="n">done_spec</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
-            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="o">.</span><span class="n">shape</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
-            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_observation_spec</span><span class="o">.</span><span class="n">shape</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reward_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
-            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_reward_spec</span><span class="o">.</span><span class="n">shape</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
-            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">unbatched_done_spec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">group_observation_spec</span><span class="p">,</span>
+            <span class="n">group_action_spec</span><span class="p">,</span>
+            <span class="n">group_reward_spec</span><span class="p">,</span>
+            <span class="n">group_info_spec</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="n">vmas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
+
         <span class="k">if</span> <span class="s2">&quot;env&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Could not find environment key &#39;env&#39; in kwargs.&quot;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span>
@@ -664,71 +858,93 @@
         <span class="p">)</span>
         <span class="n">dones</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_done</span><span class="p">(</span><span class="n">dones</span><span class="p">)</span>
 
-        <span class="n">agent_tds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_agents</span><span class="p">):</span>
-            <span class="n">agent_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-            <span class="n">agent_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_info</span><span class="p">(</span><span class="n">infos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="o">.</span><span class="n">clone</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">agent_names</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">agent_tds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">agent_name</span> <span class="ow">in</span> <span class="n">agent_names</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_names_to_indices_map</span><span class="p">[</span><span class="n">agent_name</span><span class="p">]</span>
 
-            <span class="n">agent_td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-                <span class="n">source</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">agent_obs</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">agent_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">agent_td</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="n">agent_info</span><span class="p">)</span>
-            <span class="n">agent_tds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_td</span><span class="p">)</span>
+                <span class="n">agent_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">agent_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_info</span><span class="p">(</span><span class="n">infos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">agent_td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
+                    <span class="n">source</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">agent_obs</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">agent_td</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="n">agent_info</span><span class="p">)</span>
+                <span class="n">agent_tds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_td</span><span class="p">)</span>
 
-        <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">agent_tds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span><span class="p">:</span>
-            <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">agent_tds</span><span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
+            <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">agent_tds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">het_specs_map</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+                <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">agent_tds</span><span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
+            <span class="n">source</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">group</span><span class="p">:</span> <span class="n">agent_tds</span><span class="p">})</span>
+
         <span class="n">tensordict_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-            <span class="n">source</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;agents&quot;</span><span class="p">:</span> <span class="n">agent_tds</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="p">},</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
-
         <span class="k">return</span> <span class="n">tensordict_out</span>
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
-        <span class="n">action</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">))</span>
-        <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_action</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">agent_indices</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">action_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n_agents</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">agent_names</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">group_action</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">group</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">))</span>
+            <span class="n">group_action_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">read_action</span><span class="p">(</span><span class="n">group_action</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">))</span>
+            <span class="n">agent_indices</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">agent_names_to_indices_map</span><span class="p">[</span><span class="n">agent_name</span><span class="p">]:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">n_agents</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">agent_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">agent_names</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">n_agents</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">agent_names</span><span class="p">)</span>
+            <span class="n">action_list</span> <span class="o">+=</span> <span class="n">group_action_list</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="p">[</span><span class="n">action_list</span><span class="p">[</span><span class="n">agent_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_agents</span><span class="p">)]</span>
 
         <span class="n">obs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">dones</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
         <span class="n">dones</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_done</span><span class="p">(</span><span class="n">dones</span><span class="p">)</span>
 
-        <span class="n">agent_tds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_agents</span><span class="p">):</span>
-            <span class="n">agent_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-            <span class="n">agent_rew</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_reward</span><span class="p">(</span><span class="n">rews</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-            <span class="n">agent_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_info</span><span class="p">(</span><span class="n">infos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="o">.</span><span class="n">clone</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">agent_names</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">agent_tds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">agent_name</span> <span class="ow">in</span> <span class="n">agent_names</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_names_to_indices_map</span><span class="p">[</span><span class="n">agent_name</span><span class="p">]</span>
 
-            <span class="n">agent_td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-                <span class="n">source</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">agent_obs</span><span class="p">,</span>
-                    <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">agent_rew</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">agent_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">agent_td</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="n">agent_info</span><span class="p">)</span>
-            <span class="n">agent_tds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_td</span><span class="p">)</span>
+                <span class="n">agent_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_obs</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">agent_rew</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_reward</span><span class="p">(</span><span class="n">rews</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">agent_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_info</span><span class="p">(</span><span class="n">infos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-        <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">agent_tds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">het_specs</span><span class="p">:</span>
-            <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">agent_tds</span><span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
+                <span class="n">agent_td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
+                    <span class="n">source</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">agent_obs</span><span class="p">,</span>
+                        <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">agent_rew</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">agent_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">agent_td</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="n">agent_info</span><span class="p">)</span>
+                <span class="n">agent_tds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_td</span><span class="p">)</span>
+
+            <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">agent_tds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">het_specs_map</span><span class="p">[</span><span class="n">group</span><span class="p">]:</span>
+                <span class="n">agent_tds</span> <span class="o">=</span> <span class="n">agent_tds</span><span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
+            <span class="n">source</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">group</span><span class="p">:</span> <span class="n">agent_tds</span><span class="p">})</span>
+
         <span class="n">tensordict_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-            <span class="n">source</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;next&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;agents&quot;</span><span class="p">:</span> <span class="n">agent_tds</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">dones</span><span class="p">}},</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
-
         <span class="k">return</span> <span class="n">tensordict_out</span>
 
     <span class="k">def</span> <span class="nf">read_obs</span><span class="p">(</span>
@@ -765,10 +981,10 @@
         <span class="n">rewards</span> <span class="o">=</span> <span class="n">_selective_unsqueeze</span><span class="p">(</span><span class="n">rewards</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">rewards</span>
 
-    <span class="k">def</span> <span class="nf">read_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
-        <span class="n">agent_actions</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_agents</span><span class="p">):</span>
-            <span class="n">agent_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">read_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;agents&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_actions</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorical_actions</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">group</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_categorical</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">agent_actions</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">agent_actions</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -782,8 +998,64 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="VmasEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.vmas.VmasEnv.html#torchrl.envs.libs.vmas.VmasEnv">[docs]</a><span class="k">class</span> <span class="nc">VmasEnv</span><span class="p">(</span><span class="n">VmasWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="VmasEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.VmasEnv.html#torchrl.envs.VmasEnv">[docs]</a><span class="k">class</span> <span class="nc">VmasEnv</span><span class="p">(</span><span class="n">VmasWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Vmas environment wrapper.</span>
+
+<span class="sd">    GitHub: https://github.com/proroklab/VectorizedMultiAgentSimulator</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2207.03530</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        scenario (str or vmas.simulator.scenario.BaseScenario): the vmas scenario to build.</span>
+<span class="sd">            Must be one of :attr:`~.available_envs`. For a description and rendering of available scenarios see</span>
+<span class="sd">            `the README &lt;https://github.com/proroklab/VectorizedMultiAgentSimulator/tree/VMAS-1.3.3?tab=readme-ov-file#main-scenarios&gt;`__.</span>
+
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        num_envs (int): Number of vectorized simulation environments. VMAS perfroms vectorized simulations using PyTorch.</span>
+<span class="sd">            This argument indicates the number of vectorized environments that should be simulated in a batch. It will also</span>
+<span class="sd">            determine the batch size of the environment.</span>
+<span class="sd">        device (torch.device, optional): Device for simulation. Defaults to the defaultt device. All the tensors created by VMAS</span>
+<span class="sd">            will be placed on this device.</span>
+<span class="sd">        continuous_actions (bool, optional): Whether to use continuous actions. Defaults to ``True``. If ``False``, actions</span>
+<span class="sd">            will be discrete. The number of actions and their size will depend on the chosen scenario.</span>
+<span class="sd">            See the VMAS repositiory for more info.</span>
+<span class="sd">        max_steps (int, optional): Horizon of the task. Defaults to ``None`` (infinite horizon). Each VMAS scenario can</span>
+<span class="sd">            be terminating or not. If ``max_steps`` is specified,</span>
+<span class="sd">            the scenario is also terminated (and the ``&quot;terminated&quot;`` flag is set) whenever this horizon is reached.</span>
+<span class="sd">            Unlike gym&#39;s ``TimeLimit`` transform or torchrl&#39;s :class:`~torchrl.envs.transforms.StepCounter`,</span>
+<span class="sd">            this argument will not set the ``&quot;truncated&quot;`` entry in the tensordict.</span>
+<span class="sd">        categorical_actions (bool, optional): if the environment actions are discrete, whether to transform</span>
+<span class="sd">            them to categorical or one-hot. Defaults to ``True``.</span>
+<span class="sd">        group_map (MarlGroupMapType or Dict[str, List[str]], optional): how to group agents in tensordicts for</span>
+<span class="sd">            input/output. By default, if the agent names follow the ``&quot;&lt;name&gt;_&lt;int&gt;&quot;``</span>
+<span class="sd">            convention, they will be grouped by ``&quot;&lt;name&gt;&quot;``. If they do not follow this convention, they will be all put</span>
+<span class="sd">            in one group named ``&quot;agents&quot;``.</span>
+<span class="sd">            Otherwise, a group map can be specified or selected from some premade options.</span>
+<span class="sd">            See :class:`~torchrl.envs.utils.MarlGroupMapType` for more info.</span>
+<span class="sd">        **kwargs (Dict, optional): These are additional arguments that can be passed to the VMAS scenario constructor.</span>
+<span class="sd">            (e.g., number of agents, reward sparsity). The available arguments will vary based on the chosen scenario.</span>
+<span class="sd">            To see the available arguments for a specific scenario, see the constructor in its file from</span>
+<span class="sd">            `the scenario folder &lt;https://github.com/proroklab/VectorizedMultiAgentSimulator/tree/VMAS-1.3.3/vmas/scenarios&gt;`__.</span>
+
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        group_map (Dict[str, List[str]]): how to group agents in tensordicts for</span>
+<span class="sd">            input/output. See :class:`~torchrl.envs.utils.MarlGroupMapType` for more info.</span>
+<span class="sd">        agent_names (list of str): names of the agent in the environment</span>
+<span class="sd">        agent_names_to_indices_map (Dict[str, int]): dictionary mapping agent names to their index in the enviornment</span>
+<span class="sd">        unbatched_action_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        unbatched_observation_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        unbatched_reward_spec (TensorSpec): version of the spec without the vectorized dimension</span>
+<span class="sd">        het_specs (bool): whether the enviornment has any lazy spec</span>
+<span class="sd">        het_specs_map (Dict[str, bool]): dictionary mapping each group to a flag representing of the group has lazy specs</span>
+<span class="sd">        available_envs (List[str]): the list of the scenarios available to build.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        VMAS returns a single ``done`` flag which does not distinguish between</span>
+<span class="sd">        when the env reached ``max_steps`` and termination.</span>
+<span class="sd">        If you deem the ``truncation`` signal necessary, set ``max_steps`` to</span>
+<span class="sd">        ``None`` and use a :class:`~torchrl.envs.transforms.StepCounter` transform.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt;  env = VmasEnv(</span>
@@ -799,59 +1071,75 @@
 <span class="sd">        &gt;&gt;&gt;  print(env.rollout(10))</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
-<span class="sd">                action: Tensor(torch.Size([5, 32, 10, 2]), dtype=torch.float64),</span>
-<span class="sd">                done: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.bool),</span>
-<span class="sd">                info: TensorDict(</span>
+<span class="sd">                agents: TensorDict(</span>
 <span class="sd">                    fields={</span>
-<span class="sd">                        cohesion_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                        collision_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                        separation_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                        velocity_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32)},</span>
-<span class="sd">                    batch_size=torch.Size([5, 32, 10]),</span>
-<span class="sd">                    device=cpu,</span>
-<span class="sd">                    is_shared=False),</span>
-<span class="sd">                next: TensorDict(</span>
-<span class="sd">                    fields={</span>
+<span class="sd">                        action: Tensor(shape=torch.Size([32, 10, 5, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="sd">                        info: TensorDict(</span>
 <span class="sd">                            fields={</span>
-<span class="sd">                                cohesion_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                                collision_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                                separation_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32),</span>
-<span class="sd">                                velocity_rew: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32)},</span>
-<span class="sd">                            batch_size=torch.Size([5, 32, 10]),</span>
+<span class="sd">                                agent_collision_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                agent_distance_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([32, 10, 5]),</span>
 <span class="sd">                            device=cpu,</span>
 <span class="sd">                            is_shared=False),</span>
-<span class="sd">                        observation: Tensor(torch.Size([5, 32, 10, 18]), dtype=torch.float32)},</span>
-<span class="sd">                    batch_size=torch.Size([5, 32, 10]),</span>
+<span class="sd">                        observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([32, 10, 5]),</span>
 <span class="sd">                    device=cpu,</span>
 <span class="sd">                    is_shared=False),</span>
-<span class="sd">                observation: Tensor(torch.Size([5, 32, 10, 18]), dtype=torch.float32),</span>
-<span class="sd">                reward: Tensor(torch.Size([5, 32, 10, 1]), dtype=torch.float32)},</span>
-<span class="sd">            batch_size=torch.Size([5, 32, 10]),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        agents: TensorDict(</span>
+<span class="sd">                            fields={</span>
+<span class="sd">                                info: TensorDict(</span>
+<span class="sd">                                    fields={</span>
+<span class="sd">                                        agent_collision_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                        agent_distance_rew: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                                    batch_size=torch.Size([32, 10, 5]),</span>
+<span class="sd">                                    device=cpu,</span>
+<span class="sd">                                    is_shared=False),</span>
+<span class="sd">                                observation: Tensor(shape=torch.Size([32, 10, 5, 18]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                reward: Tensor(shape=torch.Size([32, 10, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                            batch_size=torch.Size([32, 10, 5]),</span>
+<span class="sd">                            device=cpu,</span>
+<span class="sd">                            is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([32, 10]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([32, 10, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([32, 10]),</span>
 <span class="sd">            device=cpu,</span>
 <span class="sd">            is_shared=False)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;vmas.simulator.scenario.BaseScenario&quot;</span><span class="p">],</span>
+        <span class="n">scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;vmas.simulator.scenario.BaseScenario&quot;</span><span class="p">],</span>  <span class="c1"># noqa</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">num_envs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">continuous_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">max_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">categorical_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">group_map</span><span class="p">:</span> <span class="n">MarlGroupMapType</span> <span class="o">|</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_vmas</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;vmas python package was not found. Please install this dependency. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;More info: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">git_url</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">IMPORT_ERR</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scenario&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scenario</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;num_envs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_envs</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;continuous_actions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous_actions</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_steps</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+            <span class="n">num_envs</span><span class="o">=</span><span class="n">num_envs</span><span class="p">,</span>
+            <span class="n">continuous_actions</span><span class="o">=</span><span class="n">continuous_actions</span><span class="p">,</span>
+            <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">categorical_actions</span><span class="o">=</span><span class="n">categorical_actions</span><span class="p">,</span>
+            <span class="n">group_map</span><span class="o">=</span><span class="n">group_map</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;scenario&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -861,13 +1149,15 @@
 
     <span class="k">def</span> <span class="nf">_build_env</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;vmas.simulator.scenario.BaseScenario&quot;</span><span class="p">],</span>
+        <span class="n">scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;vmas.simulator.scenario.BaseScenario&quot;</span><span class="p">],</span>  <span class="c1"># noqa</span>
         <span class="n">num_envs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">continuous_actions</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">max_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="o">**</span><span class="n">scenario_kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;vmas.simulator.environment.environment.Environment&quot;</span><span class="p">:</span>  <span class="c1"># noqa</span>
+        <span class="n">vmas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">scenario_name</span> <span class="o">=</span> <span class="n">scenario</span>
         <span class="n">from_pixels</span> <span class="o">=</span> <span class="n">scenario_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;from_pixels&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">pixels_only</span> <span class="o">=</span> <span class="n">scenario_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pixels_only&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -942,6 +1232,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -1084,7 +1375,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

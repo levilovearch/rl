@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -373,6 +374,7 @@
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
@@ -384,7 +386,7 @@
 
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">VERBOSE</span>
 <span class="kn">from</span> <span class="nn">torchrl.collectors.collectors</span> <span class="kn">import</span> <span class="n">DataCollectorBase</span>
-<span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.replay_buffers</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">EnvBase</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">ExplorationType</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">reset_noise</span>
@@ -543,7 +545,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;lr scheduler </span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;collector = </span><span class="si">{</span><span class="n">collector</span><span class="si">}</span><span class="s2">; </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;loss_module = </span><span class="si">{</span><span class="n">loss_module</span><span class="si">}</span><span class="s2">; </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;recorder = </span><span class="si">{</span><span class="n">recorder</span><span class="si">}</span><span class="s2">; </span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -628,6 +630,7 @@
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># create recorder object</span>
         <span class="n">recorder_obj</span> <span class="o">=</span> <span class="n">Recorder</span><span class="p">(</span>
             <span class="n">record_frames</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">record_frames</span><span class="p">,</span>
             <span class="n">frame_skip</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">frame_skip</span><span class="p">,</span>
@@ -636,11 +639,14 @@
             <span class="n">record_interval</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">record_interval</span><span class="p">,</span>
             <span class="n">log_keys</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">recorder_log_keys</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># register recorder</span>
         <span class="n">trainer</span><span class="o">.</span><span class="n">register_op</span><span class="p">(</span>
             <span class="s2">&quot;post_steps_log&quot;</span><span class="p">,</span>
             <span class="n">recorder_obj</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># call recorder - could be removed</span>
         <span class="n">recorder_obj</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># create explorative recorder - could be optional</span>
         <span class="n">recorder_obj_explore</span> <span class="o">=</span> <span class="n">Recorder</span><span class="p">(</span>
             <span class="n">record_frames</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">record_frames</span><span class="p">,</span>
             <span class="n">frame_skip</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">frame_skip</span><span class="p">,</span>
@@ -651,10 +657,12 @@
             <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;exploration&quot;</span><span class="p">,</span>
             <span class="n">out_keys</span><span class="o">=</span><span class="p">{(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">):</span> <span class="s2">&quot;r_evaluation_exploration&quot;</span><span class="p">},</span>
         <span class="p">)</span>
+        <span class="c1"># register recorder</span>
         <span class="n">trainer</span><span class="o">.</span><span class="n">register_op</span><span class="p">(</span>
             <span class="s2">&quot;post_steps_log&quot;</span><span class="p">,</span>
             <span class="n">recorder_obj_explore</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># call recorder - could be removed</span>
         <span class="n">recorder_obj_explore</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="n">trainer</span><span class="o">.</span><span class="n">register_op</span><span class="p">(</span>
@@ -718,6 +726,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -860,7 +869,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

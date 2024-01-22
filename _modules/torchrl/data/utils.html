@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,6 +373,7 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -382,9 +384,14 @@
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BinaryDiscreteTensorSpec</span><span class="p">,</span>
     <span class="n">CompositeSpec</span><span class="p">,</span>
+    <span class="n">DiscreteTensorSpec</span><span class="p">,</span>
     <span class="n">LazyStackedCompositeSpec</span><span class="p">,</span>
     <span class="n">LazyStackedTensorSpec</span><span class="p">,</span>
+    <span class="n">MultiDiscreteTensorSpec</span><span class="p">,</span>
+    <span class="n">MultiOneHotDiscreteTensorSpec</span><span class="p">,</span>
+    <span class="n">OneHotDiscreteTensorSpec</span><span class="p">,</span>
     <span class="n">TensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -411,6 +418,27 @@
     <span class="n">DEVICE_TYPING_ARGS</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 
 <span class="n">INDEX_TYPING</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+
+
+<span class="n">ACTION_SPACE_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">OneHotDiscreteTensorSpec</span><span class="p">:</span> <span class="s2">&quot;one_hot&quot;</span><span class="p">,</span>
+    <span class="n">MultiOneHotDiscreteTensorSpec</span><span class="p">:</span> <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">,</span>
+    <span class="n">BinaryDiscreteTensorSpec</span><span class="p">:</span> <span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+    <span class="n">DiscreteTensorSpec</span><span class="p">:</span> <span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;one_hot&quot;</span><span class="p">:</span> <span class="s2">&quot;one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;one-hot&quot;</span><span class="p">:</span> <span class="s2">&quot;one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">:</span> <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mult-one-hot&quot;</span><span class="p">:</span> <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi_one_hot&quot;</span><span class="p">:</span> <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi-one-hot&quot;</span><span class="p">:</span> <span class="s2">&quot;mult_one_hot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;binary&quot;</span><span class="p">:</span> <span class="s2">&quot;binary&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;categorical&quot;</span><span class="p">:</span> <span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+    <span class="n">MultiDiscreteTensorSpec</span><span class="p">:</span> <span class="s2">&quot;multi_categorical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi_categorical&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_categorical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi-categorical&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_categorical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi_discrete&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_categorical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multi-discrete&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_categorical&quot;</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="consolidate_spec"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.consolidate_spec.html#torchrl.data.consolidate_spec">[docs]</a><span class="k">def</span> <span class="nf">consolidate_spec</span><span class="p">(</span>
@@ -499,7 +527,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">[:</span> <span class="n">spec</span><span class="o">.</span><span class="n">stack_dim</span><span class="p">])</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">stack_dim</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
         <span class="k">return</span> <span class="n">LazyStackedTensorSpec</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span><span class="n">_empty_like_spec</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">_specs</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">_specs</span><span class="p">],</span>
-            <span class="n">dim</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">stack_dim</span>
+            <span class="n">dim</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">stack_dim</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># the exclusive key has values which are TensorSpecs -&gt;</span>
@@ -550,6 +578,22 @@
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
+<div class="viewcode-block" id="contains_lazy_spec"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.contains_lazy_spec.html#torchrl.data.contains_lazy_spec">[docs]</a><span class="k">def</span> <span class="nf">contains_lazy_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">TensorSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns true if a spec contains lazy stacked specs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spec (TensorSpec): the spec to check</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="p">(</span><span class="n">LazyStackedTensorSpec</span><span class="p">,</span> <span class="n">LazyStackedCompositeSpec</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">inner_spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">contains_lazy_spec</span><span class="p">(</span><span class="n">inner_spec</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
 <span class="k">class</span> <span class="nc">CloudpickleWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper for functions that allow for serialization in multiprocessed settings.&quot;&quot;&quot;</span>
 
@@ -573,9 +617,84 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_process_action_space_spec</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="n">original_spec</span> <span class="o">=</span> <span class="n">spec</span>
+    <span class="n">composite_spec</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
+        <span class="c1"># this will break whenever our action is more complex than a single tensor</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;action&quot;</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">_key</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># the first key is the action</span>
+                <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">_key</span><span class="p">]</span>
+            <span class="n">composite_spec</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s2">&quot;action could not be found in the spec. Make sure &quot;</span>
+                <span class="s2">&quot;you pass a spec that is either a native action spec or a composite action spec &quot;</span>
+                <span class="s2">&quot;with a leaf &#39;action&#39; entry. Otherwise, simply remove the spec and use the action_space only.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;action_space cannot be of type CompositeSpec.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">spec</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Passing an action_space as a TensorSpec and a spec isn&#39;t allowed, unless they match.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">action_space</span>
+        <span class="n">action_space</span> <span class="o">=</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span>
+        <span class="c1"># check that the spec and action_space match</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span> <span class="o">!=</span> <span class="n">action_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The action spec and the action space do not match: got action_space=</span><span class="si">{</span><span class="n">action_space</span><span class="si">}</span><span class="s2"> and spec=</span><span class="si">{</span><span class="n">spec</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">action_space</span> <span class="o">=</span> <span class="n">_find_action_space</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Neither action_space nor spec was defined. The action space cannot be inferred.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">composite_spec</span><span class="p">:</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">original_spec</span>
+    <span class="k">return</span> <span class="n">action_space</span><span class="p">,</span> <span class="n">spec</span>
+
+
+<span class="k">def</span> <span class="nf">_find_action_space</span><span class="p">(</span><span class="n">action_space</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">TensorSpec</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;action&quot;</span> <span class="ow">in</span> <span class="n">action_space</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">_key</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># the first key is the action</span>
+                <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">action_space</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span>
+            <span class="n">action_space</span> <span class="o">=</span> <span class="n">action_space</span><span class="p">[</span><span class="n">_key</span><span class="p">]</span>
+        <span class="n">action_space</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">action_space</span> <span class="o">=</span> <span class="n">ACTION_SPACE_MAP</span><span class="p">[</span><span class="n">action_space</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;action_space was not specified/not compatible and could not be retrieved from the value network. Got action_space=</span><span class="si">{</span><span class="n">action_space</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">action_space</span>
 </pre></div>
 
              </article>
@@ -629,6 +748,7 @@
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
      
 
   
@@ -771,7 +891,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

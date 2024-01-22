@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -374,16 +375,25 @@
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
 <span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">TensorDictModule</span>
-<span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">from</span> <span class="nn">torch.nn.modules</span> <span class="kn">import</span> <span class="n">dropout</span>
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">vmap</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">functorch</span> <span class="kn">import</span> <span class="n">vmap</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err_ft</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">err_ft</span> <span class="kn">from</span> <span class="nn">err</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">step_mdp</span>
 
 <span class="n">_GAMMA_LMBDA_DEPREC_WARNING</span> <span class="o">=</span> <span class="p">(</span>
@@ -391,6 +401,8 @@
     <span class="s2">&quot;is deprecated and will be removed soon. To customize your value function, &quot;</span>
     <span class="s2">&quot;run `loss_module.make_value_estimator(ValueEstimators.&lt;value_fun&gt;, gamma=val)`.&quot;</span>
 <span class="p">)</span>
+
+<span class="n">RANDOM_MODULE_LIST</span> <span class="o">=</span> <span class="p">(</span><span class="n">dropout</span><span class="o">.</span><span class="n">_DropoutNd</span><span class="p">,)</span>
 
 
 <div class="viewcode-block" id="ValueEstimators"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.ValueEstimators.html#torchrl.objectives.ValueEstimators">[docs]</a><span class="k">class</span> <span class="nc">ValueEstimators</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -408,7 +420,8 @@
     <span class="n">TD0</span> <span class="o">=</span> <span class="s2">&quot;Bootstrapped TD (1-step return)&quot;</span>
     <span class="n">TD1</span> <span class="o">=</span> <span class="s2">&quot;TD(1) (infinity-step return)&quot;</span>
     <span class="n">TDLambda</span> <span class="o">=</span> <span class="s2">&quot;TD(lambda)&quot;</span>
-    <span class="n">GAE</span> <span class="o">=</span> <span class="s2">&quot;Generalized advantage estimate&quot;</span></div>
+    <span class="n">GAE</span> <span class="o">=</span> <span class="s2">&quot;Generalized advantage estimate&quot;</span>
+    <span class="n">VTrace</span> <span class="o">=</span> <span class="s2">&quot;V-trace&quot;</span></div>
 
 
 <div class="viewcode-block" id="default_value_kwargs"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.default_value_kwargs.html#torchrl.objectives.default_value_kwargs">[docs]</a><span class="k">def</span> <span class="nf">default_value_kwargs</span><span class="p">(</span><span class="n">value_type</span><span class="p">:</span> <span class="n">ValueEstimators</span><span class="p">):</span>
@@ -431,6 +444,8 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.99</span><span class="p">,</span> <span class="s2">&quot;lmbda&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s2">&quot;differentiable&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
     <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TDLambda</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.99</span><span class="p">,</span> <span class="s2">&quot;lmbda&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s2">&quot;differentiable&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">VTrace</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.99</span><span class="p">,</span> <span class="s2">&quot;differentiable&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown value type </span><span class="si">{</span><span class="n">value_type</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
 
@@ -511,32 +526,19 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">loss_module</span><span class="p">:</span> <span class="s2">&quot;LossModule&quot;</span><span class="p">,</span>  <span class="c1"># noqa: F821</span>
     <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">torchrl.objectives.common</span> <span class="kn">import</span> <span class="n">LossModule</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_module</span><span class="p">,</span> <span class="n">LossModule</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The loss_module must be a LossModule instance.&quot;</span><span class="p">)</span>
         <span class="n">_has_update_associated</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">loss_module</span><span class="p">,</span> <span class="s2">&quot;_has_update_associated&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_target_names</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="c1"># for properties</span>
-            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">loss_module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;target_&quot;</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;buffers&quot;</span><span class="p">))</span>
-                    <span class="ow">and</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">loss_module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">loss_module</span><span class="o">.</span><span class="n">named_children</span><span class="p">():</span>
+                <span class="c1"># the TensorDictParams is a nn.Module instance</span>
+                <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;target_&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_params&quot;</span><span class="p">):</span>
                     <span class="n">_target_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-
-            <span class="c1"># for regular lists: raise an exception</span>
-            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">loss_module</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;target_&quot;</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;buffers&quot;</span><span class="p">))</span>
-                    <span class="ow">and</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">loss_module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="s2">&quot;Your module seems to have a target tensor list contained &quot;</span>
-                        <span class="s2">&quot;in a non-dynamic structure (such as a list). If the &quot;</span>
-                        <span class="s2">&quot;module is cast onto a device, the reference to these &quot;</span>
-                        <span class="s2">&quot;tensors will be lost.&quot;</span>
-                    <span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_target_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -561,7 +563,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">init_</span><span class="p">()</span>
             <span class="n">_has_update_associated</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span> <span class="o">=</span> <span class="n">_has_update_associated</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">loss_module</span><span class="o">.</span><span class="n">_has_update_associated</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">_has_update_associated</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -735,18 +738,19 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">network</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">p_example</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">StopIteration</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">p_example</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prev_state</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prev_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_example</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prev_state</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="hold_out_params"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.hold_out_params.html#torchrl.objectives.hold_out_params">[docs]</a><span class="k">class</span> <span class="nc">hold_out_params</span><span class="p">(</span><span class="n">_context_manager</span><span class="p">):</span>
@@ -839,12 +843,36 @@
             <span class="n">out</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netname</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
+        <span class="c1"># TODO: decide what to do with locked tds in functional calls</span>
+        <span class="c1"># if is_tensor_collection(out):</span>
+        <span class="c1">#     out.lock_()</span>
         <span class="n">_cache</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span>
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">return</span> <span class="n">new_fun</span>
+
+
+<span class="k">def</span> <span class="nf">_vmap_func</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+
+        <span class="k">def</span> <span class="nf">decorated_module</span><span class="p">(</span><span class="o">*</span><span class="n">module_args_params</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">module_args_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">module_args</span> <span class="o">=</span> <span class="n">module_args_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">module</span><span class="p">(</span><span class="o">*</span><span class="n">module_args</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">func</span><span class="p">)(</span><span class="o">*</span><span class="n">module_args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vmap</span><span class="p">(</span><span class="n">decorated_module</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># noqa: TOR101</span>
+
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;vmap: called random operation while in randomness error mode&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Please use &lt;loss_module&gt;.set_vmap_randomness(&#39;different&#39;) to handle random operations during vmap.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 </pre></div>
 
              </article>
@@ -898,6 +926,7 @@
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
      
 
   
@@ -1040,7 +1069,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

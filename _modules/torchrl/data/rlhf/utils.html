@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,9 +373,14 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
-<span class="kn">import</span> <span class="nn">importlib</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
@@ -384,6 +390,91 @@
 <span class="kn">from</span> <span class="nn">torchrl.data.rlhf.prompt</span> <span class="kn">import</span> <span class="n">PromptData</span>
 
 <span class="n">_has_transformers</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">class</span> <span class="nc">KLControllerBase</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for KL controllers.</span>
+
+<span class="sd">    Each controller must implement an update method that takes the current KL value and</span>
+<span class="sd">    the number of steps and updates the kl_coef attribute of the wrapped model,</span>
+<span class="sd">    which will multiply the KL during calculation of the reward.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">ConstantKLController</span><span class="p">(</span><span class="n">KLControllerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant KL Controller.</span>
+
+<span class="sd">    This controller maintains a fixed coefficient no matter what values it is updated</span>
+<span class="sd">    with.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        model: wrapped model that needs to be controlled. Must have attribute &#39;kl_coef&#39;</span>
+<span class="sd">        kl_coef (float): The coefficient to multiply KL with when calculating the</span>
+<span class="sd">            reward.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">kl_coef</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;kl_coef&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;Model input to ConstantKLController doesn&#39;t have attribute &#39;kl_coef&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">kl_coef</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+
+
+<span class="k">class</span> <span class="nc">AdaptiveKLController</span><span class="p">(</span><span class="n">KLControllerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adaptive KL Controller as described in Ziegler et al. &quot;Fine-Tuning Language Models from Human Preferences&quot;.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        model: wrapped model that needs to be controlled. Must have attribute &#39;kl_coef&#39;</span>
+<span class="sd">        init_kl_coef (float): The starting value of the coefficient.</span>
+<span class="sd">        target (float): The target KL value. When the observed KL is smaller, the</span>
+<span class="sd">            coefficient is decreased, thereby relaxing the KL penalty in the training</span>
+<span class="sd">            objective and allowing the model to stray further from the reference model.</span>
+<span class="sd">            When the observed KL is greater than the target, the KL coefficient is</span>
+<span class="sd">            increased, thereby pulling the model back towards the reference model.</span>
+<span class="sd">        horizon (int): Scaling factor to control how aggressively we update the</span>
+<span class="sd">            coefficient.</span>
+
+<span class="sd">    Reference: Section 2.2 https://arxiv.org/pdf/1909.08593.pdf#page=2</span>
+<span class="sd">    Source: https://github.com/openai/lm-human-preferences/blob/master/lm_human_preferences/train_policy.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">init_kl_coef</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">init_kl_coef</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="n">horizon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update ``self.coef`` adaptively.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            kl_values (sequence of float): The current KL value between the newest policy and the initial</span>
+<span class="sd">                policy.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">kl_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The kl_values were not provided to </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Make sure these values are provided for the scheduler to be updated &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;accordingly. &quot;</span>
+            <span class="p">)</span>
+        <span class="n">n_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kl_values</span><span class="p">)</span>
+        <span class="c1"># renormalize kls</span>
+        <span class="n">kl_value</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">kl_values</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="n">proportional_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">kl_value</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># ϵₜ</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">proportional_error</span> <span class="o">*</span> <span class="n">n_steps</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">*=</span> <span class="n">mult</span>  <span class="c1"># βₜ₊₁</span>
 
 
 <div class="viewcode-block" id="RolloutFromModel"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.RolloutFromModel.html#torchrl.data.RolloutFromModel">[docs]</a><span class="k">class</span> <span class="nc">RolloutFromModel</span><span class="p">:</span>
@@ -403,10 +494,13 @@
 <span class="sd">        reward_model: (nn.Module, tensordict.nn.TensorDictModule): a model which, given</span>
 <span class="sd">            ``input_ids`` and ``attention_mask``, calculates rewards for each token and</span>
 <span class="sd">            end_scores (the reward for the final token in each sequence).</span>
+<span class="sd">        kl_coef: (float, optional): initial kl coefficient.</span>
 <span class="sd">        max_new_tokens (int, optional): the maximum length of the sequence.</span>
 <span class="sd">            Defaults to 50.</span>
 <span class="sd">        score_clip (float, optional): Scores from the reward model are clipped to the</span>
 <span class="sd">            range ``(-score_clip, score_clip)``. Defaults to 10.</span>
+<span class="sd">        kl_scheduler (KLControllerBase, optional): the KL coefficient scheduler.</span>
+<span class="sd">        num_steps (int, optional): number of steps between two optimization.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule</span>
@@ -457,7 +551,15 @@
     <span class="n">EOS_TOKEN_ID</span> <span class="o">=</span> <span class="mi">50256</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">ref_model</span><span class="p">,</span> <span class="n">reward_model</span><span class="p">,</span> <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">score_clip</span><span class="o">=</span><span class="mf">10.0</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">ref_model</span><span class="p">,</span>
+        <span class="n">reward_model</span><span class="p">,</span>
+        <span class="n">kl_coef</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">max_new_tokens</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">score_clip</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">kl_scheduler</span><span class="p">:</span> <span class="n">KLControllerBase</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_transformers</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
@@ -469,18 +571,23 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span> <span class="o">=</span> <span class="n">reward_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_new_tokens</span> <span class="o">=</span> <span class="n">max_new_tokens</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">score_clip</span> <span class="o">=</span> <span class="n">score_clip</span>
-
-<div class="viewcode-block" id="RolloutFromModel.kl_step"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.RolloutFromModel.html#torchrl.data.RolloutFromModel.kl_step">[docs]</a>    <span class="k">def</span> <span class="nf">kl_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes a step in the KL coefficient schedule.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="n">kl_coef</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kl_scheduler</span> <span class="o">=</span> <span class="n">kl_scheduler</span>
+        <span class="k">if</span> <span class="n">num_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">num_steps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we create a list. Value appended to it will be detached scalars so very cheap to store,</span>
+            <span class="c1"># even if the update is not called.</span>
+            <span class="c1"># The scheduler update will take care of erasing these values.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">rollout_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">kl_coef</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">rollout_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
         <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">log_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_rollout_td</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">,</span> <span class="n">kl_coef</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_rollout_td</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RolloutFromModel.create_rollout_td"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.RolloutFromModel.html#torchrl.data.RolloutFromModel.create_rollout_td">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">create_rollout_td</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">,</span> <span class="n">kl_coef</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">create_rollout_td</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A TensorDict wrapper for generated data.</span>
 
 <span class="sd">        This function takes a batch plus the generated tokens and replicates the</span>
@@ -512,9 +619,11 @@
 <span class="sd">              part of the inputs that will be used for generating the next token.</span>
 <span class="sd">            - ``(&quot;next&quot;, &quot;attention_mask&quot;)``: updated attention_mask after token has been</span>
 <span class="sd">              generated. Passed to the generative model on the next time step</span>
-<span class="sd">            - ``(&quot;next&quot;, &quot;done&quot;)``: Boolean array indicating whether we&#39;ve reached a</span>
+<span class="sd">            - ``(&quot;next&quot;, &quot;terminated&quot;)``: Boolean array indicating whether we&#39;ve reached a</span>
 <span class="sd">              terminal state (either because we generated EOS token or because we</span>
 <span class="sd">              reached the token limit)</span>
+<span class="sd">            - ``(&quot;next&quot;, &quot;done&quot;)``: Boolean array indicating whether we&#39;ve reached a</span>
+<span class="sd">              final state. Currently a copy of ``&quot;terminated&quot;``.</span>
 <span class="sd">            - ``(&quot;next&quot;, &quot;reward&quot;)``: The reward received at each time step</span>
 <span class="sd">            - ``(&quot;next&quot;, &quot;reward_raw&quot;)``: The raw reward from the reward model, without the</span>
 <span class="sd">              KL term. This is mainly for debugging and logging, it is not used in</span>
@@ -525,7 +634,7 @@
         <span class="n">rollout_generated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rollout_generated</span><span class="p">(</span><span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
         <span class="n">rollout_attention_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">rollout_generated</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EOS_TOKEN_ID</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
 
-        <span class="n">done</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_done_status</span><span class="p">(</span><span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+        <span class="n">done</span><span class="p">,</span> <span class="n">terminated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_done_status</span><span class="p">(</span><span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
         <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_action</span><span class="p">(</span><span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
         <span class="n">end_scores</span><span class="p">,</span> <span class="n">end_scores_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_end_scores</span><span class="p">(</span>
             <span class="n">rollout_generated</span><span class="p">,</span> <span class="n">rollout_attention_mask</span><span class="p">,</span> <span class="n">batch</span>
@@ -537,7 +646,7 @@
         <span class="p">)</span>
         <span class="n">reward_raw</span> <span class="o">=</span> <span class="n">clipped_scores</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">reward_raw</span> <span class="o">=</span> <span class="n">reward_raw</span> <span class="o">*</span> <span class="n">done</span>
-        <span class="n">reward_kl</span> <span class="o">=</span> <span class="o">-</span><span class="n">kl_coef</span> <span class="o">*</span> <span class="n">log_ratio</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">reward_kl</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">*</span> <span class="n">log_ratio</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_raw</span> <span class="o">+</span> <span class="n">reward_kl</span>
         <span class="n">td</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
@@ -548,11 +657,13 @@
                 <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">rollout_generated</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
                 <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">rollout_attention_mask</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
                 <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+                <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">terminated</span><span class="p">,</span>
                 <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
                 <span class="s2">&quot;reward_raw&quot;</span><span class="p">:</span> <span class="n">reward_raw</span><span class="p">,</span>
                 <span class="s2">&quot;reward_kl&quot;</span><span class="p">:</span> <span class="n">reward_kl</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward_kl</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">TensorDict</span><span class="p">(</span>
             <span class="n">td</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">done</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">generated</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span><span class="o">.</span><span class="n">refine_names</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">)</span></div>
@@ -576,13 +687,24 @@
             <span class="p">(</span><span class="n">generated</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EOS_TOKEN_ID</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">batch</span><span class="o">.</span><span class="n">prompt_rindex</span><span class="p">,</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_new_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">done</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="n">truncated_idx</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_new_tokens</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">generated</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span>
+                <span class="n">done_idx</span>
+            <span class="p">)</span>
+            <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">zeros</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
             <span class="n">done_idx</span><span class="o">.</span><span class="n">numel</span><span class="p">(),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_new_tokens</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">generated</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">done</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">done_idx</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">truncated</span> <span class="o">=</span> <span class="n">zeros</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">truncated_idx</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">zeros</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">done_idx</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">terminated</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">done</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">truncated</span>
+        <span class="p">)</span>  <span class="c1"># we assume that if it&#39;s not truncated, it was terminated</span>
+        <span class="k">return</span> <span class="n">truncated</span> <span class="o">|</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">terminated</span>
 
     <span class="k">def</span> <span class="nf">_get_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
         <span class="c1"># the sequence of actions for each trajectory is just the generated token ids</span>
@@ -759,7 +881,15 @@
         <span class="n">log_probs_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scores</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">generated_tokens</span><span class="p">)</span>
 
         <span class="n">log_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_ratio</span><span class="p">(</span><span class="n">generated</span><span class="p">,</span> <span class="n">batch</span><span class="o">.</span><span class="n">prompt_rindex</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs_gen</span><span class="p">,</span> <span class="n">log_ratio</span></div></div>
+        <span class="k">return</span> <span class="n">generated</span><span class="p">,</span> <span class="n">log_probs_gen</span><span class="p">,</span> <span class="n">log_ratio</span></div>
+
+    <span class="k">def</span> <span class="nf">step_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># recover true kl</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kl_scheduler</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">)):</span>
+            <span class="c1"># remove all values</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 </pre></div>
 
              </article>
@@ -813,6 +943,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -955,7 +1086,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

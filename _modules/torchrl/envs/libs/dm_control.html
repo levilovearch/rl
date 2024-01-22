@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -375,45 +376,37 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">collections</span>
+
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
+<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">VERBOSE</span>
+
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoundedTensorSpec</span><span class="p">,</span>
     <span class="n">CompositeSpec</span><span class="p">,</span>
+    <span class="n">DiscreteTensorSpec</span><span class="p">,</span>
     <span class="n">TensorSpec</span><span class="p">,</span>
     <span class="n">UnboundedContinuousTensorSpec</span><span class="p">,</span>
     <span class="n">UnboundedDiscreteTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">..._utils</span> <span class="kn">import</span> <span class="n">VERBOSE</span>
-
-<span class="kn">from</span> <span class="nn">...data.utils</span> <span class="kn">import</span> <span class="n">DEVICE_TYPING</span><span class="p">,</span> <span class="n">numpy_to_torch_dtype_dict</span>
-<span class="kn">from</span> <span class="nn">..gym_like</span> <span class="kn">import</span> <span class="n">GymLikeEnv</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">DEVICE_TYPING</span><span class="p">,</span> <span class="n">numpy_to_torch_dtype_dict</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.gym_like</span> <span class="kn">import</span> <span class="n">GymLikeEnv</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_classproperty</span>
 
 <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;EGL_DEVICE_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span> <span class="o">%</span> <span class="n">n</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EGL_DEVICE_ID: &quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;EGL_DEVICE_ID&quot;</span><span class="p">])</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;EGL_DEVICE_ID: &quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;EGL_DEVICE_ID&quot;</span><span class="p">])</span>
 
-<span class="k">try</span><span class="p">:</span>
-
-    <span class="kn">import</span> <span class="nn">dm_control</span>
-    <span class="kn">import</span> <span class="nn">dm_env</span>
-    <span class="kn">from</span> <span class="nn">dm_control</span> <span class="kn">import</span> <span class="n">suite</span>
-    <span class="kn">from</span> <span class="nn">dm_control.suite.wrappers</span> <span class="kn">import</span> <span class="n">pixels</span>
-
-    <span class="n">_has_dmc</span> <span class="o">=</span> <span class="kc">True</span>
-
-<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-    <span class="n">_has_dmc</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="n">err</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_has_dmc</span> <span class="o">=</span> <span class="n">_has_dm_control</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;dm_control&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DMControlEnv&quot;</span><span class="p">,</span> <span class="s2">&quot;DMControlWrapper&quot;</span><span class="p">]</span>
 
@@ -423,6 +416,8 @@
     <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">DEVICE_TYPING</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">dm_env</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">):</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">k</span><span class="p">:</span> <span class="n">_dmcontrol_to_torchrl_spec_transform</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
@@ -437,8 +432,8 @@
             <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">BoundedTensorSpec</span><span class="p">(</span>
             <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
-            <span class="n">minimum</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">minimum</span><span class="p">,</span>
-            <span class="n">maximum</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">maximum</span><span class="p">,</span>
+            <span class="n">low</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">minimum</span><span class="p">,</span>
+            <span class="n">high</span><span class="o">=</span><span class="n">spec</span><span class="o">.</span><span class="n">maximum</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
@@ -460,8 +455,10 @@
 
 
 <span class="k">def</span> <span class="nf">_get_envs</span><span class="p">(</span><span class="n">to_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_dmc</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_dm_control</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Cannot find dm_control in virtual environment.&quot;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">dm_control</span> <span class="kn">import</span> <span class="n">suite</span>
+
     <span class="k">if</span> <span class="ow">not</span> <span class="n">to_dict</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">suite</span><span class="o">.</span><span class="n">BENCHMARKING</span><span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">suite</span><span class="o">.</span><span class="n">EXTRA</span><span class="p">)</span>
     <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
@@ -471,7 +468,7 @@
     <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">suite</span><span class="o">.</span><span class="n">EXTRA</span><span class="p">:</span>
         <span class="n">env_name</span> <span class="o">=</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">d</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">d</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 
 
 <span class="k">def</span> <span class="nf">_robust_to_tensor</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
@@ -481,26 +478,90 @@
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="DMControlWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.dm_control.DMControlWrapper.html#torchrl.envs.libs.dm_control.DMControlWrapper">[docs]</a><span class="k">class</span> <span class="nc">DMControlWrapper</span><span class="p">(</span><span class="n">GymLikeEnv</span><span class="p">):</span>
+<div class="viewcode-block" id="DMControlWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.DMControlWrapper.html#torchrl.envs.DMControlWrapper">[docs]</a><span class="k">class</span> <span class="nc">DMControlWrapper</span><span class="p">(</span><span class="n">GymLikeEnv</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DeepMind Control lab environment wrapper.</span>
 
+<span class="sd">    The DeepMind control library can be found here: https://github.com/deepmind/dm_control.</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2006.12983</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        env (dm_control.suite env): environment instance</span>
-<span class="sd">        from_pixels (bool): if ``True``, the observation</span>
+<span class="sd">        env (dm_control.suite env): :class:`~dm_control.suite.base.Task`</span>
+<span class="sd">            environment instance.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): if ``True``, an attempt to return the pixel</span>
+<span class="sd">            observations from the env will be performed.</span>
+<span class="sd">            By default, these observations</span>
+<span class="sd">            will be written under the ``&quot;pixels&quot;`` entry.</span>
+<span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        pixels_only (bool, optional): if ``True``, only the pixel observations will</span>
+<span class="sd">            be returned (by default under the ``&quot;pixels&quot;`` entry in the output tensordict).</span>
+<span class="sd">            If ``False``, observations (eg, states) and pixels will be returned</span>
+<span class="sd">            whenever ``from_pixels=True``. Defaults to ``True``.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            Should match the leading dimensions of all observations, done states,</span>
+<span class="sd">            rewards, actions and infos.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs (list): a list of ``Tuple[str, List[str]]`` representing the</span>
+<span class="sd">            environment / task pairs available.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; env = dm_control.suite.load(&quot;cheetah&quot;, &quot;run&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; from dm_control import suite</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import DMControlWrapper</span>
+<span class="sd">        &gt;&gt;&gt; env = suite.load(&quot;cheetah&quot;, &quot;run&quot;)</span>
 <span class="sd">        &gt;&gt;&gt; env = DMControlWrapper(env,</span>
 <span class="sd">        ...    from_pixels=True, frame_skip=4)</span>
 <span class="sd">        &gt;&gt;&gt; td = env.rand_step()</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([6]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        pixels: Tensor(shape=torch.Size([240, 320, 3]), device=cpu, dtype=torch.uint8, is_shared=False),</span>
+<span class="sd">                        position: Tensor(shape=torch.Size([8]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        velocity: Tensor(shape=torch.Size([9]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
+<span class="sd">        [(&#39;acrobot&#39;, [&#39;swingup&#39;, &#39;swingup_sparse&#39;]), (&#39;ball_in_cup&#39;, [&#39;catch&#39;]), (&#39;cartpole&#39;, [&#39;balance&#39;, &#39;balance_sparse&#39;, &#39;swingup&#39;, &#39;swingup_sparse&#39;, &#39;three_poles&#39;, &#39;two_poles&#39;]), (&#39;cheetah&#39;, [&#39;run&#39;]), (&#39;finger&#39;, [&#39;spin&#39;, &#39;turn_easy&#39;, &#39;turn_hard&#39;]), (&#39;fish&#39;, [&#39;upright&#39;, &#39;swim&#39;]), (&#39;hopper&#39;, [&#39;stand&#39;, &#39;hop&#39;]), (&#39;humanoid&#39;, [&#39;stand&#39;, &#39;walk&#39;, &#39;run&#39;, &#39;run_pure_state&#39;]), (&#39;manipulator&#39;, [&#39;bring_ball&#39;, &#39;bring_peg&#39;, &#39;insert_ball&#39;, &#39;insert_peg&#39;]), (&#39;pendulum&#39;, [&#39;swingup&#39;]), (&#39;point_mass&#39;, [&#39;easy&#39;, &#39;hard&#39;]), (&#39;reacher&#39;, [&#39;easy&#39;, &#39;hard&#39;]), (&#39;swimmer&#39;, [&#39;swimmer6&#39;, &#39;swimmer15&#39;]), (&#39;walker&#39;, [&#39;stand&#39;, &#39;walk&#39;, &#39;run&#39;]), (&#39;dog&#39;, [&#39;fetch&#39;, &#39;run&#39;, &#39;stand&#39;, &#39;trot&#39;, &#39;walk&#39;]), (&#39;humanoid_CMU&#39;, [&#39;run&#39;, &#39;stand&#39;, &#39;walk&#39;]), (&#39;lqr&#39;, [&#39;lqr_2_1&#39;, &#39;lqr_6_2&#39;]), (&#39;quadruped&#39;, [&#39;escape&#39;, &#39;fetch&#39;, &#39;run&#39;, &#39;walk&#39;]), (&#39;stacker&#39;, [&#39;stack_2&#39;, &#39;stack_4&#39;])]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">git_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/deepmind/dm_control&quot;</span>
     <span class="n">libname</span> <span class="o">=</span> <span class="s2">&quot;dm_control&quot;</span>
-    <span class="n">available_envs</span> <span class="o">=</span> <span class="n">_get_envs</span><span class="p">()</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">available_envs</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_dm_control</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_get_envs</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">dm_control</span>
+
+        <span class="k">return</span> <span class="n">dm_control</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -521,6 +582,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pixels_only</span> <span class="o">=</span> <span class="n">pixels_only</span>
 
         <span class="k">if</span> <span class="n">from_pixels</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">dm_control.suite.wrappers</span> <span class="kn">import</span> <span class="n">pixels</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_egl_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;camera_id&quot;</span><span class="p">:</span> <span class="n">camera_id</span><span class="p">}</span>
             <span class="k">if</span> <span class="n">render_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -544,12 +607,23 @@
             <span class="n">reward_spec</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_spec</span> <span class="o">=</span> <span class="n">reward_spec</span>
         <span class="c1"># populate default done spec</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span>
+        <span class="n">done_spec</span> <span class="o">=</span> <span class="n">DiscreteTensorSpec</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span>
+            <span class="n">done</span><span class="o">=</span><span class="n">done_spec</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+            <span class="n">truncated</span><span class="o">=</span><span class="n">done_spec</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+            <span class="n">terminated</span><span class="o">=</span><span class="n">done_spec</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span> <span class="o">=</span> <span class="n">_dmcontrol_to_torchrl_spec_transform</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">action_spec</span><span class="p">(),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="n">dm_control</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
+        <span class="kn">from</span> <span class="nn">dm_control.suite.wrappers</span> <span class="kn">import</span> <span class="n">pixels</span>
+
         <span class="k">if</span> <span class="s2">&quot;env&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Could not find environment key &#39;env&#39; in kwargs.&quot;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span>
@@ -577,6 +651,8 @@
         <span class="k">return</span> <span class="n">seed</span>
 
     <span class="k">def</span> <span class="nf">_set_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">dm_control.suite.wrappers</span> <span class="kn">import</span> <span class="n">pixels</span>
+
         <span class="k">if</span> <span class="n">_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">_seed</span><span class="p">)</span>
@@ -593,14 +669,27 @@
 
     <span class="k">def</span> <span class="nf">_output_transform</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">timestep_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;TimeStep&quot;</span><span class="p">]</span>  <span class="c1"># noqa: F821</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">timestep_tuple</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">tuple</span><span class="p">:</span>
             <span class="n">timestep_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">timestep_tuple</span><span class="p">,)</span>
         <span class="n">reward</span> <span class="o">=</span> <span class="n">timestep_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reward</span>
 
-        <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># dm_control envs are non-terminating</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">=</span> <span class="n">terminated</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># dm_control envs are non-terminating</span>
         <span class="n">observation</span> <span class="o">=</span> <span class="n">timestep_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">observation</span>
-        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span>
+
+    <span class="k">def</span> <span class="nf">_reset_output_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_data</span><span class="p">):</span>
+        <span class="p">(</span>
+            <span class="n">observation</span><span class="p">,</span>
+            <span class="n">reward</span><span class="p">,</span>
+            <span class="n">terminated</span><span class="p">,</span>
+            <span class="n">truncated</span><span class="p">,</span>
+            <span class="n">done</span><span class="p">,</span>
+            <span class="n">info</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_transform</span><span class="p">(</span><span class="n">reset_data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observation</span><span class="p">,</span> <span class="n">info</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -608,23 +697,71 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="DMControlEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.dm_control.DMControlEnv.html#torchrl.envs.libs.dm_control.DMControlEnv">[docs]</a><span class="k">class</span> <span class="nc">DMControlEnv</span><span class="p">(</span><span class="n">DMControlWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="DMControlEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.DMControlEnv.html#torchrl.envs.DMControlEnv">[docs]</a><span class="k">class</span> <span class="nc">DMControlEnv</span><span class="p">(</span><span class="n">DMControlWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DeepMind Control lab environment wrapper.</span>
 
+<span class="sd">    The DeepMind control library can be found here: https://github.com/deepmind/dm_control.</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2006.12983</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        env_name (str): name of the environment</span>
-<span class="sd">        task_name (str): name of the task</span>
-<span class="sd">        seed (int, optional): seed to use for the environment</span>
-<span class="sd">        from_pixels (bool, optional): if ``True``, the observation will be returned</span>
-<span class="sd">            as an image.</span>
-<span class="sd">            Default is False.</span>
+<span class="sd">        env_name (str): name of the environment.</span>
+<span class="sd">        task_name (str): name of the task.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): if ``True``, an attempt to return the pixel</span>
+<span class="sd">            observations from the env will be performed.</span>
+<span class="sd">            By default, these observations</span>
+<span class="sd">            will be written under the ``&quot;pixels&quot;`` entry.</span>
+<span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        pixels_only (bool, optional): if ``True``, only the pixel observations will</span>
+<span class="sd">            be returned (by default under the ``&quot;pixels&quot;`` entry in the output tensordict).</span>
+<span class="sd">            If ``False``, observations (eg, states) and pixels will be returned</span>
+<span class="sd">            whenever ``from_pixels=True``. Defaults to ``True``.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            Should match the leading dimensions of all observations, done states,</span>
+<span class="sd">            rewards, actions and infos.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs (list): a list of ``Tuple[str, List[str]]`` representing the</span>
+<span class="sd">            environment / task pairs available.</span>
 
 <span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import DMControlEnv</span>
 <span class="sd">        &gt;&gt;&gt; env = DMControlEnv(env_name=&quot;cheetah&quot;, task_name=&quot;run&quot;,</span>
 <span class="sd">        ...    from_pixels=True, frame_skip=4)</span>
 <span class="sd">        &gt;&gt;&gt; td = env.rand_step()</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([6]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        pixels: Tensor(shape=torch.Size([240, 320, 3]), device=cpu, dtype=torch.uint8, is_shared=False),</span>
+<span class="sd">                        position: Tensor(shape=torch.Size([8]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        velocity: Tensor(shape=torch.Size([9]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
+<span class="sd">        [(&#39;acrobot&#39;, [&#39;swingup&#39;, &#39;swingup_sparse&#39;]), (&#39;ball_in_cup&#39;, [&#39;catch&#39;]), (&#39;cartpole&#39;, [&#39;balance&#39;, &#39;balance_sparse&#39;, &#39;swingup&#39;, &#39;swingup_sparse&#39;, &#39;three_poles&#39;, &#39;two_poles&#39;]), (&#39;cheetah&#39;, [&#39;run&#39;]), (&#39;finger&#39;, [&#39;spin&#39;, &#39;turn_easy&#39;, &#39;turn_hard&#39;]), (&#39;fish&#39;, [&#39;upright&#39;, &#39;swim&#39;]), (&#39;hopper&#39;, [&#39;stand&#39;, &#39;hop&#39;]), (&#39;humanoid&#39;, [&#39;stand&#39;, &#39;walk&#39;, &#39;run&#39;, &#39;run_pure_state&#39;]), (&#39;manipulator&#39;, [&#39;bring_ball&#39;, &#39;bring_peg&#39;, &#39;insert_ball&#39;, &#39;insert_peg&#39;]), (&#39;pendulum&#39;, [&#39;swingup&#39;]), (&#39;point_mass&#39;, [&#39;easy&#39;, &#39;hard&#39;]), (&#39;reacher&#39;, [&#39;easy&#39;, &#39;hard&#39;]), (&#39;swimmer&#39;, [&#39;swimmer6&#39;, &#39;swimmer15&#39;]), (&#39;walker&#39;, [&#39;stand&#39;, &#39;walk&#39;, &#39;run&#39;]), (&#39;dog&#39;, [&#39;fetch&#39;, &#39;run&#39;, &#39;stand&#39;, &#39;trot&#39;, &#39;walk&#39;]), (&#39;humanoid_CMU&#39;, [&#39;run&#39;, &#39;stand&#39;, &#39;walk&#39;]), (&#39;lqr&#39;, [&#39;lqr_2_1&#39;, &#39;lqr_6_2&#39;]), (&#39;quadruped&#39;, [&#39;escape&#39;, &#39;fetch&#39;, &#39;run&#39;, &#39;walk&#39;]), (&#39;stacker&#39;, [&#39;stack_2&#39;, &#39;stack_4&#39;])]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -632,7 +769,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_dmc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="s2">&quot;dm_control python package was not found. Please install this dependency.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">IMPORT_ERR</span>
+            <span class="p">)</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">env_name</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;task_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_name</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -644,6 +781,8 @@
         <span class="n">_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">dm_control</span> <span class="kn">import</span> <span class="n">suite</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">env_name</span> <span class="o">=</span> <span class="n">env_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">task_name</span> <span class="o">=</span> <span class="n">task_name</span>
 
@@ -655,7 +794,7 @@
             <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;pixels_only&quot;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_dmc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;dm_control not found, unable to create </span><span class="si">{</span><span class="n">env_name</span><span class="si">}</span><span class="s2">:&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">. Consider downloading and installing &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;dm_control from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">git_url</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -684,9 +823,10 @@
             <span class="n">env_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env_name&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="s2">&quot;task_name&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
                 <span class="n">task_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;task_name&quot;</span><span class="p">]</span>
+                <span class="n">available_envs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_envs</span><span class="p">)</span>
                 <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">env_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_envs</span>
-                    <span class="ow">or</span> <span class="n">task_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_envs</span><span class="p">[</span><span class="n">env_name</span><span class="p">]</span>
+                    <span class="n">env_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_envs</span>
+                    <span class="ow">or</span> <span class="n">task_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_envs</span><span class="p">[</span><span class="n">env_name</span><span class="p">]</span>
                 <span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">env_name</span><span class="si">}</span><span class="s2"> with task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> is unknown in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">libname</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -751,6 +891,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -893,7 +1034,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

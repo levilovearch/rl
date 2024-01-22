@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -380,6 +381,13 @@ to download the full example code</p>
 <section class="sphx-glr-example-title" id="multi-agent-reinforcement-learning-ppo-with-torchrl-tutorial">
 <span id="sphx-glr-tutorials-multiagent-ppo-py"></span><h1>Multi-Agent Reinforcement Learning (PPO) with TorchRL Tutorial<a class="headerlink" href="#multi-agent-reinforcement-learning-ppo-with-torchrl-tutorial" title="Permalink to this heading">¶</a></h1>
 <p><strong>Author</strong>: <a class="reference external" href="https://github.com/matteobettini">Matteo Bettini</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are interested in Multi-Agent Reinforcement Learning (MARL) in
+TorchRL, check out
+<a class="reference external" href="https://github.com/facebookresearch/BenchMARL">BenchMARL</a>: a benchmarking library where you
+can train and compare MARL algorithms, tasks, and models using TorchRL!</p>
+</div>
 <p>This tutorial demonstrates how to use PyTorch and <code class="xref py py-mod docutils literal notranslate"><span class="pre">torchrl</span></code> to
 solve a Multi-Agent Reinforcement Learning (MARL) problem.</p>
 <p>A code-only version of this tutorial is available in the
@@ -407,7 +415,7 @@ using  <a class="reference external" href="https://en.wikipedia.org/wiki/Lidar">
 <li><p>How to create a multi-agent environment in TorchRL, how its specs work, and how it integrates with the library;</p></li>
 <li><p>How you use GPU vectorized environments in TorchRL;</p></li>
 <li><p>How to create different multi-agent network architectures in TorchRL (e.g., using parameter sharing, centralised critic)</p></li>
-<li><p>How we can use <a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
+<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
 <li><p>How we can tie all the library components (collectors, modules, replay buffers, and losses) in a multi-agent MAPPO/IPPO training loop.</p></li>
 </ul>
 <p>If you are running this in Google Colab, make sure you install the following dependencies:</p>
@@ -468,11 +476,11 @@ parameter sharing and critic centralisation.</p></li>
 <p>If you are running this in Colab or in a machine with a GUI, you will also have the option
 to render and visualise your own trained policy prior and after training.</p>
 <p>Let’s import our dependencies</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Torch</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Torch</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="c1"># Tensordict modules</span>
-<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a>
+<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a>
 <span class="kn">from</span> <span class="nn">tensordict.nn.distributions</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">NormalParamExtractor</span></a>
 
 <span class="c1"># Data collection</span>
@@ -487,10 +495,10 @@ to render and visualise your own trained policy prior and after training.</p>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">check_env_specs</span>
 
 <span class="c1"># Multi-agent network</span>
-<span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MultiAgentMLP</span></a><span class="p">,</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ProbabilisticActor</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/distributions.html#torch.distributions.transformed_distribution.TransformedDistribution" title="torch.distributions.transformed_distribution.TransformedDistribution" class="sphx-glr-backref-module-torch-distributions-transformed_distribution sphx-glr-backref-type-py-class"><span class="n">TanhNormal</span></a>
+<span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MultiAgentMLP</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ProbabilisticActor</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/distributions.html#torch.distributions.transformed_distribution.TransformedDistribution" title="torch.distributions.transformed_distribution.TransformedDistribution" class="sphx-glr-backref-module-torch-distributions-transformed_distribution sphx-glr-backref-type-py-class"><span class="n">TanhNormal</span></a>
 
 <span class="c1"># Loss</span>
-<span class="kn">from</span> <span class="nn">torchrl.objectives</span> <span class="kn">import</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ClipPPOLoss</span></a><span class="p">,</span> <span class="n">ValueEstimators</span>
+<span class="kn">from</span> <span class="nn">torchrl.objectives</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ClipPPOLoss</span></a><span class="p">,</span> <span class="n">ValueEstimators</span>
 
 <span class="c1"># Utils</span>
 <a href="https://pytorch.org/docs/stable/generated/torch.manual_seed.html#torch.manual_seed" title="torch.manual_seed" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span></a><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -505,7 +513,7 @@ Depending on the resources
 available, one may choose to execute the policy and the simulator on GPU or on another
 device.
 You can tune some of these values to adjust the computational requirements.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Devices</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Devices</span>
 <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">has_cuda</span> <span class="k">else</span> <span class="s2">&quot;cuda:0&quot;</span>  <span class="c1"># The divice where learning is run</span>
 <span class="n">vmas_device</span> <span class="o">=</span> <span class="n">device</span>  <span class="c1"># The device where the simulator is run (VMAS can run on GPU)</span>
 
@@ -563,7 +571,7 @@ For this tutorial, we will limit the episodes to <code class="docutils literal n
 functionality is already provided in the VMAS simulator but the TorchRL <code class="xref py py-class docutils literal notranslate"><span class="pre">StepCount</span></code>
 transform could alternatively be used.
 We will also use <code class="docutils literal notranslate"><span class="pre">num_vmas_envs</span></code> vectorized environments, to leverage batch simulation.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">max_steps</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># Episode steps before done</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">max_steps</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># Episode steps before done</span>
 <span class="n">num_vmas_envs</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">frames_per_batch</span> <span class="o">//</span> <span class="n">max_steps</span>
 <span class="p">)</span>  <span class="c1"># Number of vectorized envs. frames_per_batch should be divisible by this number</span>
@@ -596,32 +604,43 @@ you should not have to care about this.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">done_spec</span></code> defines the done domain;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">observation_spec</span></code> which defines the domain of all other outputs from environmnet steps;</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;action_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">action_spec</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reward_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_spec</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">done_spec</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;action_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">full_action_spec</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reward_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">full_reward_spec</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">full_done_spec</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;observation_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>action_spec: BoundedTensorSpec(
-    shape=torch.Size([60, 3, 2]),
-    space=ContinuousBox(
-        minimum=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True),
-        maximum=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True)),
-    device=cpu,
-    dtype=torch.float32,
-    domain=continuous)
-reward_spec: UnboundedContinuousTensorSpec(
-    shape=torch.Size([60, 3, 1]),
-    space=None,
-    device=cpu,
-    dtype=torch.float32,
-    domain=continuous)
-done_spec: DiscreteTensorSpec(
-    shape=torch.Size([60, 1]),
-    space=DiscreteBox(n=2),
-    device=cpu,
-    dtype=torch.bool,
-    domain=discrete)
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>action_spec: CompositeSpec(
+    agents: CompositeSpec(
+        action: BoundedTensorSpec(
+            shape=torch.Size([60, 3, 2]),
+            space=ContinuousBox(
+                low=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True),
+                high=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True)),
+            device=cpu,
+            dtype=torch.float32,
+            domain=continuous), device=cpu, shape=torch.Size([60, 3])), device=cpu, shape=torch.Size([60]))
+reward_spec: CompositeSpec(
+    agents: CompositeSpec(
+        reward: UnboundedContinuousTensorSpec(
+            shape=torch.Size([60, 3, 1]),
+            space=None,
+            device=cpu,
+            dtype=torch.float32,
+            domain=continuous), device=cpu, shape=torch.Size([60, 3])), device=cpu, shape=torch.Size([60]))
+done_spec: CompositeSpec(
+    done: DiscreteTensorSpec(
+        shape=torch.Size([60, 1]),
+        space=DiscreteBox(n=2),
+        device=cpu,
+        dtype=torch.bool,
+        domain=discrete),
+    terminated: DiscreteTensorSpec(
+        shape=torch.Size([60, 1]),
+        space=DiscreteBox(n=2),
+        device=cpu,
+        dtype=torch.bool,
+        domain=discrete), device=cpu, shape=torch.Size([60]))
 observation_spec: CompositeSpec(
     agents: CompositeSpec(
         observation: UnboundedContinuousTensorSpec(
@@ -659,60 +678,21 @@ agents.</p>
 <p>TorchRL has a way to keep track of which MARL specs are shared and which are not.
 In fact, specs that have the additional agent dimension
 (i.e., they vary for each agent) will be contained in a inner “agents” key.</p>
-<p>To access the full structure of the specs we can use</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;full_action_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">input_spec</span><span class="p">[</span><span class="s2">&quot;_action_spec&quot;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;full_reward_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_reward_spec&quot;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;full_done_spec:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_done_spec&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>full_action_spec: CompositeSpec(
-    agents: CompositeSpec(
-        action: BoundedTensorSpec(
-            shape=torch.Size([60, 3, 2]),
-            space=ContinuousBox(
-                minimum=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True),
-                maximum=Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, contiguous=True)),
-            device=cpu,
-            dtype=torch.float32,
-            domain=continuous), device=cpu, shape=torch.Size([60, 3])), device=cpu, shape=torch.Size([60]))
-full_reward_spec: CompositeSpec(
-    agents: CompositeSpec(
-        reward: UnboundedContinuousTensorSpec(
-            shape=torch.Size([60, 3, 1]),
-            space=None,
-            device=cpu,
-            dtype=torch.float32,
-            domain=continuous), device=cpu, shape=torch.Size([60, 3])), device=cpu, shape=torch.Size([60]))
-full_done_spec: CompositeSpec(
-    done: DiscreteTensorSpec(
-        shape=torch.Size([60, 1]),
-        space=DiscreteBox(n=2),
-        device=cpu,
-        dtype=torch.bool,
-        domain=discrete), device=cpu, shape=torch.Size([60]))
-</pre></div>
-</div>
 <p>As you can see the reward and action spec present the “agent” key,
 meaning that entries in tensordicts belonging to those specs will be nested in an “agents” tensordict,
 grouping all per-agent values.</p>
-<p>To quickly access the key for each of these values in tensordicts, we can simply ask the environment for the
-respective key, and
+<p>To quickly access the keys for each of these values in tensordicts, we can simply ask the environment for the
+respective keys, and
 we will immediately understand which are per-agent and which shared.
 This info will be useful in order to tell all other TorchRL components where to find each value</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;action_key:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reward_key:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done_key:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">done_key</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;action_keys:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">action_keys</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reward_keys:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_keys</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done_keys:&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">done_keys</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>action_key: (&#39;agents&#39;, &#39;action&#39;)
-reward_key: (&#39;agents&#39;, &#39;reward&#39;)
-done_key: (&#39;done&#39;,)
-</pre></div>
-</div>
-<p>To tie it all together, we can see that passing these keys to the full specs gives us the leaf domains</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">action_spec</span> <span class="o">==</span> <span class="n">env</span><span class="o">.</span><span class="n">input_spec</span><span class="p">[</span><span class="s2">&quot;_action_spec&quot;</span><span class="p">][</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span>
-<span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_spec</span> <span class="o">==</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_reward_spec&quot;</span><span class="p">][</span><span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">]</span>
-<span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">==</span> <span class="n">env</span><span class="o">.</span><span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;_done_spec&quot;</span><span class="p">][</span><span class="n">env</span><span class="o">.</span><span class="n">done_key</span><span class="p">]</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>action_keys: [(&#39;agents&#39;, &#39;action&#39;)]
+reward_keys: [(&#39;agents&#39;, &#39;reward&#39;)]
+done_keys: [&#39;done&#39;, &#39;terminated&#39;]
 </pre></div>
 </div>
 <section id="transforms">
@@ -725,7 +705,7 @@ We will tell this transform where to find the reward key and where to write the 
 The transformed environment will inherit
 the device and meta-data of the wrapped environment, and transform these depending on the sequence
 of transforms it contains.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
     <span class="n">env</span><span class="p">,</span>
     <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">RewardSum</span></a><span class="p">(</span><span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;episode_reward&quot;</span><span class="p">)]),</span>
 <span class="p">)</span>
@@ -733,10 +713,7 @@ of transforms it contains.</p>
 </div>
 <p>the <code class="xref py py-func docutils literal notranslate"><span class="pre">check_env_specs()</span></code> function runs a small rollout and compares its output against the environment
 specs. If no error is raised, we can be confident that the specs are properly defined:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">check_env_specs</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>check_env_specs succeeded!
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">check_env_specs</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -746,10 +723,10 @@ specs. If no error is raised, we can be confident that the specs are properly de
 call <cite>env.rollout(n_steps)</cite> and get an overview of what the environment inputs
 and outputs look like. Actions will automatically be drawn at random from the action spec
 domain.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n_rollout_steps</span> <span class="o">=</span> <span class="mi">5</span>
-<a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span><span class="n">n_rollout_steps</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rollout of three steps:&quot;</span><span class="p">,</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shape of the rollout TensorDict:&quot;</span><span class="p">,</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.batch_size" title="tensordict.TensorDict.batch_size" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-property"><span class="n">rollout</span><span class="o">.</span><span class="n">batch_size</span></a><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_rollout_steps</span> <span class="o">=</span> <span class="mi">5</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span><span class="n">n_rollout_steps</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rollout of three steps:&quot;</span><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shape of the rollout TensorDict:&quot;</span><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.batch_size" title="tensordict.TensorDict.batch_size" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-property"><span class="n">rollout</span><span class="o">.</span><span class="n">batch_size</span></a><span class="p">)</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>rollout of three steps: TensorDict(
@@ -789,10 +766,12 @@ domain.</p>
                     batch_size=torch.Size([60, 5, 3]),
                     device=cpu,
                     is_shared=False),
-                done: Tensor(shape=torch.Size([60, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+                done: Tensor(shape=torch.Size([60, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                terminated: Tensor(shape=torch.Size([60, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
             batch_size=torch.Size([60, 5]),
             device=cpu,
-            is_shared=False)},
+            is_shared=False),
+        terminated: Tensor(shape=torch.Size([60, 5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
     batch_size=torch.Size([60, 5]),
     device=cpu,
     is_shared=False)
@@ -849,7 +828,7 @@ speed, but it is important to always think about this decision in your own probl
 <p><strong>First</strong>: define a neural network <code class="docutils literal notranslate"><span class="pre">n_obs_per_agent</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">n_actions_per_agents</span></code></p>
 <p>For this we use the <code class="docutils literal notranslate"><span class="pre">MultiAgentMLP</span></code>, a TorchRL module made exactly for
 multiple agents, with much customisation available.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">share_parameters_policy</span> <span class="o">=</span> <span class="kc">True</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">share_parameters_policy</span> <span class="o">=</span> <span class="kc">True</span>
 
 <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_net</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span></a><span class="p">(</span>
     <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MultiAgentMLP</span></a><span class="p">(</span>
@@ -875,7 +854,7 @@ neural networks, and write the
 outputs in-place at the <code class="docutils literal notranslate"><span class="pre">out_keys</span></code>.</p>
 <p>Note that we use <code class="docutils literal notranslate"><span class="pre">(&quot;agents&quot;,</span> <span class="pre">...)</span></code> keys as these keys are denoting data with the
 additional <code class="docutils literal notranslate"><span class="pre">n_agents</span></code> dimension.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_module</span></a> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_module</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
     <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_net</span></a><span class="p">,</span>
     <span class="n">in_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">)],</span>
     <span class="n">out_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">)],</span>
@@ -891,15 +870,15 @@ distribution, which we gather from the environment specs.</p>
 <p>The name of the <code class="docutils literal notranslate"><span class="pre">in_keys</span></code> (and hence the name of the <code class="docutils literal notranslate"><span class="pre">out_keys</span></code> from
 the <code class="xref py py-class docutils literal notranslate"><span class="pre">TensorDictModule</span></code> above) has to end with the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">TanhNormal</span></code> distribution constructor keyword arguments (loc and scale).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">policy</span> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ProbabilisticActor</span></a><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_module</span></a><span class="p">,</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">policy</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ProbabilisticActor</span></a><span class="p">(</span>
+    <span class="n">module</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_module</span></a><span class="p">,</span>
     <span class="n">spec</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">,</span>
     <span class="n">in_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;loc&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">)],</span>
     <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">],</span>
     <span class="n">distribution_class</span><span class="o">=</span><a href="https://pytorch.org/docs/stable/distributions.html#torch.distributions.transformed_distribution.TransformedDistribution" title="torch.distributions.transformed_distribution.TransformedDistribution" class="sphx-glr-backref-module-torch-distributions-transformed_distribution sphx-glr-backref-type-py-class"><span class="n">TanhNormal</span></a><span class="p">,</span>
     <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span><span class="p">,</span>
-        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span><span class="p">,</span>
+        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span>
+        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">unbatched_action_spec</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="n">return_log_prob</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">log_prob_key</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_log_prob&quot;</span><span class="p">),</span>
@@ -936,7 +915,7 @@ and training is centralised.</p></li>
 <p>In any case, the critic output will have shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">n_agents,</span> <span class="pre">1)</span></code>.
 If the critic is centralised and shared,
 all the values along the <code class="docutils literal notranslate"><span class="pre">n_agents</span></code> dimension will be identical.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">share_parameters_critic</span> <span class="o">=</span> <span class="kc">True</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">share_parameters_critic</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">mappo</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># IPPO if False</span>
 
 <span class="n">critic_net</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MultiAgentMLP</span></a><span class="p">(</span>
@@ -951,7 +930,7 @@ all the values along the <code class="docutils literal notranslate"><span class=
     <span class="n">activation_class</span><span class="o">=</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html#torch.nn.Tanh" title="torch.nn.Tanh" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span></a><span class="p">,</span>
 <span class="p">)</span>
 
-<a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">critic_net</span><span class="p">,</span>
     <span class="n">in_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">)],</span>
     <span class="n">out_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;state_value&quot;</span><span class="p">)],</span>
@@ -964,8 +943,8 @@ of the environment to run these modules, as they know what information to read
 and where to write it:</p>
 <p><strong>From this point on, the multi-agent-specific components have been instantiated, and we will simply use the same
 components as in single-agent learning. Isn’t this fantastic?</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running policy:&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running value:&quot;</span><span class="p">,</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()))</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running policy:&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running value:&quot;</span><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()))</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Running policy: TensorDict(
@@ -989,7 +968,8 @@ components as in single-agent learning. Isn’t this fantastic?</strong></p>
             batch_size=torch.Size([60, 3]),
             device=cpu,
             is_shared=False),
-        done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+        done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        terminated: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
     batch_size=torch.Size([60]),
     device=cpu,
     is_shared=False)
@@ -1011,7 +991,8 @@ Running value: TensorDict(
             batch_size=torch.Size([60, 3]),
             device=cpu,
             is_shared=False),
-        done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+        done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        terminated: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
     batch_size=torch.Size([60]),
     device=cpu,
     is_shared=False)
@@ -1027,7 +1008,7 @@ the last two steps until the environment signals a stop (or reaches a done
 state).</p>
 <p>We will use the simplest possible data collector, which has the same output as an environment rollout,
 with the only difference that it will auto reset done states until the desired frames are collected.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">collector</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset" title="torch.utils.data.IterableDataset" class="sphx-glr-backref-module-torch-utils-data sphx-glr-backref-type-py-class"><span class="n">SyncDataCollector</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">collector</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset" title="torch.utils.data.IterableDataset" class="sphx-glr-backref-module-torch-utils-data sphx-glr-backref-type-py-class"><span class="n">SyncDataCollector</span></a><span class="p">(</span>
     <span class="n">env</span><span class="p">,</span>
     <span class="n">policy</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="n">vmas_device</span><span class="p">,</span>
@@ -1047,7 +1028,7 @@ of epochs.</p>
 <p>Using a replay buffer for PPO is not mandatory and we could simply
 use the collected data online, but using these classes
 makes it easy for us to build the inner training loop in a reproducible way.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">replay_buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">replay_buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span>
     <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span>
         <span class="n">frames_per_batch</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
     <span class="p">),</span>  <span class="c1"># We store the frames_per_batch collected at each iteration</span>
@@ -1075,9 +1056,9 @@ The <code class="docutils literal notranslate"><span class="pre">&quot;value_tar
 value that the value network should represent with the input observation.
 Both of these will be used by <code class="xref py py-class docutils literal notranslate"><span class="pre">ClipPPOLoss</span></code> to
 return the policy and value losses.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">loss_module</span> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ClipPPOLoss</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">loss_module</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ClipPPOLoss</span></a><span class="p">(</span>
     <span class="n">actor</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
-    <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="o">=</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">,</span>
+    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">,</span>
     <span class="n">clip_epsilon</span><span class="o">=</span><span class="n">clip_epsilon</span><span class="p">,</span>
     <span class="n">entropy_coef</span><span class="o">=</span><span class="n">entropy_eps</span><span class="p">,</span>
     <span class="n">normalize_advantage</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Important to avoid normalizing across the agent dimension</span>
@@ -1087,6 +1068,9 @@ return the policy and value losses.</p>
     <span class="n">action</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">action_key</span><span class="p">,</span>
     <span class="n">sample_log_prob</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_log_prob&quot;</span><span class="p">),</span>
     <span class="n">value</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;state_value&quot;</span><span class="p">),</span>
+    <span class="c1"># These last 2 keys will be expanded to match the reward shape</span>
+    <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">done</span></a><span class="o">=</span><span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">),</span>
+    <span class="n">terminated</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 
 
@@ -1135,36 +1119,43 @@ The steps include:</p>
 </li>
 <li><p>Repeat</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">n_iters</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;episode_reward_mean = 0&quot;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">n_iters</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;episode_reward_mean = 0&quot;</span><span class="p">)</span>
 
 <span class="n">episode_reward_mean_list</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict_data</span></a> <span class="ow">in</span> <span class="n">collector</span><span class="p">:</span>
-    <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.set" title="tensordict.TensorDict.set" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">set</span></a><span class="p">(</span>
-        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">),</span>
-        <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">))</span>
+<span class="k">for</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict_data</span></a> <span class="ow">in</span> <span class="n">collector</span><span class="p">:</span>
+    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.set" title="tensordict.TensorDict.set" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">set</span></a><span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">))</span>
         <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">expand</span><span class="p">(</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
-    <span class="p">)</span>  <span class="c1"># We need to expand the done to match the reward shape (this is expected by the value estimator)</span>
+        <span class="o">.</span><span class="n">expand</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get_item_shape" title="tensordict.TensorDict.get_item_shape" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get_item_shape</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">))),</span>
+    <span class="p">)</span>
+    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.set" title="tensordict.TensorDict.set" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">set</span></a><span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">expand</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get_item_shape" title="tensordict.TensorDict.get_item_shape" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get_item_shape</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">reward_key</span><span class="p">))),</span>
+    <span class="p">)</span>
+    <span class="c1"># We need to expand the done and terminated to match the reward shape (this is expected by the value estimator)</span>
 
     <span class="k">with</span> <a href="https://pytorch.org/docs/stable/generated/torch.no_grad.html#torch.no_grad" title="torch.no_grad" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span></a><span class="p">():</span>
         <span class="n">GAE</span><span class="p">(</span>
-            <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict_data</span></a><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="n">loss_module</span><span class="o">.</span><span class="n">critic_params</span><span class="p">,</span>
-            <span class="n">target_params</span><span class="o">=</span><span class="n">loss_module</span><span class="o">.</span><span class="n">target_critic_params</span><span class="p">,</span>
+            <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict_data</span></a><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictParams.html#tensordict.TensorDictParams" title="tensordict.TensorDictParams" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_module</span><span class="o">.</span><span class="n">critic_params</span></a><span class="p">,</span>
+            <span class="n">target_params</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_module</span><span class="o">.</span><span class="n">target_critic_params</span></a><span class="p">,</span>
         <span class="p">)</span>  <span class="c1"># Compute GAE and add it to the data</span>
 
-    <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_view</span></a> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.reshape" title="tensordict.TensorDict.reshape" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">reshape</span></a><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Flatten the batch size to shuffle data</span>
-    <span class="n">replay_buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_view</span></a><span class="p">)</span>
+    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_view</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.reshape" title="tensordict.TensorDict.reshape" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">reshape</span></a><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Flatten the batch size to shuffle data</span>
+    <span class="n">replay_buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_view</span></a><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frames_per_batch</span> <span class="o">//</span> <span class="n">minibatch_size</span><span class="p">):</span>
-            <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subdata</span></a> <span class="o">=</span> <span class="n">replay_buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
-            <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a> <span class="o">=</span> <span class="n">loss_module</span><span class="p">(</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subdata</span></a><span class="p">)</span>
+            <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subdata</span></a> <span class="o">=</span> <span class="n">replay_buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+            <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a> <span class="o">=</span> <span class="n">loss_module</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subdata</span></a><span class="p">)</span>
 
             <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_value</span></a> <span class="o">=</span> <span class="p">(</span>
-                <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_objective&quot;</span><span class="p">]</span>
-                <span class="o">+</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_critic&quot;</span><span class="p">]</span>
-                <span class="o">+</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_entropy&quot;</span><span class="p">]</span>
+                <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_objective&quot;</span><span class="p">]</span>
+                <span class="o">+</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_critic&quot;</span><span class="p">]</span>
+                <span class="o">+</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_vals</span></a><span class="p">[</span><span class="s2">&quot;loss_entropy&quot;</span><span class="p">]</span>
             <span class="p">)</span>
 
             <a href="https://pytorch.org/docs/stable/generated/torch.Tensor.backward.html#torch.Tensor.backward" title="torch.Tensor.backward" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-method"><span class="n">loss_value</span><span class="o">.</span><span class="n">backward</span></a><span class="p">()</span>
@@ -1173,15 +1164,15 @@ The steps include:</p>
                 <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.parameters" title="torch.nn.Module.parameters" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-method"><span class="n">loss_module</span><span class="o">.</span><span class="n">parameters</span></a><span class="p">(),</span> <span class="n">max_grad_norm</span>
             <span class="p">)</span>  <span class="c1"># Optional</span>
 
-            <a href="https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.step.html#torch.optim.Optimizer.step" title="torch.optim.Optimizer.step" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">step</span></a><span class="p">()</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.step" title="torch.optim.Adam.step" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">step</span></a><span class="p">()</span>
             <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.zero_grad" title="torch.optim.Adam.zero_grad" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span></a><span class="p">()</span>
 
     <span class="n">collector</span><span class="o">.</span><span class="n">update_policy_weights_</span><span class="p">()</span>
 
     <span class="c1"># Logging</span>
-    <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">done</span></a> <span class="o">=</span> <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">))</span>
+    <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">done</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">))</span>
     <span class="n">episode_reward_mean</span> <span class="o">=</span> <span class="p">(</span>
-        <a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;episode_reward&quot;</span><span class="p">))[</span><a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">done</span></a><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.get" title="tensordict.TensorDict.get" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">get</span></a><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">,</span> <span class="s2">&quot;episode_reward&quot;</span><span class="p">))[</span><a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">done</span></a><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="n">episode_reward_mean_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">episode_reward_mean</span><span class="p">)</span>
     <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;episode_reward_mean = </span><span class="si">{</span><span class="n">episode_reward_mean</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1189,16 +1180,16 @@ The steps include:</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>episode_reward_mean = 0:   0%|          | 0/10 [00:00&lt;?, ?it/s]
-episode_reward_mean = -0.3390621244907379:  10%|#         | 1/10 [00:06&lt;01:02,  6.98s/it]
-episode_reward_mean = 0.1457589715719223:  20%|##        | 2/10 [00:13&lt;00:55,  6.95s/it]
-episode_reward_mean = 1.0210180282592773:  30%|###       | 3/10 [00:22&lt;00:54,  7.73s/it]
-episode_reward_mean = 1.5489939451217651:  40%|####      | 4/10 [00:29&lt;00:44,  7.41s/it]
-episode_reward_mean = 1.7553492784500122:  50%|#####     | 5/10 [00:36&lt;00:36,  7.21s/it]
-episode_reward_mean = 2.2441396713256836:  60%|######    | 6/10 [00:43&lt;00:28,  7.12s/it]
-episode_reward_mean = 2.5985326766967773:  70%|#######   | 7/10 [00:50&lt;00:21,  7.08s/it]
-episode_reward_mean = 2.5103886127471924:  80%|########  | 8/10 [00:57&lt;00:14,  7.08s/it]
-episode_reward_mean = 2.7321016788482666:  90%|######### | 9/10 [01:04&lt;00:07,  7.17s/it]
-episode_reward_mean = 2.9089064598083496: 100%|##########| 10/10 [01:12&lt;00:00,  7.31s/it]
+episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:12&lt;01:52, 12.49s/it]
+episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:24&lt;01:39, 12.49s/it]
+episode_reward_mean = 1.0600677728652954:  30%|███       | 3/10 [00:37&lt;01:27, 12.48s/it]
+episode_reward_mean = 1.4344534873962402:  40%|████      | 4/10 [00:49&lt;01:15, 12.51s/it]
+episode_reward_mean = 2.1100871562957764:  50%|█████     | 5/10 [01:02&lt;01:02, 12.50s/it]
+episode_reward_mean = 2.304917335510254:  60%|██████    | 6/10 [01:15&lt;00:50, 12.52s/it]
+episode_reward_mean = 2.6943857669830322:  70%|███████   | 7/10 [01:27&lt;00:37, 12.54s/it]
+episode_reward_mean = 2.871443748474121:  80%|████████  | 8/10 [01:40&lt;00:25, 12.63s/it]
+episode_reward_mean = 2.8500826358795166:  90%|█████████ | 9/10 [01:53&lt;00:12, 12.75s/it]
+episode_reward_mean = 2.759843587875366: 100%|██████████| 10/10 [02:06&lt;00:00, 12.93s/it]
 </pre></div>
 </div>
 </section>
@@ -1206,7 +1197,7 @@ episode_reward_mean = 2.9089064598083496: 100%|##########| 10/10 [01:12&lt;00:00
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this heading">¶</a></h2>
 <p>Let’s plot the mean reward obtained per episode</p>
 <p>To make training last longer, increase the <code class="docutils literal notranslate"><span class="pre">n_iters</span></code> hyperparameter.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">episode_reward_mean_list</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">episode_reward_mean_list</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Training iterations&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Reward&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Episode reward mean&quot;</span><span class="p">)</span>
@@ -1217,13 +1208,14 @@ episode_reward_mean = 2.9089064598083496: 100%|##########| 10/10 [01:12&lt;00:00
 <section id="render">
 <h2>Render<a class="headerlink" href="#render" title="Permalink to this heading">¶</a></h2>
 <p>If you are running this in a machine with GUI, you can render the trained policy by running:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span><span class="o">.</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span>
-    <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
-    <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
-    <span class="n">callback</span><span class="o">=</span><span class="k">lambda</span> <span class="n">env</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span>
-    <span class="n">auto_cast_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <a href="https://pytorch.org/docs/stable/generated/torch.no_grad.html#torch.no_grad" title="torch.no_grad" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span></a><span class="p">():</span>
+   <span class="n">env</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span>
+       <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
+       <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+       <span class="n">callback</span><span class="o">=</span><span class="k">lambda</span> <span class="n">env</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span>
+       <span class="n">auto_cast_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+       <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+   <span class="p">)</span>
 </pre></div>
 </div>
 <p>If you are running this in Google Colab, you can render the trained policy by running:</p>
@@ -1241,13 +1233,14 @@ episode_reward_mean = 2.9089064598083496: 100%|##########| 10/10 [01:12&lt;00:00
 <span class="k">def</span> <span class="nf">rendering_callback</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">td</span><span class="p">):</span>
     <span class="n">env</span><span class="o">.</span><span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rgb_array&quot;</span><span class="p">)))</span>
 <span class="n">env</span><span class="o">.</span><span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">env</span><span class="o">.</span><a href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span>
-     <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
-     <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
-     <span class="n">callback</span><span class="o">=</span><span class="n">rendering_callback</span><span class="p">,</span>
-     <span class="n">auto_cast_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-     <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="k">with</span> <a href="https://pytorch.org/docs/stable/generated/torch.no_grad.html#torch.no_grad" title="torch.no_grad" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span></a><span class="p">():</span>
+   <span class="n">env</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rollout</span></a><span class="p">(</span>
+       <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
+       <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+       <span class="n">callback</span><span class="o">=</span><span class="n">rendering_callback</span><span class="p">,</span>
+       <span class="n">auto_cast_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+       <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+   <span class="p">)</span>
 <span class="n">env</span><span class="o">.</span><span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scenario_name</span><span class="si">}</span><span class="s2">.gif&quot;</span><span class="p">,</span>
     <span class="n">save_all</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1268,7 +1261,7 @@ episode_reward_mean = 2.9089064598083496: 100%|##########| 10/10 [01:12&lt;00:00
 <li><p>How to create a multi-agent environment in TorchRL, how its specs work, and how it integrates with the library;</p></li>
 <li><p>How you use GPU vectorized environments in TorchRL;</p></li>
 <li><p>How to create different multi-agent network architectures in TorchRL (e.g., using parameter sharing, centralised critic)</p></li>
-<li><p>How we can use <a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
+<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
 <li><p>How we can tie all the library components (collectors, modules, replay buffers, and losses) in a multi-agent MAPPO/IPPO training loop.</p></li>
 </ul>
 <p>Now that you are proficient with multi-agent PPO, you can check out all
@@ -1287,14 +1280,14 @@ Here are a few videos of some possible scenarios you can try in VMAS.</p>
 <p><span class="caption-text">Scenarios available in <a class="reference external" href="https://github.com/proroklab/VectorizedMultiAgentSimulator">VMAS</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  21.837 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  13 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 5.630 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  27 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-multiagent-ppo-py">
-<div class="sphx-glr-download sphx-glr-download-python docutils container">
-<p><a class="reference download internal" download="" href="../_downloads/f40bd467562dfb87148a8df03c1efb7a/multiagent_ppo.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">multiagent_ppo.py</span></code></a></p>
-</div>
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/a977047786179278d12b52546e1c0da8/multiagent_ppo.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">multiagent_ppo.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/f40bd467562dfb87148a8df03c1efb7a/multiagent_ppo.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">multiagent_ppo.py</span></code></a></p>
 </div>
 </div>
 <p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
@@ -1383,6 +1376,7 @@ Here are a few videos of some possible scenarios you can try in VMAS.</p>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 
@@ -1526,7 +1520,7 @@ Here are a few videos of some possible scenarios you can try in VMAS.</p>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

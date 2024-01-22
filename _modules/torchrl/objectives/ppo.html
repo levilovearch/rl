@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -374,11 +375,17 @@
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">dispatch</span><span class="p">,</span> <span class="n">ProbabilisticTensorDictSequential</span><span class="p">,</span> <span class="n">TensorDictModule</span>
+<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">dispatch</span><span class="p">,</span>
+    <span class="n">ProbabilisticTensorDictSequential</span><span class="p">,</span>
+    <span class="n">repopulate_module</span><span class="p">,</span>
+    <span class="n">TensorDictModule</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">NestedKey</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributions</span> <span class="k">as</span> <span class="n">d</span>
@@ -392,7 +399,7 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="n">LossModule</span>
-<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">GAE</span><span class="p">,</span> <span class="n">TD0Estimator</span><span class="p">,</span> <span class="n">TD1Estimator</span><span class="p">,</span> <span class="n">TDLambdaEstimator</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">GAE</span><span class="p">,</span> <span class="n">TD0Estimator</span><span class="p">,</span> <span class="n">TD1Estimator</span><span class="p">,</span> <span class="n">TDLambdaEstimator</span><span class="p">,</span> <span class="n">VTrace</span>
 
 
 <div class="viewcode-block" id="PPOLoss"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.PPOLoss.html#torchrl.objectives.PPOLoss">[docs]</a><span class="k">class</span> <span class="nc">PPOLoss</span><span class="p">(</span><span class="n">LossModule</span><span class="p">):</span>
@@ -514,11 +521,11 @@
 <span class="sd">        &gt;&gt;&gt; loss = PPOLoss(actor, value)</span>
 <span class="sd">        &gt;&gt;&gt; batch = [2, ]</span>
 <span class="sd">        &gt;&gt;&gt; action = spec.rand(batch)</span>
-<span class="sd">        &gt;&gt;&gt; data = TensorDict({</span>
-<span class="sd">        ...         &quot;observation&quot;: torch.randn(*batch, n_obs),</span>
+<span class="sd">        &gt;&gt;&gt; data = TensorDict({&quot;observation&quot;: torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...         &quot;action&quot;: action,</span>
 <span class="sd">        ...         &quot;sample_log_prob&quot;: torch.randn_like(action[..., 1]),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;done&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...         (&quot;next&quot;, &quot;terminated&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;reward&quot;): torch.randn(*batch, 1),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;observation&quot;): torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     }, batch)</span>
@@ -536,7 +543,7 @@
 <span class="sd">    This class is compatible with non-tensordict based modules too and can be</span>
 <span class="sd">    used without recurring to any tensordict-related primitive. In this case,</span>
 <span class="sd">    the expected keyword arguments are:</span>
-<span class="sd">    ``[&quot;action&quot;, &quot;sample_log_prob&quot;, &quot;next_reward&quot;, &quot;next_done&quot;]`` + in_keys of the actor and value network.</span>
+<span class="sd">    ``[&quot;action&quot;, &quot;sample_log_prob&quot;, &quot;next_reward&quot;, &quot;next_done&quot;, &quot;next_terminated&quot;]`` + in_keys of the actor and value network.</span>
 <span class="sd">    The return value is a tuple of tensors in the following order:</span>
 <span class="sd">    ``[&quot;loss_objective&quot;]`` + ``[&quot;entropy&quot;, &quot;loss_entropy&quot;]`` if entropy_bonus is set</span>
 <span class="sd">                           + ``&quot;loss_critic&quot;`` if critic_coef is not None.</span>
@@ -574,6 +581,7 @@
 <span class="sd">        ...         action=action,</span>
 <span class="sd">        ...         sampleLogProb=torch.randn_like(action[..., 1]) / 10,</span>
 <span class="sd">        ...         next_done=torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...         next_terminated=torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...         next_reward=torch.randn(*batch, 1),</span>
 <span class="sd">        ...         next_observation=torch.randn(*batch, n_obs))</span>
 <span class="sd">        &gt;&gt;&gt; loss_objective.backward()</span>
@@ -603,6 +611,9 @@
 <span class="sd">            done (NestedKey): The key in the input TensorDict that indicates</span>
 <span class="sd">                whether a trajectory is done. Will be used for the underlying value estimator.</span>
 <span class="sd">                Defaults to ``&quot;done&quot;``.</span>
+<span class="sd">            terminated (NestedKey): The key in the input TensorDict that indicates</span>
+<span class="sd">                whether a trajectory is terminated. Will be used for the underlying value estimator.</span>
+<span class="sd">                Defaults to ``&quot;terminated&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">advantage</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;advantage&quot;</span>
@@ -612,6 +623,7 @@
         <span class="n">action</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
         <span class="n">reward</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;reward&quot;</span>
         <span class="n">done</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;done&quot;</span>
+        <span class="n">terminated</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;terminated&quot;</span>
 
     <span class="n">default_keys</span> <span class="o">=</span> <span class="n">_AcceptedKeys</span><span class="p">()</span>
     <span class="n">default_value_estimator</span> <span class="o">=</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">GAE</span>
@@ -636,9 +648,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_in_keys</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_keys</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_functional</span><span class="p">(</span>
-            <span class="n">actor</span><span class="p">,</span> <span class="s2">&quot;actor&quot;</span><span class="p">,</span> <span class="n">funs_to_decorate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;get_dist&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_functional</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="s2">&quot;actor&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">separate_losses</span><span class="p">:</span>
             <span class="c1"># we want to make sure there are no duplicates in the params: the</span>
             <span class="c1"># params of critic must be refs to actor if they&#39;re shared</span>
@@ -674,6 +684,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">sample_log_prob</span><span class="p">,</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">),</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span>
             <span class="o">*</span><span class="p">[(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span><span class="p">],</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span>
@@ -713,6 +724,7 @@
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="n">reward</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
                 <span class="n">done</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+                <span class="n">terminated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_in_keys</span><span class="p">()</span>
 
@@ -737,7 +749,8 @@
                 <span class="sa">f</span><span class="s2">&quot;tensordict stored </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s2"> requires grad.&quot;</span>
             <span class="p">)</span>
 
-        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
         <span class="n">prev_log_prob</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">sample_log_prob</span><span class="p">)</span>
@@ -763,10 +776,8 @@
                 <span class="sa">f</span><span class="s2">&quot;can be used for the value loss.&quot;</span>
             <span class="p">)</span>
 
-        <span class="n">state_value_td</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">(</span>
-            <span class="n">tensordict</span><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_params</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">):</span>
+            <span class="n">state_value_td</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">state_value</span> <span class="o">=</span> <span class="n">state_value_td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -800,8 +811,8 @@
             <span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">advantage</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_advantage</span> <span class="ow">and</span> <span class="n">advantage</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="p">(</span><span class="n">advantage</span> <span class="o">-</span> <span class="n">loc</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span>
 
         <span class="n">log_weight</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_weight</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
@@ -832,6 +843,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">GAE</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TDLambda</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TDLambdaEstimator</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">VTrace</span><span class="p">:</span>
+            <span class="c1"># VTrace currently does not support functional call on the actor</span>
+            <span class="n">actor_with_params</span> <span class="o">=</span> <span class="n">repopulate_module</span><span class="p">(</span>
+                <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">VTrace</span><span class="p">(</span>
+                <span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="n">actor_network</span><span class="o">=</span><span class="n">actor_with_params</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown value type </span><span class="si">{</span><span class="n">value_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -841,6 +860,8 @@
             <span class="s2">&quot;value_target&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value_target</span><span class="p">,</span>
             <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
             <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+            <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
+            <span class="s2">&quot;sample_log_prob&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">sample_log_prob</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span><span class="o">.</span><span class="n">set_keys</span><span class="p">(</span><span class="o">**</span><span class="n">tensor_keys</span><span class="p">)</span></div></div>
 
@@ -997,8 +1018,8 @@
             <span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">advantage</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_advantage</span> <span class="ow">and</span> <span class="n">advantage</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="p">(</span><span class="n">advantage</span> <span class="o">-</span> <span class="n">loc</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span>
 
         <span class="n">log_weight</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_weight</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
@@ -1011,11 +1032,6 @@
             <span class="n">ess</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">lw</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">lw</span><span class="p">)</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
             <span class="n">batch</span> <span class="o">=</span> <span class="n">log_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">advantage</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">log_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;advantage.shape and log_weight.shape do not match (got </span><span class="si">{</span><span class="n">advantage</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;and </span><span class="si">{</span><span class="n">log_weight</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">)&quot;</span>
-            <span class="p">)</span>
         <span class="n">gain1</span> <span class="o">=</span> <span class="n">log_weight</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">*</span> <span class="n">advantage</span>
 
         <span class="n">log_weight_clip</span> <span class="o">=</span> <span class="n">log_weight</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_clip_bounds</span><span class="p">)</span>
@@ -1208,14 +1224,15 @@
             <span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">advantage</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_advantage</span> <span class="ow">and</span> <span class="n">advantage</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">advantage</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="p">(</span><span class="n">advantage</span> <span class="o">-</span> <span class="n">loc</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span>
         <span class="n">log_weight</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_weight</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="n">neg_loss</span> <span class="o">=</span> <span class="n">log_weight</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">*</span> <span class="n">advantage</span>
 
         <span class="n">previous_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">build_dist_from_params</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
-        <span class="n">current_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">):</span>
+            <span class="n">current_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">kl</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">kl</span><span class="o">.</span><span class="n">kl_divergence</span><span class="p">(</span><span class="n">previous_dist</span><span class="p">,</span> <span class="n">current_dist</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
@@ -1301,6 +1318,7 @@
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
      
 
   
@@ -1443,7 +1461,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

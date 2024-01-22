@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,6 +373,7 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span> <span class="k">as</span> <span class="n">dataclass_field</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -515,16 +517,6 @@
     <span class="k">if</span> <span class="n">reward_scaling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span><span class="n">RewardScaling</span><span class="p">(</span><span class="n">reward_loc</span><span class="p">,</span> <span class="n">reward_scaling</span><span class="p">))</span>
 
-    <span class="n">double_to_float_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">double_to_float_inv_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">env_library</span> <span class="ow">is</span> <span class="n">DMControlEnv</span><span class="p">:</span>
-        <span class="n">double_to_float_list</span> <span class="o">+=</span> <span class="p">[</span>
-            <span class="s2">&quot;reward&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">double_to_float_list</span> <span class="o">+=</span> <span class="p">[</span>
-            <span class="s2">&quot;action&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">double_to_float_inv_list</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span>  <span class="c1"># DMControl requires double-precision</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">from_pixels</span><span class="p">:</span>
         <span class="n">selected_keys</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">key</span>
@@ -557,22 +549,13 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="n">double_to_float_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_key</span><span class="p">)</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span>
-            <span class="n">DoubleToFloat</span><span class="p">(</span>
-                <span class="n">in_keys</span><span class="o">=</span><span class="n">double_to_float_list</span><span class="p">,</span> <span class="n">in_keys_inv</span><span class="o">=</span><span class="n">double_to_float_inv_list</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span><span class="n">DoubleToFloat</span><span class="p">())</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;catframes&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">catframes</span><span class="p">:</span>
             <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span><span class="n">CatFrames</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">catframes</span><span class="p">,</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="n">out_key</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span>
-            <span class="n">DoubleToFloat</span><span class="p">(</span>
-                <span class="n">in_keys</span><span class="o">=</span><span class="n">double_to_float_list</span><span class="p">,</span> <span class="n">in_keys_inv</span><span class="o">=</span><span class="n">double_to_float_inv_list</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span><span class="n">DoubleToFloat</span><span class="p">())</span>
 
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;gSDE&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">gSDE</span><span class="p">:</span>
         <span class="n">env</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span>
@@ -782,7 +765,7 @@
         <span class="p">)()</span>
 
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;computing state stats&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;computing state stats&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">&quot;init_env_steps&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;init_env_steps missing from arguments.&quot;</span><span class="p">)</span>
 
@@ -815,7 +798,7 @@
     <span class="n">s</span><span class="p">[</span><span class="n">s</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
 
     <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;stats computed for </span><span class="si">{</span><span class="n">val_stats</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span><span class="si">}</span><span class="s2"> steps. Got: </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;loc = </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;scale = </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -999,6 +982,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -1141,7 +1125,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

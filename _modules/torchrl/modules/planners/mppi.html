@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -377,7 +378,7 @@
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">EnvBase</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">EnvBase</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.planners.common</span> <span class="kn">import</span> <span class="n">MPCPlannerBase</span>
 
 
@@ -421,13 +422,13 @@
 <span class="sd">        &gt;&gt;&gt; class MyMBEnv(ModelBasedEnvBase):</span>
 <span class="sd">        ...     def __init__(self, world_model, device=&quot;cpu&quot;, dtype=None, batch_size=None):</span>
 <span class="sd">        ...         super().__init__(world_model, device=device, dtype=dtype, batch_size=batch_size)</span>
+<span class="sd">        ...         self.state_spec = CompositeSpec(</span>
+<span class="sd">        ...             hidden_observation=UnboundedContinuousTensorSpec((4,))</span>
+<span class="sd">        ...         )</span>
 <span class="sd">        ...         self.observation_spec = CompositeSpec(</span>
 <span class="sd">        ...             hidden_observation=UnboundedContinuousTensorSpec((4,))</span>
 <span class="sd">        ...         )</span>
-<span class="sd">        ...         self.input_spec = CompositeSpec(</span>
-<span class="sd">        ...             hidden_observation=UnboundedContinuousTensorSpec((4,)),</span>
-<span class="sd">        ...             action=UnboundedContinuousTensorSpec((1,)),</span>
-<span class="sd">        ...         )</span>
+<span class="sd">        ...         self.action_spec = UnboundedContinuousTensorSpec((1,))</span>
 <span class="sd">        ...         self.reward_spec = UnboundedContinuousTensorSpec((1,))</span>
 <span class="sd">        ...</span>
 <span class="sd">        ...     def _reset(self, tensordict: TensorDict) -&gt; TensorDict:</span>
@@ -437,10 +438,13 @@
 <span class="sd">        ...             device=self.device,</span>
 <span class="sd">        ...         )</span>
 <span class="sd">        ...         tensordict = tensordict.update(</span>
-<span class="sd">        ...             self.input_spec.rand())</span>
+<span class="sd">        ...             self.full_state_spec.rand())</span>
 <span class="sd">        ...         tensordict = tensordict.update(</span>
-<span class="sd">        ...             self.observation_spec.rand())</span>
+<span class="sd">        ...             self.full_action_spec.rand())</span>
+<span class="sd">        ...         tensordict = tensordict.update(</span>
+<span class="sd">        ...             self.full_observation_spec.rand())</span>
 <span class="sd">        ...         return tensordict</span>
+<span class="sd">        ...</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules import MLP, WorldModelWrapper</span>
 <span class="sd">        &gt;&gt;&gt; import torch.nn as nn</span>
 <span class="sd">        &gt;&gt;&gt; world_model = WorldModelWrapper(</span>
@@ -482,10 +486,12 @@
 <span class="sd">                    fields={</span>
 <span class="sd">                        done: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
 <span class="sd">                        hidden_observation: Tensor(shape=torch.Size([5, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                        reward: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">                    batch_size=torch.Size([5]),</span>
 <span class="sd">                    device=cpu,</span>
-<span class="sd">                    is_shared=False)},</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
 <span class="sd">            batch_size=torch.Size([5]),</span>
 <span class="sd">            device=cpu,</span>
 <span class="sd">            is_shared=False)</span>
@@ -675,6 +681,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -817,7 +824,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

@@ -123,7 +123,7 @@ description and more about the algorithm itself.
 
 .. GENERATED FROM PYTHON SOURCE LINES 106-133
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from collections import defaultdict
@@ -175,7 +175,7 @@ actually return ``frame_skip`` frames).
 
 .. GENERATED FROM PYTHON SOURCE LINES 145-151
 
-.. code-block:: default
+.. code-block:: Python
 
 
     device = "cpu" if not torch.has_cuda else "cuda:0"
@@ -216,7 +216,7 @@ which exceeds our predefined budget.
 
 .. GENERATED FROM PYTHON SOURCE LINES 173-178
 
-.. code-block:: default
+.. code-block:: Python
 
     frame_skip = 1
     frames_per_batch = 1000 // frame_skip
@@ -246,7 +246,7 @@ The size of these sub-batches is controlled by ``sub_batch_size``.
 
 .. GENERATED FROM PYTHON SOURCE LINES 190-199
 
-.. code-block:: default
+.. code-block:: Python
 
     sub_batch_size = 64  # cardinality of the sub-samples gathered from the current data in the inner loop
     num_epochs = 10  # optimisation steps per batch of data collected
@@ -280,7 +280,7 @@ with another. For example, creating a wrapped gym environment can be achieved wi
 
 .. GENERATED FROM PYTHON SOURCE LINES 211-214
 
-.. code-block:: default
+.. code-block:: Python
 
 
     base_env = GymEnv("InvertedDoublePendulum-v4", device=device, frame_skip=frame_skip)
@@ -347,7 +347,7 @@ entry and this entry only:
 
 .. GENERATED FROM PYTHON SOURCE LINES 265-278
 
-.. code-block:: default
+.. code-block:: Python
 
 
     env = TransformedEnv(
@@ -378,7 +378,7 @@ automatically gather the summary statistics of our environment:
 
 .. GENERATED FROM PYTHON SOURCE LINES 283-285
 
-.. code-block:: default
+.. code-block:: Python
 
     env.transform[0].init_stats(num_iter=1000, reduce_dim=0, cat_dim=0)
 
@@ -399,7 +399,7 @@ Let us do a little sanity check for the shape of our summary stats:
 
 .. GENERATED FROM PYTHON SOURCE LINES 291-293
 
-.. code-block:: default
+.. code-block:: Python
 
     print("normalization constant shape:", env.transform[0].loc.shape)
 
@@ -441,7 +441,7 @@ the ``state_spec`` which groups together the specs of all the other inputs
 
 .. GENERATED FROM PYTHON SOURCE LINES 314-320
 
-.. code-block:: default
+.. code-block:: Python
 
     print("observation_spec:", env.observation_spec)
     print("reward_spec:", env.reward_spec)
@@ -464,42 +464,55 @@ the ``state_spec`` which groups together the specs of all the other inputs
             device=cpu,
             dtype=torch.float32,
             domain=continuous),
-        step_count: UnboundedDiscreteTensorSpec(
+        step_count: BoundedTensorSpec(
             shape=torch.Size([1]),
             space=ContinuousBox(
-                minimum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True),
-                maximum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True)),
+                low=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True),
+                high=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True)),
             device=cpu,
             dtype=torch.int64,
             domain=continuous), device=cpu, shape=torch.Size([]))
     reward_spec: UnboundedContinuousTensorSpec(
         shape=torch.Size([1]),
         space=ContinuousBox(
-            minimum=Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, contiguous=True),
-            maximum=Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, contiguous=True)),
+            low=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True),
+            high=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True)),
         device=cpu,
         dtype=torch.float32,
         domain=continuous)
-    done_spec: DiscreteTensorSpec(
-        shape=torch.Size([1]),
-        space=DiscreteBox(n=2),
-        device=cpu,
-        dtype=torch.bool,
-        domain=discrete)
+    done_spec: CompositeSpec(
+        done: DiscreteTensorSpec(
+            shape=torch.Size([1]),
+            space=DiscreteBox(n=2),
+            device=cpu,
+            dtype=torch.bool,
+            domain=discrete),
+        terminated: DiscreteTensorSpec(
+            shape=torch.Size([1]),
+            space=DiscreteBox(n=2),
+            device=cpu,
+            dtype=torch.bool,
+            domain=discrete),
+        truncated: DiscreteTensorSpec(
+            shape=torch.Size([1]),
+            space=DiscreteBox(n=2),
+            device=cpu,
+            dtype=torch.bool,
+            domain=discrete), device=cpu, shape=torch.Size([]))
     action_spec: BoundedTensorSpec(
         shape=torch.Size([1]),
         space=ContinuousBox(
-            minimum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True),
-            maximum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True)),
+            low=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True),
+            high=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, contiguous=True)),
         device=cpu,
         dtype=torch.float32,
         domain=continuous)
     state_spec: CompositeSpec(
-        step_count: UnboundedDiscreteTensorSpec(
+        step_count: BoundedTensorSpec(
             shape=torch.Size([1]),
             space=ContinuousBox(
-                minimum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True),
-                maximum=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True)),
+                low=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True),
+                high=Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, contiguous=True)),
             device=cpu,
             dtype=torch.int64,
             domain=continuous), device=cpu, shape=torch.Size([]))
@@ -515,19 +528,13 @@ specs. If no error is raised, we can be confident that the specs are properly de
 
 .. GENERATED FROM PYTHON SOURCE LINES 324-326
 
-.. code-block:: default
+.. code-block:: Python
 
     check_env_specs(env)
 
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    check_env_specs succeeded!
 
 
 
@@ -551,7 +558,7 @@ that matches this trajectory length:
 
 .. GENERATED FROM PYTHON SOURCE LINES 341-345
 
-.. code-block:: default
+.. code-block:: Python
 
     rollout = env.rollout(3)
     print("rollout of three steps:", rollout)
@@ -574,12 +581,16 @@ that matches this trajectory length:
                     done: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False),
                     observation: Tensor(shape=torch.Size([3, 11]), device=cpu, dtype=torch.float32, is_shared=False),
                     reward: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                    step_count: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.int64, is_shared=False)},
+                    step_count: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.int64, is_shared=False),
+                    terminated: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                    truncated: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
                 batch_size=torch.Size([3]),
                 device=cpu,
                 is_shared=False),
             observation: Tensor(shape=torch.Size([3, 11]), device=cpu, dtype=torch.float32, is_shared=False),
-            step_count: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.int64, is_shared=False)},
+            step_count: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.int64, is_shared=False),
+            terminated: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+            truncated: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
         batch_size=torch.Size([3]),
         device=cpu,
         is_shared=False)
@@ -613,7 +624,7 @@ and a scale):
     f_{\theta}(\text{observation}) = \mu_{\theta}(\text{observation}), \sigma^{+}_{\theta}(\text{observation})
 
 The only extra-difficulty that is brought up here is to split our output in two
-equal parts and map the second to a scrictly positive space.
+equal parts and map the second to a strictly positive space.
 
 We design the policy in three steps:
 
@@ -627,7 +638,7 @@ We design the policy in three steps:
 
 .. GENERATED FROM PYTHON SOURCE LINES 380-392
 
-.. code-block:: default
+.. code-block:: Python
 
 
     actor_net = nn.Sequential(
@@ -658,7 +669,7 @@ outputs in-place at the registered ``out_keys``.
 
 .. GENERATED FROM PYTHON SOURCE LINES 398-402
 
-.. code-block:: default
+.. code-block:: Python
 
     policy_module = TensorDictModule(
         actor_net, in_keys=["observation"], out_keys=["loc", "scale"]
@@ -690,7 +701,7 @@ every keyword argument that is to be used.
 
 .. GENERATED FROM PYTHON SOURCE LINES 417-430
 
-.. code-block:: default
+.. code-block:: Python
 
     policy_module = ProbabilisticActor(
         module=policy_module,
@@ -728,7 +739,7 @@ parameters.
 
 .. GENERATED FROM PYTHON SOURCE LINES 442-457
 
-.. code-block:: default
+.. code-block:: Python
 
     value_net = nn.Sequential(
         nn.LazyLinear(num_cells, device=device),
@@ -762,7 +773,7 @@ and where to write it:
 
 .. GENERATED FROM PYTHON SOURCE LINES 463-466
 
-.. code-block:: default
+.. code-block:: Python
 
     print("Running policy:", policy_module(env.reset()))
     print("Running value:", value_module(env.reset()))
@@ -783,7 +794,9 @@ and where to write it:
             observation: Tensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),
             sample_log_prob: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
             scale: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False),
-            step_count: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, is_shared=False)},
+            step_count: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, is_shared=False),
+            terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+            truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
         batch_size=torch.Size([]),
         device=cpu,
         is_shared=False)
@@ -792,7 +805,9 @@ and where to write it:
             done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
             observation: Tensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),
             state_value: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False),
-            step_count: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, is_shared=False)},
+            step_count: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.int64, is_shared=False),
+            terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+            truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
         batch_size=torch.Size([]),
         device=cpu,
         is_shared=False)
@@ -834,7 +849,7 @@ that are 100% oblivious to the actual specificities of the rollout content.
 
 .. GENERATED FROM PYTHON SOURCE LINES 496-505
 
-.. code-block:: default
+.. code-block:: Python
 
     collector = SyncDataCollector(
         env,
@@ -875,7 +890,7 @@ make it easy for us to build the inner training loop in a reproducible way.
 
 .. GENERATED FROM PYTHON SOURCE LINES 524-530
 
-.. code-block:: default
+.. code-block:: Python
 
 
     replay_buffer = ReplayBuffer(
@@ -916,7 +931,7 @@ return the policy and value losses.
 
 .. GENERATED FROM PYTHON SOURCE LINES 552-575
 
-.. code-block:: default
+.. code-block:: Python
 
 
     advantage_module = GAE(
@@ -971,7 +986,7 @@ The steps include:
 
 .. GENERATED FROM PYTHON SOURCE LINES 594-665
 
-.. code-block:: default
+.. code-block:: Python
 
 
 
@@ -1052,7 +1067,7 @@ The steps include:
 
  .. code-block:: none
 
-      0%|          | 0/10000 [00:00<?, ?it/s]     10%|#         | 1000/10000 [00:02<00:24, 360.95it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.0964 (init= 9.0964), step count (max): 13, lr policy:  0.0003:  10%|#         | 1000/10000 [00:02<00:24, 360.95it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.0964 (init= 9.0964), step count (max): 13, lr policy:  0.0003:  20%|##        | 2000/10000 [00:05<00:22, 362.96it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1287 (init= 9.0964), step count (max): 13, lr policy:  0.0003:  20%|##        | 2000/10000 [00:05<00:22, 362.96it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1287 (init= 9.0964), step count (max): 13, lr policy:  0.0003:  30%|###       | 3000/10000 [00:08<00:19, 365.31it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1416 (init= 9.0964), step count (max): 15, lr policy:  0.0003:  30%|###       | 3000/10000 [00:08<00:19, 365.31it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1416 (init= 9.0964), step count (max): 15, lr policy:  0.0003:  40%|####      | 4000/10000 [00:10<00:16, 367.07it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1634 (init= 9.0964), step count (max): 16, lr policy:  0.0002:  40%|####      | 4000/10000 [00:10<00:16, 367.07it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1634 (init= 9.0964), step count (max): 16, lr policy:  0.0002:  50%|#####     | 5000/10000 [00:13<00:13, 369.79it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1950 (init= 9.0964), step count (max): 19, lr policy:  0.0002:  50%|#####     | 5000/10000 [00:13<00:13, 369.79it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.1950 (init= 9.0964), step count (max): 19, lr policy:  0.0002:  60%|######    | 6000/10000 [00:16<00:10, 364.93it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2190 (init= 9.0964), step count (max): 27, lr policy:  0.0001:  60%|######    | 6000/10000 [00:16<00:10, 364.93it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2190 (init= 9.0964), step count (max): 27, lr policy:  0.0001:  70%|#######   | 7000/10000 [00:19<00:08, 369.18it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2308 (init= 9.0964), step count (max): 37, lr policy:  0.0001:  70%|#######   | 7000/10000 [00:19<00:08, 369.18it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2308 (init= 9.0964), step count (max): 37, lr policy:  0.0001:  80%|########  | 8000/10000 [00:21<00:05, 372.63it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2412 (init= 9.0964), step count (max): 38, lr policy:  0.0001:  80%|########  | 8000/10000 [00:21<00:05, 372.63it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2412 (init= 9.0964), step count (max): 38, lr policy:  0.0001:  90%|######### | 9000/10000 [00:24<00:02, 375.03it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2438 (init= 9.0964), step count (max): 42, lr policy:  0.0000:  90%|######### | 9000/10000 [00:24<00:02, 375.03it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2438 (init= 9.0964), step count (max): 42, lr policy:  0.0000: 100%|##########| 10000/10000 [00:26<00:00, 377.08it/s]    eval cumulative reward:  91.8920 (init:  91.8920), eval step-count: 9, average reward= 9.2602 (init= 9.0964), step count (max): 52, lr policy:  0.0000: 100%|##########| 10000/10000 [00:26<00:00, 377.08it/s]
+      0%|          | 0/10000 [00:00<?, ?it/s]     10%|█         | 1000/10000 [00:02<00:26, 333.51it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.0885 (init= 9.0885), step count (max): 11, lr policy:  0.0003:  10%|█         | 1000/10000 [00:03<00:26, 333.51it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.0885 (init= 9.0885), step count (max): 11, lr policy:  0.0003:  20%|██        | 2000/10000 [00:06<00:24, 332.88it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.0950 (init= 9.0885), step count (max): 14, lr policy:  0.0003:  20%|██        | 2000/10000 [00:06<00:24, 332.88it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.0950 (init= 9.0885), step count (max): 14, lr policy:  0.0003:  30%|███       | 3000/10000 [00:08<00:20, 334.35it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1444 (init= 9.0885), step count (max): 16, lr policy:  0.0003:  30%|███       | 3000/10000 [00:08<00:20, 334.35it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1444 (init= 9.0885), step count (max): 16, lr policy:  0.0003:  40%|████      | 4000/10000 [00:11<00:17, 335.77it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1933 (init= 9.0885), step count (max): 41, lr policy:  0.0002:  40%|████      | 4000/10000 [00:11<00:17, 335.77it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1933 (init= 9.0885), step count (max): 41, lr policy:  0.0002:  50%|█████     | 5000/10000 [00:14<00:14, 336.58it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2034 (init= 9.0885), step count (max): 32, lr policy:  0.0002:  50%|█████     | 5000/10000 [00:14<00:14, 336.58it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2034 (init= 9.0885), step count (max): 32, lr policy:  0.0002:  60%|██████    | 6000/10000 [00:17<00:11, 337.05it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1993 (init= 9.0885), step count (max): 29, lr policy:  0.0001:  60%|██████    | 6000/10000 [00:17<00:11, 337.05it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.1993 (init= 9.0885), step count (max): 29, lr policy:  0.0001:  70%|███████   | 7000/10000 [00:20<00:09, 331.82it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2349 (init= 9.0885), step count (max): 33, lr policy:  0.0001:  70%|███████   | 7000/10000 [00:20<00:09, 331.82it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2349 (init= 9.0885), step count (max): 33, lr policy:  0.0001:  80%|████████  | 8000/10000 [00:23<00:05, 334.31it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2399 (init= 9.0885), step count (max): 41, lr policy:  0.0001:  80%|████████  | 8000/10000 [00:23<00:05, 334.31it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2399 (init= 9.0885), step count (max): 41, lr policy:  0.0001:  90%|█████████ | 9000/10000 [00:26<00:02, 336.11it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2496 (init= 9.0885), step count (max): 36, lr policy:  0.0000:  90%|█████████ | 9000/10000 [00:26<00:02, 336.11it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2496 (init= 9.0885), step count (max): 36, lr policy:  0.0000: 100%|██████████| 10000/10000 [00:29<00:00, 337.35it/s]    eval cumulative reward:  82.8823 (init:  82.8823), eval step-count: 8, average reward= 9.2538 (init= 9.0885), step count (max): 55, lr policy:  0.0000: 100%|██████████| 10000/10000 [00:29<00:00, 337.35it/s]
 
 
 
@@ -1068,7 +1083,7 @@ trajectory is truncated.
 
 .. GENERATED FROM PYTHON SOURCE LINES 673-688
 
-.. code-block:: default
+.. code-block:: Python
 
     plt.figure(figsize=(10, 10))
     plt.subplot(2, 2, 1)
@@ -1123,9 +1138,9 @@ If you want to experiment with this tutorial a bit more, you can apply the follo
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  36.384 seconds)
+   **Total running time of the script:** (1 minutes 37.044 seconds)
 
-**Estimated memory usage:**  12 MB
+**Estimated memory usage:**  8 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ppo.py:
@@ -1134,16 +1149,13 @@ If you want to experiment with this tutorial a bit more, you can apply the follo
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: coding_ppo.ipynb <coding_ppo.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: coding_ppo.py <coding_ppo.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: coding_ppo.ipynb <coding_ppo.ipynb>`
 
 
 .. only:: html

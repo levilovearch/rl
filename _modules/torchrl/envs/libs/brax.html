@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,6 +373,7 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">import</span> <span class="nn">importlib.util</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -384,40 +386,71 @@
     <span class="n">UnboundedContinuousTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_EnvWrapper</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_classproperty</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">brax</span>
-    <span class="kn">import</span> <span class="nn">brax.envs</span>
-    <span class="kn">import</span> <span class="nn">jax</span>
-    <span class="kn">from</span> <span class="nn">torchrl.envs.libs.jax_utils</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">_extract_spec</span><span class="p">,</span>
-        <span class="n">_ndarray_to_tensor</span><span class="p">,</span>
-        <span class="n">_object_to_tensordict</span><span class="p">,</span>
-        <span class="n">_tensor_to_ndarray</span><span class="p">,</span>
-        <span class="n">_tensordict_to_object</span><span class="p">,</span>
-        <span class="n">_tree_flatten</span><span class="p">,</span>
-        <span class="n">_tree_reshape</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">_has_brax</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-    <span class="n">_has_brax</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">IMPORT_ERR</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+<span class="n">_has_brax</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;brax&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.libs.jax_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_extract_spec</span><span class="p">,</span>
+    <span class="n">_ndarray_to_tensor</span><span class="p">,</span>
+    <span class="n">_object_to_tensordict</span><span class="p">,</span>
+    <span class="n">_tensor_to_ndarray</span><span class="p">,</span>
+    <span class="n">_tensordict_to_object</span><span class="p">,</span>
+    <span class="n">_tree_flatten</span><span class="p">,</span>
+    <span class="n">_tree_reshape</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_get_envs</span><span class="p">():</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_brax</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;BRAX is not installed in your virtual environment.&quot;</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">brax.envs</span>
+
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">brax</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">_envs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="BraxWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.brax.BraxWrapper.html#torchrl.envs.libs.brax.BraxWrapper">[docs]</a><span class="k">class</span> <span class="nc">BraxWrapper</span><span class="p">(</span><span class="n">_EnvWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="BraxWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.BraxWrapper.html#torchrl.envs.BraxWrapper">[docs]</a><span class="k">class</span> <span class="nc">BraxWrapper</span><span class="p">(</span><span class="n">_EnvWrapper</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Google Brax environment wrapper.</span>
 
+<span class="sd">    Brax offers a vectorized and differentiable simulation framework based on Jax.</span>
+<span class="sd">    TorchRL&#39;s wrapper incurs some overhead for the jax-to-torch conversion,</span>
+<span class="sd">    but computational graphs can still be built on top of the simulated trajectories,</span>
+<span class="sd">    allowing for backpropagation through the rollout.</span>
+
+<span class="sd">    GitHub: https://github.com/google/brax</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2106.13281</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env (brax.envs.base.PipelineEnv): the environment to wrap.</span>
+<span class="sd">        categorical_action_encoding (bool, optional): if ``True``, categorical</span>
+<span class="sd">            specs will be converted to the TorchRL equivalent (:class:`torchrl.data.DiscreteTensorSpec`),</span>
+<span class="sd">            otherwise a one-hot encoding will be used (:class:`torchrl.data.OneHotTensorSpec`).</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): Not yet supported.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            In ``brax``, this indicates the number of vectorized environments.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs: environments availalbe to build</span>
+
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; env = brax.envs.get_environment(&quot;ant&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; env = BraxWrapper(env)</span>
+<span class="sd">        &gt;&gt;&gt; import brax.envs</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import BraxWrapper</span>
+<span class="sd">        &gt;&gt;&gt; base_env = brax.envs.get_environment(&quot;ant&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env = BraxWrapper(base_env)</span>
 <span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
 <span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
 <span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
@@ -441,15 +474,97 @@
 <span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
 <span class="sd">        [&#39;acrobot&#39;, &#39;ant&#39;, &#39;fast&#39;, &#39;fetch&#39;, ...]</span>
+
+<span class="sd">    To take advante of Brax, one usually executes multiple environments at the</span>
+<span class="sd">    same time. In the following example, we iteratively test different batch sizes</span>
+<span class="sd">    and report the execution time for a short rollout:</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torch.utils.benchmark import Timer</span>
+<span class="sd">        &gt;&gt;&gt; for batch_size in [4, 16, 128]:</span>
+<span class="sd">        ...     timer = Timer(&#39;&#39;&#39;</span>
+<span class="sd">        ... env.rollout(100)</span>
+<span class="sd">        ... &#39;&#39;&#39;,</span>
+<span class="sd">        ...     setup=f&#39;&#39;&#39;</span>
+<span class="sd">        ... import brax.envs</span>
+<span class="sd">        ... from torchrl.envs import BraxWrapper</span>
+<span class="sd">        ... env = BraxWrapper(brax.envs.get_environment(&quot;ant&quot;), batch_size=[{batch_size}])</span>
+<span class="sd">        ... env.set_seed(0)</span>
+<span class="sd">        ... env.rollout(2)</span>
+<span class="sd">        ... &#39;&#39;&#39;)</span>
+<span class="sd">        ...     print(batch_size, timer.timeit(10))</span>
+<span class="sd">        4</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        310.00 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">        16</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        268.46 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">        128</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        433.80 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">    One can backpropagate through the rollout and optimize the policy directly:</span>
+
+<span class="sd">        &gt;&gt;&gt; import brax.envs</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import BraxWrapper</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule</span>
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; env = BraxWrapper(brax.envs.get_environment(&quot;ant&quot;), batch_size=[10], requires_grad=True)</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; torch.manual_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; policy = TensorDictModule(nn.Linear(27, 8), in_keys=[&quot;observation&quot;], out_keys=[&quot;action&quot;])</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; td = env.rollout(10, policy)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;next&quot;, &quot;reward&quot;].mean().backward(retain_graph=True)</span>
+<span class="sd">        &gt;&gt;&gt; print(policy.module.weight.grad.norm())</span>
+<span class="sd">        tensor(213.8605)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">git_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/google/brax&quot;</span>
-    <span class="n">available_envs</span> <span class="o">=</span> <span class="n">_get_envs</span><span class="p">()</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">available_envs</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_brax</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_get_envs</span><span class="p">())</span>
+
     <span class="n">libname</span> <span class="o">=</span> <span class="s2">&quot;brax&quot;</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">_lib</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_jax</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">lib</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lib</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_lib</span>
+
+        <span class="kn">import</span> <span class="nn">brax</span>
+        <span class="kn">import</span> <span class="nn">brax.envs</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_lib</span> <span class="o">=</span> <span class="n">brax</span>
         <span class="k">return</span> <span class="n">brax</span>
+
+    <span class="nd">@_classproperty</span>
+    <span class="k">def</span> <span class="nf">jax</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_jax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_jax</span>
+
+        <span class="kn">import</span> <span class="nn">jax</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_jax</span> <span class="o">=</span> <span class="n">jax</span>
+        <span class="k">return</span> <span class="n">jax</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">categorical_action_encoding</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -459,6 +574,8 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="n">brax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lib</span>
+
         <span class="k">if</span> <span class="s2">&quot;env&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Could not find environment key &#39;env&#39; in kwargs.&quot;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span>
@@ -481,10 +598,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="n">requires_grad</span>
 
         <span class="k">if</span> <span class="n">from_pixels</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;from_pixels=True is not yest supported within BraxWrapper&quot;</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">env</span>
 
-    <span class="k">def</span> <span class="nf">_make_state_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;brax.envs.env.Env&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_make_state_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;brax.envs.env.Env&quot;</span><span class="p">):</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">jax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jax</span>
+
         <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="n">state_dict</span> <span class="o">=</span> <span class="n">_object_to_tensordict</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">())</span>
@@ -493,8 +614,8 @@
 
     <span class="k">def</span> <span class="nf">_make_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">&quot;brax.envs.env.Env&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: F821</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_spec</span> <span class="o">=</span> <span class="n">BoundedTensorSpec</span><span class="p">(</span>
-            <span class="n">minimum</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">maximum</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">low</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">shape</span><span class="o">=</span><span class="p">(</span>
                 <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">env</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span>
@@ -524,6 +645,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">observation_spec</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_spec</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_make_state_example</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">jax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jax</span>
+
         <span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="o">.</span><span class="n">numel</span><span class="p">())</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_jit_env_reset</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
@@ -531,17 +654,20 @@
         <span class="k">return</span> <span class="n">state</span>
 
     <span class="k">def</span> <span class="nf">_init_env</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="n">jax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jax</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_jit_env_reset</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">reset</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_jit_env_step</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">step</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_state_example</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_state_example</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_set_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">jax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jax</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Brax requires an integer seed.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="n">jax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jax</span>
 
         <span class="c1"># generate random keys</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="o">*</span><span class="n">keys</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">numel</span><span class="p">())</span>
@@ -562,6 +688,7 @@
                 <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">),</span>
                 <span class="c1"># &quot;reward&quot;: reward,</span>
                 <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+                <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">done</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
                 <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -597,6 +724,7 @@
                 <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">next_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
                 <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+                <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">done</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span>
                 <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -635,6 +763,7 @@
                 <span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">next_obs</span><span class="p">,</span>
                 <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">next_reward</span><span class="p">,</span>
                 <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">next_done</span><span class="p">,</span>
+                <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="n">next_done</span><span class="p">,</span>
                 <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -652,18 +781,125 @@
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_with_grad</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_without_grad</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="BraxEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.libs.brax.BraxEnv.html#torchrl.envs.libs.brax.BraxEnv">[docs]</a><span class="k">class</span> <span class="nc">BraxEnv</span><span class="p">(</span><span class="n">BraxWrapper</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Google Brax environment wrapper.</span>
+<div class="viewcode-block" id="BraxEnv"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.BraxEnv.html#torchrl.envs.BraxEnv">[docs]</a><span class="k">class</span> <span class="nc">BraxEnv</span><span class="p">(</span><span class="n">BraxWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Google Brax environment wrapper built with the environment name.</span>
+
+<span class="sd">    Brax offers a vectorized and differentiable simulation framework based on Jax.</span>
+<span class="sd">    TorchRL&#39;s wrapper incurs some overhead for the jax-to-torch conversion,</span>
+<span class="sd">    but computational graphs can still be built on top of the simulated trajectories,</span>
+<span class="sd">    allowing for backpropagation through the rollout.</span>
+
+<span class="sd">    GitHub: https://github.com/google/brax</span>
+
+<span class="sd">    Paper: https://arxiv.org/abs/2106.13281</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env_name (str): the environment name of the env to wrap. Must be part of</span>
+<span class="sd">            :attr:`~.available_envs`.</span>
+<span class="sd">        categorical_action_encoding (bool, optional): if ``True``, categorical</span>
+<span class="sd">            specs will be converted to the TorchRL equivalent (:class:`torchrl.data.DiscreteTensorSpec`),</span>
+<span class="sd">            otherwise a one-hot encoding will be used (:class:`torchrl.data.OneHotTensorSpec`).</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        from_pixels (bool, optional): Not yet supported.</span>
+<span class="sd">        frame_skip (int, optional): if provided, indicates for how many steps the</span>
+<span class="sd">            same action is to be repeated. The observation returned will be the</span>
+<span class="sd">            last observation of the sequence, whereas the reward will be the sum</span>
+<span class="sd">            of rewards across steps.</span>
+<span class="sd">        device (torch.device, optional): if provided, the device on which the data</span>
+<span class="sd">            is to be cast. Defaults to ``torch.device(&quot;cpu&quot;)``.</span>
+<span class="sd">        batch_size (torch.Size, optional): the batch size of the environment.</span>
+<span class="sd">            In ``brax``, this indicates the number of vectorized environments.</span>
+<span class="sd">            Defaults to ``torch.Size([])``.</span>
+<span class="sd">        allow_done_after_reset (bool, optional): if ``True``, it is tolerated</span>
+<span class="sd">            for envs to be ``done`` just after :meth:`~.reset` is called.</span>
+<span class="sd">            Defaults to ``False``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        available_envs: environments availalbe to build</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; env = BraxEnv(env_name=&quot;ant&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; td = env.rand_step()</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import BraxEnv</span>
+<span class="sd">        &gt;&gt;&gt; env = BraxEnv(&quot;ant&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; td = env.reset()</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;action&quot;] = env.action_spec.rand()</span>
+<span class="sd">        &gt;&gt;&gt; td = env.step(td)</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(torch.Size([8]), dtype=torch.float32),</span>
+<span class="sd">                done: Tensor(torch.Size([1]), dtype=torch.bool),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        observation: Tensor(torch.Size([87]), dtype=torch.float32)},</span>
+<span class="sd">                    batch_size=torch.Size([]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                observation: Tensor(torch.Size([87]), dtype=torch.float32),</span>
+<span class="sd">                reward: Tensor(torch.Size([1]), dtype=torch.float32),</span>
+<span class="sd">                state: TensorDict(...)},</span>
+<span class="sd">            batch_size=torch.Size([]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
 <span class="sd">        &gt;&gt;&gt; print(env.available_envs)</span>
+<span class="sd">        [&#39;acrobot&#39;, &#39;ant&#39;, &#39;fast&#39;, &#39;fetch&#39;, ...]</span>
+
+<span class="sd">    To take advante of Brax, one usually executes multiple environments at the</span>
+<span class="sd">    same time. In the following example, we iteratively test different batch sizes</span>
+<span class="sd">    and report the execution time for a short rollout:</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; for batch_size in [4, 16, 128]:</span>
+<span class="sd">        ...     timer = Timer(&#39;&#39;&#39;</span>
+<span class="sd">        ... env.rollout(100)</span>
+<span class="sd">        ... &#39;&#39;&#39;,</span>
+<span class="sd">        ...     setup=f&#39;&#39;&#39;</span>
+<span class="sd">        ... from torchrl.envs import BraxEnv</span>
+<span class="sd">        ... env = BraxEnv(&quot;ant&quot;, batch_size=[{batch_size}])</span>
+<span class="sd">        ... env.set_seed(0)</span>
+<span class="sd">        ... env.rollout(2)</span>
+<span class="sd">        ... &#39;&#39;&#39;)</span>
+<span class="sd">        ...     print(batch_size, timer.timeit(10))</span>
+<span class="sd">        4</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        310.00 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">        16</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        268.46 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">        128</span>
+<span class="sd">        env.rollout(100)</span>
+<span class="sd">        setup: [...]</span>
+<span class="sd">        433.80 ms</span>
+<span class="sd">        1 measurement, 10 runs , 1 thread</span>
+
+<span class="sd">    One can backpropagate through the rollout and optimize the policy directly:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import BraxEnv</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictModule</span>
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; env = BraxEnv(&quot;ant&quot;, batch_size=[10], requires_grad=True)</span>
+<span class="sd">        &gt;&gt;&gt; env.set_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; torch.manual_seed(0)</span>
+<span class="sd">        &gt;&gt;&gt; policy = TensorDictModule(nn.Linear(27, 8), in_keys=[&quot;observation&quot;], out_keys=[&quot;action&quot;])</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; td = env.rollout(10, policy)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; td[&quot;next&quot;, &quot;reward&quot;].mean().backward(retain_graph=True)</span>
+<span class="sd">        &gt;&gt;&gt; print(policy.module.weight.grad.norm())</span>
+<span class="sd">        tensor(213.8605)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -675,13 +911,13 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;brax.envs.env.Env&quot;</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;brax.envs.env.Env&quot;</span><span class="p">:</span>  <span class="c1"># noqa: F821</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_brax</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;brax not found, unable to create </span><span class="si">{</span><span class="n">env_name</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Consider downloading and installing brax from&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">git_url</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">IMPORT_ERR</span>
+            <span class="p">)</span>
         <span class="n">from_pixels</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;from_pixels&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">pixels_only</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pixels_only&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="n">requires_grad</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;requires_grad&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -711,6 +947,7 @@
 <span class="k">class</span> <span class="nc">_BraxEnvStep</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">BraxWrapper</span><span class="p">,</span> <span class="n">state_td</span><span class="p">,</span> <span class="n">action_tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">qp_values</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">jax</span>
 
         <span class="c1"># convert tensors to ndarrays</span>
         <span class="n">state_obj</span> <span class="o">=</span> <span class="n">_tensordict_to_object</span><span class="p">(</span><span class="n">state_td</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">_state_example</span><span class="p">)</span>
@@ -745,15 +982,6 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">grad_next_obs</span><span class="p">,</span> <span class="n">grad_next_reward</span><span class="p">,</span> <span class="o">*</span><span class="n">grad_next_qp_values</span><span class="p">):</span>
-
-        <span class="c1"># build gradient tensordict with zeros in fields with no grad</span>
-        <span class="c1"># if grad_next_reward is None:</span>
-        <span class="c1">#     raise RuntimeError(&quot;grad_next_reward&quot;)</span>
-        <span class="c1">#     grad_next_reward = torch.zeros((*ctx.env.batch_size, 1), device=ctx.env.device)</span>
-        <span class="c1"># if grad_next_obs is None:</span>
-        <span class="c1">#     raise RuntimeError(&quot;grad_next_obs&quot;)</span>
-        <span class="c1"># if any(val is None for val in grad_next_qp_values):</span>
-        <span class="c1">#     raise RuntimeError(&quot;grad_next_qp_values&quot;)</span>
 
         <span class="n">pipeline_state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="nb">zip</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">next_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pipeline_state&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">grad_next_qp_values</span><span class="p">)</span>
@@ -867,6 +1095,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -1009,7 +1238,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

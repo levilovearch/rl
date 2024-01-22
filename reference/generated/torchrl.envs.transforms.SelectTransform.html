@@ -34,12 +34,13 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="SqueezeTransform" href="torchrl.envs.transforms.SqueezeTransform.html" />
-    <link rel="prev" title="Reward2GoTransform" href="torchrl.envs.transforms.Reward2GoTransform.html" />
+    <link rel="next" title="SignTransform" href="torchrl.envs.transforms.SignTransform.html" />
+    <link rel="prev" title="RemoveEmptySpecs" href="torchrl.envs.transforms.RemoveEmptySpecs.html" />
   <!-- Google Analytics -->
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117752657-2"></script>
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -380,7 +381,7 @@
 <h1>SelectTransform<a class="headerlink" href="#selecttransform" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchrl.envs.transforms.SelectTransform">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.envs.transforms.</span></span><span class="sig-name descname"><span class="pre">SelectTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">selected_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#SelectTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.envs.transforms.</span></span><span class="sig-name descname"><span class="pre">SelectTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">selected_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_dones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#SelectTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select keys from the input tensordict.</p>
 <dl class="simple">
 <dt>In general, the <a class="reference internal" href="torchrl.envs.transforms.ExcludeTransform.html#torchrl.envs.transforms.ExcludeTransform" title="torchrl.envs.transforms.ExcludeTransform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExcludeTransform</span></code></a> should be preferred: this transforms also</dt><dd><p>selects the “action” (or other keys from input_spec), “done” and “reward”
@@ -392,29 +393,61 @@ keys but other may be necessary.</p>
 <dd class="field-odd"><p><strong>*selected_keys</strong> (<em>iterable of NestedKey</em>) – The name of the keys to select. If the key is
 not present, it is simply ignored.</p>
 </dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>keep_rewards</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">False</span></code>, the reward keys must be provided
+if they should be kept. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>keep_dones</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">False</span></code>, the done keys must be provided
+if they should be kept. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>gymnasium</strong> (<em>&gt;&gt;&gt; import</em>) – </p></li>
+<li><p><strong>GymWrapper</strong> (<em>...</em>) – </p></li>
+<li><p><strong>TransformedEnv</strong><strong>(</strong> (<em>&gt;&gt;&gt; env =</em>) – </p></li>
+<li><p><strong>GymWrapper</strong> – </p></li>
+<li><p><strong>SelectTransform</strong> (<em>...</em>) – </p></li>
+<li><p><strong>)</strong> (<em>...</em>) – </p></li>
+<li><p><strong>env.rollout</strong> (<em>&gt;&gt;&gt;</em>) – </p></li>
+<li><p><strong>TensorDict</strong><strong>(</strong> – <dl>
+<dt>fields={</dt><dd><p>action: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
+done: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+next: TensorDict(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>fields={</dt><dd><p>done: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+observation: Tensor(shape=torch.Size([3, 3]), device=cpu, dtype=torch.float32, is_shared=False),
+reward: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.float32, is_shared=False)},</p>
+</dd>
+</dl>
+<p>batch_size=torch.Size([3]),
+device=cpu,
+is_shared=False),</p>
+</div></blockquote>
+<p>observation: Tensor(shape=torch.Size([3, 3]), device=cpu, dtype=torch.float32, is_shared=False)},</p>
+</dd>
+</dl>
+<p>batch_size=torch.Size([3]),
+device=cpu,
+is_shared=False)</p>
+</p></li>
+</ul>
+</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.envs.transforms.SelectTransform.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the input tensordict, and for the selected keys, applies the transform.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchrl.envs.transforms.SelectTransform.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#SelectTransform.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets a tranform if it is stateful.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchrl.envs.transforms.SelectTransform.transform_observation_spec">
-<span class="sig-name descname"><span class="pre">transform_observation_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observation_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.tensor_specs.TensorSpec"><span class="pre">TensorSpec</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.tensor_specs.TensorSpec"><span class="pre">TensorSpec</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#SelectTransform.transform_observation_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform.transform_observation_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transforms the observation spec such that the resulting spec matches transform mapping.</p>
+<dt class="sig sig-object py" id="torchrl.envs.transforms.SelectTransform.transform_output_spec">
+<span class="sig-name descname"><span class="pre">transform_output_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec" title="torchrl.data.tensor_specs.CompositeSpec"><span class="pre">CompositeSpec</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec" title="torchrl.data.tensor_specs.CompositeSpec"><span class="pre">CompositeSpec</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#SelectTransform.transform_output_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.SelectTransform.transform_output_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the output spec such that the resulting spec matches transform mapping.</p>
+<p>This method should generally be left untouched. Changes should be implemented using
+<a class="reference internal" href="torchrl.envs.transforms.CatFrames.html#torchrl.envs.transforms.CatFrames.transform_observation_spec" title="torchrl.envs.transforms.CatFrames.transform_observation_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform_observation_spec()</span></code></a>, <a class="reference internal" href="torchrl.envs.transforms.BinarizeReward.html#torchrl.envs.transforms.BinarizeReward.transform_reward_spec" title="torchrl.envs.transforms.BinarizeReward.transform_reward_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform_reward_spec()</span></code></a> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">transformfull_done_spec()</span></code>.
+:param output_spec: spec before the transform
+:type output_spec: TensorSpec</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>observation_spec</strong> (<a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><em>TensorSpec</em></a>) – spec before the transform</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>expected spec after the transform</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>expected spec after the transform</p>
 </dd>
 </dl>
 </dd></dl>
@@ -431,10 +464,10 @@ not present, it is simply ignored.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchrl.envs.transforms.SqueezeTransform.html" class="btn btn-neutral float-right" title="SqueezeTransform" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchrl.envs.transforms.SignTransform.html" class="btn btn-neutral float-right" title="SignTransform" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchrl.envs.transforms.Reward2GoTransform.html" class="btn btn-neutral" title="Reward2GoTransform" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchrl.envs.transforms.RemoveEmptySpecs.html" class="btn btn-neutral" title="RemoveEmptySpecs" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -487,6 +520,7 @@ not present, it is simply ignored.</p>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -629,7 +663,7 @@ not present, it is simply ignored.</p>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

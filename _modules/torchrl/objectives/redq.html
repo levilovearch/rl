@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -378,7 +379,6 @@
 <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">dispatch</span><span class="p">,</span> <span class="n">TensorDictModule</span><span class="p">,</span> <span class="n">TensorDictSequential</span>
@@ -386,29 +386,19 @@
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">NestedKey</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
-<span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">CompositeSpec</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">CompositeSpec</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">ExplorationType</span><span class="p">,</span> <span class="n">set_exploration_type</span><span class="p">,</span> <span class="n">step_mdp</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.common</span> <span class="kn">import</span> <span class="n">LossModule</span>
+
 <span class="kn">from</span> <span class="nn">torchrl.objectives.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_cache_values</span><span class="p">,</span>
     <span class="n">_GAMMA_LMBDA_DEPREC_WARNING</span><span class="p">,</span>
+    <span class="n">_vmap_func</span><span class="p">,</span>
     <span class="n">default_value_kwargs</span><span class="p">,</span>
     <span class="n">distance_loss</span><span class="p">,</span>
     <span class="n">ValueEstimators</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.value</span> <span class="kn">import</span> <span class="n">TD0Estimator</span><span class="p">,</span> <span class="n">TD1Estimator</span><span class="p">,</span> <span class="n">TDLambdaEstimator</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">vmap</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">functorch</span> <span class="kn">import</span> <span class="n">vmap</span>
-
-    <span class="n">FUNCTORCH_ERR</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">_has_functorch</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-    <span class="n">FUNCTORCH_ERR</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-    <span class="n">_has_functorch</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="REDQLoss"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.REDQLoss.html#torchrl.objectives.REDQLoss">[docs]</a><span class="k">class</span> <span class="nc">REDQLoss</span><span class="p">(</span><span class="n">LossModule</span><span class="p">):</span>
@@ -494,6 +484,7 @@
 <span class="sd">        ...         &quot;observation&quot;: torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...         &quot;action&quot;: action,</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;done&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...         (&quot;next&quot;, &quot;terminated&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;reward&quot;): torch.randn(*batch, 1),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;observation&quot;): torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     }, batch)</span>
@@ -516,7 +507,7 @@
 <span class="sd">    This class is compatible with non-tensordict based modules too and can be</span>
 <span class="sd">    used without recurring to any tensordict-related primitive. In this case,</span>
 <span class="sd">    the expected keyword arguments are:</span>
-<span class="sd">    ``[&quot;action&quot;, &quot;next_reward&quot;, &quot;next_done&quot;]`` + in_keys of the actor and qvalue network</span>
+<span class="sd">    ``[&quot;action&quot;, &quot;next_reward&quot;, &quot;next_done&quot;, &quot;next_terminated&quot;]`` + in_keys of the actor and qvalue network</span>
 <span class="sd">    The return value is a tuple of tensors in the following order:</span>
 <span class="sd">    ``[&quot;loss_actor&quot;, &quot;loss_qvalue&quot;, &quot;loss_alpha&quot;, &quot;alpha&quot;, &quot;entropy&quot;,</span>
 <span class="sd">        &quot;state_action_value_actor&quot;, &quot;action_log_prob_actor&quot;, &quot;next.state_value&quot;, &quot;target_value&quot;,]``.</span>
@@ -557,6 +548,7 @@
 <span class="sd">        ...         observation=torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...         action=action,</span>
 <span class="sd">        ...         next_done=torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...         next_terminated=torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...         next_reward=torch.randn(*batch, 1),</span>
 <span class="sd">        ...         next_observation=torch.randn(*batch, n_obs))</span>
 <span class="sd">        &gt;&gt;&gt; loss_actor.backward()</span>
@@ -585,6 +577,9 @@
 <span class="sd">            done (NestedKey): The key in the input TensorDict that indicates</span>
 <span class="sd">                whether a trajectory is done. Will be used for the underlying value estimator.</span>
 <span class="sd">                Defaults to ``&quot;done&quot;``.</span>
+<span class="sd">            terminated (NestedKey): The key in the input TensorDict that indicates</span>
+<span class="sd">                whether a trajectory is terminated. Will be used for the underlying value estimator.</span>
+<span class="sd">                Defaults to ``&quot;terminated&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">action</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
@@ -594,6 +589,7 @@
         <span class="n">state_action_value</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;state_action_value&quot;</span>
         <span class="n">reward</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;reward&quot;</span>
         <span class="n">done</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;done&quot;</span>
+        <span class="n">terminated</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;terminated&quot;</span>
 
     <span class="n">default_keys</span> <span class="o">=</span> <span class="n">_AcceptedKeys</span><span class="p">()</span>
     <span class="n">delay_actor</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -630,9 +626,6 @@
         <span class="n">priority_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">separate_losses</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_functorch</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Failed to import functorch.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">FUNCTORCH_ERR</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_in_keys</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_deprecated_ctor_keys</span><span class="p">(</span><span class="n">priority_key</span><span class="o">=</span><span class="n">priority_key</span><span class="p">)</span>
@@ -641,7 +634,6 @@
             <span class="n">actor_network</span><span class="p">,</span>
             <span class="s2">&quot;actor_network&quot;</span><span class="p">,</span>
             <span class="n">create_target_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delay_actor</span><span class="p">,</span>
-            <span class="n">funs_to_decorate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;get_dist_params&quot;</span><span class="p">],</span>
         <span class="p">)</span>
 
         <span class="c1"># let&#39;s make sure that actor_network has `return_log_prob` set to True</span>
@@ -696,8 +688,12 @@
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">_GAMMA_LMBDA_DEPREC_WARNING</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_qvalue_network00</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qvalue_network</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_getdist</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span><span class="o">.</span><span class="n">get_dist_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_qvalue_network00</span> <span class="o">=</span> <span class="n">_vmap_func</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qvalue_network</span><span class="p">,</span> <span class="n">randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_getdist</span> <span class="o">=</span> <span class="n">_vmap_func</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s2">&quot;get_dist_params&quot;</span><span class="p">,</span> <span class="n">randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -722,8 +718,19 @@
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
                     <span class="n">action_spec</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">:</span> <span class="n">action_spec</span><span class="p">})</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                <span class="p">):</span>
+                    <span class="n">action_container_shape</span> <span class="o">=</span> <span class="n">action_spec</span><span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">action_container_shape</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">shape</span>
                 <span class="n">target_entropy</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">action_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                    <span class="n">action_spec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">]</span>
+                    <span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">action_container_shape</span><span class="p">)</span> <span class="p">:]</span>
+                    <span class="o">.</span><span class="n">numel</span><span class="p">()</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span>
                 <span class="s2">&quot;target_entropy_buffer&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target_entropy</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
@@ -737,6 +744,7 @@
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="n">reward</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
                 <span class="n">done</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+                <span class="n">terminated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_in_keys</span><span class="p">()</span>
 
@@ -753,6 +761,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">sample_log_prob</span><span class="p">,</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">),</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span>
             <span class="o">*</span><span class="p">[(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">],</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">qvalue_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span>
@@ -972,6 +981,7 @@
             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
             <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+            <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span><span class="o">.</span><span class="n">set_keys</span><span class="p">(</span><span class="o">**</span><span class="n">tensor_keys</span><span class="p">)</span></div></div>
 </pre></div>
@@ -1027,6 +1037,7 @@
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
      
 
   
@@ -1169,7 +1180,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

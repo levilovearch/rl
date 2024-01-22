@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -380,35 +381,88 @@
 <h1>StepCounter<a class="headerlink" href="#stepcounter" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchrl.envs.transforms.StepCounter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.envs.transforms.</span></span><span class="sig-name descname"><span class="pre">StepCounter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncated_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'truncated'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_count_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'step_count'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Counts the steps from a reset and sets the done state to True after a certain number of steps.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.envs.transforms.</span></span><span class="sig-name descname"><span class="pre">StepCounter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncated_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'truncated'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_count_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'step_count'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts the steps from a reset and optionally sets the truncated state to <code class="docutils literal notranslate"><span class="pre">True</span></code> after a certain number of steps.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">&quot;done&quot;</span></code> state is also adapted accordingly (as done is the disjunction
+of task completion and early truncation).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>max_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – a positive integer that indicates the
 maximum number of steps to take before setting the <code class="docutils literal notranslate"><span class="pre">truncated_key</span></code>
-entry to <code class="docutils literal notranslate"><span class="pre">True</span></code>.
-However, the step count will still be
-incremented on each call to step() into the <cite>step_count</cite> attribute.</p></li>
-<li><p><strong>truncated_key</strong> (<em>NestedKey</em><em>, </em><em>optional</em>) – the key where the truncated key should
-be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code>, which is recognised by
-data collectors as a reset signal.</p></li>
-<li><p><strong>step_count_key</strong> (<em>NestedKey</em><em>, </em><em>optional</em>) – the key where the step_count key should
-be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;step_count&quot;</span></code>, which is recognised by
-data collectors.</p></li>
+entry to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>truncated_key</strong> (<em>str</em><em>, </em><em>optional</em>) – the key where the truncated entries
+should be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code>, which is recognised by
+data collectors as a reset signal.
+This argument can only be a string (not a nested key) as it will be
+matched to each of the leaf done key in the parent environment
+(eg, a <code class="docutils literal notranslate"><span class="pre">(&quot;agent&quot;,</span> <span class="pre">&quot;done&quot;)</span></code> key will be accompanied by a
+<code class="docutils literal notranslate"><span class="pre">(&quot;agent&quot;,</span> <span class="pre">&quot;truncated&quot;)</span></code> if the <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code> key name is used).</p></li>
+<li><p><strong>step_count_key</strong> (<em>str</em><em>, </em><em>optional</em>) – the key where the step count entries
+should be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;step_count&quot;</span></code>.
+This argument can only be a string (not a nested key) as it will be
+matched to each of the leaf done key in the parent environment
+(eg, a <code class="docutils literal notranslate"><span class="pre">(&quot;agent&quot;,</span> <span class="pre">&quot;done&quot;)</span></code> key will be accompanied by a
+<code class="docutils literal notranslate"><span class="pre">(&quot;agent&quot;,</span> <span class="pre">&quot;step_count&quot;)</span></code> if the <code class="docutils literal notranslate"><span class="pre">&quot;step_count&quot;</span></code> key name is used).</p></li>
+<li><p><strong>update_done</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the <code class="docutils literal notranslate"><span class="pre">&quot;done&quot;</span></code> boolean tensor
+at the level of <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code>
+will be updated.
+This signal indicates that the trajectory has reached its ends,
+either because the task is completed (<code class="docutils literal notranslate"><span class="pre">&quot;completed&quot;</span></code> entry is
+<code class="docutils literal notranslate"><span class="pre">True</span></code>) or because it has been truncated (<code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code> entry
+is <code class="docutils literal notranslate"><span class="pre">True</span></code>).
+Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To ensure compatibility with environments that have multiple
+done_key(s), this transform will write a step_count entry for
+every done entry within the tensordict.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">gymnasium</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">GymWrapper</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_env</span> <span class="o">=</span> <span class="n">GymWrapper</span><span class="p">(</span><span class="n">gymnasium</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span><span class="n">base_env</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">StepCounter</span><span class="p">(</span><span class="n">max_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rollout</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rollout</span><span class="p">)</span>
+<span class="go">TensorDict(</span>
+<span class="go">    fields={</span>
+<span class="go">        action: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        done: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        completed: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">        next: TensorDict(</span>
+<span class="go">            fields={</span>
+<span class="go">                done: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                completed: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">                observation: Tensor(shape=torch.Size([5, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">                reward: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">                step_count: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="go">                truncated: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">            batch_size=torch.Size([5]),</span>
+<span class="go">            device=cpu,</span>
+<span class="go">            is_shared=False),</span>
+<span class="go">        observation: Tensor(shape=torch.Size([5, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        step_count: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="go">        truncated: Tensor(shape=torch.Size([5, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">    batch_size=torch.Size([5]),</span>
+<span class="go">    device=cpu,</span>
+<span class="go">    is_shared=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rollout</span><span class="p">[</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;step_count&quot;</span><span class="p">])</span>
+<span class="go">tensor([[1],</span>
+<span class="go">        [2],</span>
+<span class="go">        [3],</span>
+<span class="go">        [4],</span>
+<span class="go">        [5]])</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.envs.transforms.StepCounter.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the input tensordict, and for the selected keys, applies the transform.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchrl.envs.transforms.StepCounter.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets a tranform if it is stateful.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -435,6 +489,21 @@ data collectors.</p></li>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>expected spec after the transform</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.envs.transforms.StepCounter.transform_output_spec">
+<span class="sig-name descname"><span class="pre">transform_output_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec" title="torchrl.data.tensor_specs.CompositeSpec"><span class="pre">CompositeSpec</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec" title="torchrl.data.tensor_specs.CompositeSpec"><span class="pre">CompositeSpec</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/envs/transforms/transforms.html#StepCounter.transform_output_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.envs.transforms.StepCounter.transform_output_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the output spec such that the resulting spec matches transform mapping.</p>
+<p>This method should generally be left untouched. Changes should be implemented using
+<a class="reference internal" href="#torchrl.envs.transforms.StepCounter.transform_observation_spec" title="torchrl.envs.transforms.StepCounter.transform_observation_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform_observation_spec()</span></code></a>, <a class="reference internal" href="torchrl.envs.transforms.BinarizeReward.html#torchrl.envs.transforms.BinarizeReward.transform_reward_spec" title="torchrl.envs.transforms.BinarizeReward.transform_reward_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform_reward_spec()</span></code></a> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">transformfull_done_spec()</span></code>.
+:param output_spec: spec before the transform
+:type output_spec: TensorSpec</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>expected spec after the transform</p>
 </dd>
 </dl>
 </dd></dl>
@@ -507,6 +576,7 @@ data collectors.</p></li>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -649,7 +719,7 @@ data collectors.</p></li>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -375,6 +376,7 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">importlib.util</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
@@ -385,8 +387,11 @@
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">NestedKey</span>
-<span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">TensorDictReplayBuffer</span><span class="p">,</span> <span class="n">TensorStorage</span>
-<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers</span> <span class="kn">import</span> <span class="n">SamplerWithoutReplacement</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SamplerWithoutReplacement</span><span class="p">,</span>
+    <span class="n">TensorDictReplayBuffer</span><span class="p">,</span>
+    <span class="n">TensorStorage</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">_has_transformers</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <span class="n">_has_datasets</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;datasets&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -447,8 +452,8 @@
 <span class="sd">        &gt;&gt;&gt; print(dataset)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
-<span class="sd">                attention_mask: MemmapTensor(shape=torch.Size([185068, 550]), device=cpu, dtype=torch.int64, is_shared=False),</span>
-<span class="sd">                input_ids: MemmapTensor(shape=torch.Size([185068, 550]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                attention_mask: MemoryMappedTensor(shape=torch.Size([185068, 550]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                input_ids: MemoryMappedTensor(shape=torch.Size([185068, 550]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
 <span class="sd">            batch_size=torch.Size([185068]),</span>
 <span class="sd">            device=None,</span>
 <span class="sd">            is_shared=False)</span>
@@ -507,6 +512,7 @@
         <span class="n">data_dir</span> <span class="o">=</span> <span class="n">root_dir</span> <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">data_dir_total</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="n">split</span> <span class="o">/</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_length</span><span class="p">)</span>
         <span class="c1"># search for data</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Looking for data in&quot;</span><span class="p">,</span> <span class="n">data_dir_total</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir_total</span><span class="p">):</span>
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="o">.</span><span class="n">load_memmap</span><span class="p">(</span><span class="n">data_dir_total</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dataset</span>
@@ -640,8 +646,8 @@
 <span class="sd">                        fields={</span>
 <span class="sd">                            prefix: TensorDict(</span>
 <span class="sd">                                fields={</span>
-<span class="sd">                                    labels: MemmapTensor(shape=torch.Size([10, 11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="sd">                                    tokens: MemmapTensor(shape=torch.Size([10, 11]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                                    labels: MemoryMappedTensor(shape=torch.Size([10, 11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                                    tokens: MemoryMappedTensor(shape=torch.Size([10, 11]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
 <span class="sd">                                batch_size=torch.Size([10]),</span>
 <span class="sd">                                device=None,</span>
 <span class="sd">                                is_shared=False)},</span>
@@ -678,16 +684,17 @@
 
 
 <div class="viewcode-block" id="get_dataloader"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.get_dataloader.html#torchrl.data.get_dataloader">[docs]</a><span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span>
-    <span class="n">batch_size</span><span class="p">,</span>
-    <span class="n">block_size</span><span class="p">,</span>
-    <span class="n">tensorclass_type</span><span class="p">,</span>
-    <span class="n">device</span><span class="p">,</span>
-    <span class="n">dataset_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">infinite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">prefetch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
-    <span class="n">root_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">from_disk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tensorclass_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">infinite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">prefetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">split</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">root_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">from_disk</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a dataset and returns a dataloader from it.</span>
 
@@ -716,9 +723,12 @@
 <span class="sd">        from_disk (bool, optional): if ``True``, :func:`datasets.load_from_disk`</span>
 <span class="sd">            will be used. Otherwise, :func:`datasets.load_dataset` will be used.</span>
 <span class="sd">            Defaults to ``False``.</span>
+<span class="sd">        num_workers (int, optional): number of workers for :meth:`datasets.dataset.map`</span>
+<span class="sd">            which is called during tokenization.</span>
+<span class="sd">            Defaults to ``max(os.cpu_count() // 2, 1)``.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; from torchrl.data.rlhf.comparison import PairwiseDataset</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.data.rlhf.reward import PairwiseDataset</span>
 <span class="sd">        &gt;&gt;&gt; dataloader = get_dataloader(</span>
 <span class="sd">        ...     batch_size=256, block_size=550, tensorclass_type=PairwiseDataset, device=&quot;cpu&quot;)</span>
 <span class="sd">        &gt;&gt;&gt; for d in dataloader:</span>
@@ -751,6 +761,7 @@
         <span class="n">max_length</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
         <span class="n">root_dir</span><span class="o">=</span><span class="n">root_dir</span><span class="p">,</span>
         <span class="n">from_disk</span><span class="o">=</span><span class="n">from_disk</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
         <span class="n">storage</span><span class="o">=</span><span class="n">TensorStorage</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
@@ -897,6 +908,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -1039,7 +1051,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

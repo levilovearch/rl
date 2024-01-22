@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -388,8 +389,11 @@
 <li><p><strong>max_size</strong> (<em>int</em>) – size of the storage, i.e. maximum number of elements stored
 in the buffer.</p></li>
 <li><p><strong>scratch_dir</strong> (<em>str</em><em> or </em><em>path</em>) – directory where memmap-tensors will be written.</p></li>
-<li><p><strong>device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.0)"><em>torch.device</em></a><em>, </em><em>optional</em>) – device where the sampled tensors will be
-stored and sent. Default is <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.device(&quot;cpu&quot;)</span></code>.</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a><em>, </em><em>optional</em>) – device where the sampled tensors will be
+stored and sent. Default is <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.device(&quot;cpu&quot;)</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code> is provided, the device is automatically gathered from the
+first batch of data passed. This is not enabled by default to avoid
+data placed on GPU by mistake, causing OOM issues.</p></li>
 </ul>
 </dd>
 </dl>
@@ -405,12 +409,12 @@ stored and sent. Default is <code class="xref py py-obj docutils literal notrans
 <span class="gp">&gt;&gt;&gt; </span><span class="n">storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
-<span class="go">        some data: MemmapTensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        some data: MemoryMappedTensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">        some: TensorDict(</span>
 <span class="go">            fields={</span>
 <span class="go">                nested: TensorDict(</span>
 <span class="go">                    fields={</span>
-<span class="go">                        data: MemmapTensor(shape=torch.Size([11, 12]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="go">                        data: MemoryMappedTensor(shape=torch.Size([11, 12]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
 <span class="go">                    batch_size=torch.Size([11]),</span>
 <span class="go">                    device=cpu,</span>
 <span class="go">                    is_shared=False)},</span>
@@ -434,8 +438,8 @@ stored and sent. Default is <code class="xref py py-obj docutils literal notrans
 <span class="gp">&gt;&gt;&gt; </span><span class="n">storage</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">MyClass(</span>
-<span class="go">    bar=MemmapTensor(shape=torch.Size([11, 12]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="go">    foo=MemmapTensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">    bar=MemoryMappedTensor(shape=torch.Size([11, 12]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">    foo=MemoryMappedTensor(shape=torch.Size([11]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">    batch_size=torch.Size([11]),</span>
 <span class="go">    device=cpu,</span>
 <span class="go">    is_shared=False)</span>
@@ -524,6 +528,7 @@ is shared with other buffers (eg. Priority Samplers).</p>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -666,7 +671,7 @@ is shared with other buffers (eg. Priority Samplers).</p>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

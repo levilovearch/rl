@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -372,8 +373,8 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
-
 <span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
@@ -387,9 +388,9 @@
     <span class="n">UnboundedContinuousTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">DEVICE_TYPING</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">TensorDictPrimer</span><span class="p">,</span> <span class="n">TransformedEnv</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">EnvBase</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.model_based.dreamer</span> <span class="kn">import</span> <span class="n">DreamerEnv</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.transforms</span> <span class="kn">import</span> <span class="n">TensorDictPrimer</span><span class="p">,</span> <span class="n">TransformedEnv</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">ExplorationType</span><span class="p">,</span> <span class="n">set_exploration_type</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">NoisyLinear</span><span class="p">,</span>
@@ -498,7 +499,7 @@
     <span class="n">atoms</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">atoms</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">distributional</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">linear_layer_class</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">noisy</span> <span class="k">else</span> <span class="n">NoisyLinear</span>
 
-    <span class="n">action_spec</span> <span class="o">=</span> <span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;input_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;_action_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span>
+    <span class="n">action_spec</span> <span class="o">=</span> <span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;input_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;full_action_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">domain</span> <span class="o">!=</span> <span class="s2">&quot;discrete&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;env </span><span class="si">{</span><span class="n">proof_environment</span><span class="si">}</span><span class="s2"> has an action domain &quot;</span>
@@ -528,7 +529,9 @@
             <span class="s2">&quot;mlp_kwargs_output&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_cells&quot;</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">&quot;layer_class&quot;</span><span class="p">:</span> <span class="n">linear_layer_class</span><span class="p">},</span>
         <span class="p">}</span>
         <span class="c1"># automatically infer in key</span>
-        <span class="p">(</span><span class="n">in_key</span><span class="p">,)</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;output_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;_observation_spec&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">in_key</span><span class="p">,)</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span>
+            <span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;output_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;full_observation_spec&quot;</span><span class="p">],</span> <span class="mi">1</span>
+        <span class="p">)</span>
 
     <span class="n">actor_class</span> <span class="o">=</span> <span class="n">QValueActor</span>
     <span class="n">actor_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -537,7 +540,7 @@
         <span class="c1"># if action spec is modeled as categorical variable, we still need to have features equal</span>
         <span class="c1"># to the number of possible choices and also set categorical behavioural for actors.</span>
         <span class="n">actor_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;action_space&quot;</span><span class="p">:</span> <span class="s2">&quot;categorical&quot;</span><span class="p">})</span>
-        <span class="n">out_features</span> <span class="o">=</span> <span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;input_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;_action_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">n</span>
+        <span class="n">out_features</span> <span class="o">=</span> <span class="n">env_specs</span><span class="p">[</span><span class="s2">&quot;input_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;full_action_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">n</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">out_features</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -658,6 +661,10 @@
 <span class="sd">            is_shared=False)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;This helper function will be deprecated in v0.4. Consider using the local helper in the REDQ example.&quot;</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">tanh_loc</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">tanh_loc</span>
     <span class="n">default_policy_scale</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">default_policy_scale</span>
     <span class="n">gSDE</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">gSDE</span>
@@ -743,8 +750,8 @@
 
     <span class="n">dist_class</span> <span class="o">=</span> <span class="n">TanhNormal</span>
     <span class="n">dist_kwargs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span><span class="p">,</span>
-        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span><span class="p">,</span>
+        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span>
+        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span><span class="p">,</span>
         <span class="s2">&quot;tanh_loc&quot;</span><span class="p">:</span> <span class="n">tanh_loc</span><span class="p">,</span>
     <span class="p">}</span>
 
@@ -768,8 +775,8 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="s2">&quot;continuous&quot;</span><span class="p">:</span>
-            <span class="nb">min</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">minimum</span>
-            <span class="nb">max</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">maximum</span>
+            <span class="nb">min</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">low</span>
+            <span class="nb">max</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">high</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">SafeTanhTransform</span><span class="p">()</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">min</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">max</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="n">transform</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">ComposeTransform</span><span class="p">(</span>
@@ -1021,6 +1028,7 @@
             <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="n">action_key</span><span class="p">],</span>
             <span class="n">default_interaction_type</span><span class="o">=</span><span class="n">InteractionType</span><span class="o">.</span><span class="n">RANDOM</span><span class="p">,</span>
             <span class="n">distribution_class</span><span class="o">=</span><span class="n">TanhNormal</span><span class="p">,</span>
+            <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;tanh_loc&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
             <span class="n">spec</span><span class="o">=</span><span class="n">CompositeSpec</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">action_key</span><span class="p">:</span> <span class="n">proof_environment</span><span class="o">.</span><span class="n">action_spec</span><span class="p">}),</span>
         <span class="p">),</span>
     <span class="p">)</span>
@@ -1067,8 +1075,9 @@
             <span class="n">SafeProbabilisticModule</span><span class="p">(</span>
                 <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;loc&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">],</span>
                 <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="n">action_key</span><span class="p">],</span>
-                <span class="n">default_interaction_type</span><span class="o">=</span><span class="n">InteractionType</span><span class="o">.</span><span class="n">RANDOM</span><span class="p">,</span>
+                <span class="n">default_interaction_type</span><span class="o">=</span><span class="n">InteractionType</span><span class="o">.</span><span class="n">MODE</span><span class="p">,</span>
                 <span class="n">distribution_class</span><span class="o">=</span><span class="n">TanhNormal</span><span class="p">,</span>
+                <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;tanh_loc&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
                 <span class="n">spec</span><span class="o">=</span><span class="n">CompositeSpec</span><span class="p">(</span>
                     <span class="o">**</span><span class="p">{</span><span class="n">action_key</span><span class="p">:</span> <span class="n">proof_environment</span><span class="o">.</span><span class="n">action_spec</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)}</span>
                 <span class="p">),</span>
@@ -1329,6 +1338,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -1471,7 +1481,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

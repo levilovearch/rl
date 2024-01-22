@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -401,7 +402,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a logger instance of the provided `logger_type`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        logger_type (str): One of tensorboard / csv / wandb / mlflow</span>
+<span class="sd">        logger_type (str): One of tensorboard / csv / wandb / mlflow.</span>
+<span class="sd">            If empty, ``None`` is returned.</span>
 <span class="sd">        logger_name (str): Name to be used as a log_dir</span>
 <span class="sd">        experiment_name (str): Name of the experiment</span>
 <span class="sd">        kwargs (dict[str]): might contain either `wandb_kwargs` or `mlflow_kwargs`</span>
@@ -430,8 +432,10 @@
             <span class="n">exp_name</span><span class="o">=</span><span class="n">experiment_name</span><span class="p">,</span>
             <span class="o">**</span><span class="n">mlflow_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">logger_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported logger_type: </span><span class="si">{</span><span class="n">logger_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported logger_type: &#39;</span><span class="si">{</span><span class="n">logger_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">logger</span></div>
 </pre></div>
 
@@ -486,6 +490,7 @@
          <script src="../../../../_static/underscore.js"></script>
          <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../../_static/doctools.js"></script>
+         <script src="../../../../_static/design-tabs.js"></script>
      
 
   
@@ -628,7 +633,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -387,9 +388,15 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>actor_network</strong> (<a class="reference internal" href="torchrl.modules.tensordict_module.ProbabilisticActor.html#torchrl.modules.tensordict_module.ProbabilisticActor" title="torchrl.modules.tensordict_module.ProbabilisticActor"><em>ProbabilisticActor</em></a>) – the actor to be trained</p></li>
 <li><p><strong>qvalue_network</strong> (<em>TensorDictModule</em>) – a single Q-value network that will be multiplicated as many times as needed.</p></li>
-<li><p><strong>num_actions</strong> (<em>int</em>) – number of actions in the action space.</p></li>
+<li><p><strong>action_space</strong> (<em>str</em><em> or </em><a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><em>TensorSpec</em></a>) – Action space. Must be one of
+<code class="docutils literal notranslate"><span class="pre">&quot;one-hot&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mult_one_hot&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;binary&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categorical&quot;</span></code>,
+or an instance of the corresponding specs (<a class="reference internal" href="torchrl.data.OneHotDiscreteTensorSpec.html#torchrl.data.OneHotDiscreteTensorSpec" title="torchrl.data.OneHotDiscreteTensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.OneHotDiscreteTensorSpec</span></code></a>,
+<a class="reference internal" href="torchrl.data.MultiOneHotDiscreteTensorSpec.html#torchrl.data.MultiOneHotDiscreteTensorSpec" title="torchrl.data.MultiOneHotDiscreteTensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.MultiOneHotDiscreteTensorSpec</span></code></a>,
+<a class="reference internal" href="torchrl.data.BinaryDiscreteTensorSpec.html#torchrl.data.BinaryDiscreteTensorSpec" title="torchrl.data.BinaryDiscreteTensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.BinaryDiscreteTensorSpec</span></code></a> or <a class="reference internal" href="torchrl.data.DiscreteTensorSpec.html#torchrl.data.DiscreteTensorSpec" title="torchrl.data.DiscreteTensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.DiscreteTensorSpec</span></code></a>).</p></li>
+<li><p><strong>num_actions</strong> (<em>int</em><em>, </em><em>optional</em>) – number of actions in the action space.
+To be provided if target_entropy is set to “auto”.</p></li>
 <li><p><strong>num_qvalue_nets</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of Q-value networks to be trained. Default is 10.</p></li>
-<li><p><strong>loss_function</strong> (<em>str</em><em>, </em><em>optional</em>) – loss function to be used for the Q-value. Can be one of  <cite>“smooth_l1”</cite>, “l2”,
+<li><p><strong>loss_function</strong> (<em>str</em><em>, </em><em>optional</em>) – loss function to be used for the Q-value. Can be one of <cite>“smooth_l1”</cite>, “l2”,
 “l1”, Default is “smooth_l1”.</p></li>
 <li><p><strong>alpha_init</strong> (<em>float</em><em>, </em><em>optional</em>) – initial entropy multiplier.
 Default is 1.0.</p></li>
@@ -421,65 +428,54 @@ parameters for both policy and critic losses.</p></li>
 &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import ProbabilisticActor, ValueOperator
 &gt;&gt;&gt; from torchrl.modules.tensordict_module.common import SafeModule
 &gt;&gt;&gt; from torchrl.objectives.sac import DiscreteSACLoss
-&gt;&gt;&gt; from tensordict.tensordict import TensorDict
+&gt;&gt;&gt; from tensordict import TensorDict
+&gt;&gt;&gt; from tensordict.nn import TensorDictModule
 &gt;&gt;&gt; n_act, n_obs = 4, 3
 &gt;&gt;&gt; spec = OneHotDiscreteTensorSpec(n_act)
-&gt;&gt;&gt; net = NormalParamWrapper(nn.Linear(n_obs, 2 * n_act))
-&gt;&gt;&gt; module = SafeModule(net, in_keys=[“observation”], out_keys=[“logits”])
+&gt;&gt;&gt; module = TensorDictModule(nn.Linear(n_obs, n_act), in_keys=[“observation”], out_keys=[“logits”])
 &gt;&gt;&gt; actor = ProbabilisticActor(
 …     module=module,
 …     in_keys=[“logits”],
 …     out_keys=[“action”],
 …     spec=spec,
 …     distribution_class=OneHotCategorical)
-&gt;&gt;&gt; class ValueClass(nn.Module):
-…     def __init__(self):
-…         super().__init__()
-…         self.linear = nn.Linear(n_obs, n_act)
-…     def forward(self, obs):
-…         return self.linear(obs)
-&gt;&gt;&gt; module = ValueClass()
-&gt;&gt;&gt; qvalue = ValueOperator(
-…     module=module,
-…     in_keys=[‘observation’])
-&gt;&gt;&gt; loss = DiscreteSACLoss(actor, qvalue, num_actions=actor.spec[“action”].space.n)
-&gt;&gt;&gt; batch = [2, ]
+&gt;&gt;&gt; qvalue = TensorDictModule(
+…     nn.Linear(n_obs, n_act),
+…     in_keys=[“observation”],
+…     out_keys=[“action_value”],
+… )
+&gt;&gt;&gt; loss = DiscreteSACLoss(actor, qvalue, action_space=spec, num_actions=spec.space.n)
+&gt;&gt;&gt; batch = [2,]
 &gt;&gt;&gt; action = spec.rand(batch)
 &gt;&gt;&gt; data = TensorDict({
-…         “observation”: torch.randn(<a href="#id1"><span class="problematic" id="id2">*</span></a>batch, n_obs),
-…         “action”: action,
-…         (“next”, “done”): torch.zeros(<a href="#id3"><span class="problematic" id="id4">*</span></a>batch, 1, dtype=torch.bool),
-…         (“next”, “reward”): torch.randn(<a href="#id5"><span class="problematic" id="id6">*</span></a>batch, 1),
-…         (“next”, “observation”): torch.randn(<a href="#id7"><span class="problematic" id="id8">*</span></a>batch, n_obs),
+…     “observation”: torch.randn(<a href="#id1"><span class="problematic" id="id2">*</span></a>batch, n_obs),
+…     “action”: action,
+…     (“next”, “done”): torch.zeros(<a href="#id3"><span class="problematic" id="id4">*</span></a>batch, 1, dtype=torch.bool),
+…     (“next”, “terminated”): torch.zeros(<a href="#id5"><span class="problematic" id="id6">*</span></a>batch, 1, dtype=torch.bool),
+…     (“next”, “reward”): torch.randn(<a href="#id7"><span class="problematic" id="id8">*</span></a>batch, 1),
+…     (“next”, “observation”): torch.randn(<a href="#id9"><span class="problematic" id="id10">*</span></a>batch, n_obs),
 …     }, batch)
 &gt;&gt;&gt; loss(data)
-TensorDict(</p>
+TensorDict(
+fields={</p>
 <blockquote>
-<div><dl class="simple">
-<dt>fields={</dt><dd><p>action_log_prob_actor: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
-alpha: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
+<div><p>alpha: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
 entropy: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
 loss_actor: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
 loss_alpha: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
-loss_qvalue: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
-next.state_value: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
-state_action_value_actor: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),
-target_value: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</p>
-</dd>
-</dl>
+loss_qvalue: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</p>
+</div></blockquote>
 <p>batch_size=torch.Size([]),
 device=None,
 is_shared=False)</p>
-</div></blockquote>
 <p>This class is compatible with non-tensordict based modules too and can be
 used without recurring to any tensordict-related primitive. In this case,
 the expected keyword arguments are:
-<code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;]</span></code> + in_keys of the actor and qvalue network.
+<code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;,</span> <span class="pre">&quot;next_terminated&quot;]</span></code> + in_keys of the actor and qvalue network.
 The return value is a tuple of tensors in the following order:
-<a href="#id9"><span class="problematic" id="id10">``</span></a>[“loss_actor”, “loss_qvalue”, “loss_alpha”,</p>
+<a href="#id11"><span class="problematic" id="id12">``</span></a>[“loss_actor”, “loss_qvalue”, “loss_alpha”,</p>
 <blockquote>
-<div><p>“alpha”, “entropy”, “state_action_value_actor”,
-“action_log_prob_actor”, “next.state_value”, “target_value”]``</p>
+<div><p>“alpha”, “entropy”]``</p>
 </div></blockquote>
 <p>The output keys can also be filtered using <code class="xref py py-meth docutils literal notranslate"><span class="pre">DiscreteSACLoss.select_out_keys()</span></code> method.</p>
 <p class="rubric">Examples</p>
@@ -520,6 +516,7 @@ The return value is a tuple of tensors in the following order:
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_done</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">next_terminated</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">next_reward</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -527,7 +524,7 @@ The return value is a tuple of tensors in the following order:
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.objectives.DiscreteSACLoss.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorDictBase</span></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/sac.html#DiscreteSACLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.DiscreteSACLoss.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/sac.html#DiscreteSACLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.DiscreteSACLoss.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>It is designed to read an input TensorDict and return another tensordict with loss keys named “loss*”.</p>
 <p>Splitting the loss in its component can then be used by the trainer to log the various loss values throughout
 training. Other scalars present in the output tensordict will be logged too.</p>
@@ -649,6 +646,7 @@ used.</p></li>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -791,7 +789,7 @@ used.</p></li>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

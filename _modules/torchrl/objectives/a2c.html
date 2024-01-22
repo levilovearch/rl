@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="../../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -92,7 +93,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -373,11 +374,17 @@
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">dispatch</span><span class="p">,</span> <span class="n">ProbabilisticTensorDictSequential</span><span class="p">,</span> <span class="n">TensorDictModule</span>
+<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">dispatch</span><span class="p">,</span>
+    <span class="n">ProbabilisticTensorDictSequential</span><span class="p">,</span>
+    <span class="n">repopulate_module</span><span class="p">,</span>
+    <span class="n">TensorDictModule</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">NestedKey</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributions</span> <span class="k">as</span> <span class="n">d</span>
@@ -390,7 +397,13 @@
     <span class="n">distance_loss</span><span class="p">,</span>
     <span class="n">ValueEstimators</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchrl.objectives.value</span> <span class="kn">import</span> <span class="n">GAE</span><span class="p">,</span> <span class="n">TD0Estimator</span><span class="p">,</span> <span class="n">TD1Estimator</span><span class="p">,</span> <span class="n">TDLambdaEstimator</span>
+<span class="kn">from</span> <span class="nn">torchrl.objectives.value</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GAE</span><span class="p">,</span>
+    <span class="n">TD0Estimator</span><span class="p">,</span>
+    <span class="n">TD1Estimator</span><span class="p">,</span>
+    <span class="n">TDLambdaEstimator</span><span class="p">,</span>
+    <span class="n">VTrace</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="A2CLoss"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.A2CLoss.html#torchrl.objectives.A2CLoss">[docs]</a><span class="k">class</span> <span class="nc">A2CLoss</span><span class="p">(</span><span class="n">LossModule</span><span class="p">):</span>
@@ -467,6 +480,7 @@
 <span class="sd">        ...         &quot;observation&quot;: torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...         &quot;action&quot;: action,</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;done&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...         (&quot;next&quot;, &quot;terminated&quot;): torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;reward&quot;): torch.randn(*batch, 1),</span>
 <span class="sd">        ...         (&quot;next&quot;, &quot;observation&quot;): torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     }, batch)</span>
@@ -484,7 +498,7 @@
 <span class="sd">    This class is compatible with non-tensordict based modules too and can be</span>
 <span class="sd">    used without recurring to any tensordict-related primitive. In this case,</span>
 <span class="sd">    the expected keyword arguments are:</span>
-<span class="sd">    ``[&quot;action&quot;, &quot;next_reward&quot;, &quot;next_done&quot;]`` + in_keys of the actor and critic.</span>
+<span class="sd">    ``[&quot;action&quot;, &quot;next_reward&quot;, &quot;next_done&quot;, &quot;next_terminated&quot;]`` + in_keys of the actor and critic.</span>
 <span class="sd">    The return value is a tuple of tensors in the following order:</span>
 <span class="sd">    ``[&quot;loss_objective&quot;]``</span>
 <span class="sd">        + ``[&quot;loss_critic&quot;]`` if critic_coef is not None</span>
@@ -518,6 +532,7 @@
 <span class="sd">        ...     observation = torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     action = spec.rand(batch),</span>
 <span class="sd">        ...     next_done = torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...     next_terminated = torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...     next_reward = torch.randn(*batch, 1),</span>
 <span class="sd">        ...     next_observation = torch.randn(*batch, n_obs))</span>
 <span class="sd">        &gt;&gt;&gt; loss_obj.backward()</span>
@@ -531,6 +546,7 @@
 <span class="sd">        ...     observation = torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     action = spec.rand(batch),</span>
 <span class="sd">        ...     next_done = torch.zeros(*batch, 1, dtype=torch.bool),</span>
+<span class="sd">        ...     next_terminated = torch.zeros(*batch, 1, dtype=torch.bool),</span>
 <span class="sd">        ...     next_reward = torch.randn(*batch, 1),</span>
 <span class="sd">        ...     next_observation = torch.randn(*batch, n_obs))</span>
 <span class="sd">        &gt;&gt;&gt; loss_obj.backward()</span>
@@ -557,6 +573,9 @@
 <span class="sd">            done (NestedKey): The key in the input TensorDict that indicates</span>
 <span class="sd">                whether a trajectory is done. Will be used for the underlying value estimator.</span>
 <span class="sd">                Defaults to ``&quot;done&quot;``.</span>
+<span class="sd">            terminated (NestedKey): The key in the input TensorDict that indicates</span>
+<span class="sd">                whether a trajectory is terminated. Will be used for the underlying value estimator.</span>
+<span class="sd">                Defaults to ``&quot;terminated&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">advantage</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;advantage&quot;</span>
@@ -565,6 +584,8 @@
         <span class="n">action</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;action&quot;</span>
         <span class="n">reward</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;reward&quot;</span>
         <span class="n">done</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;done&quot;</span>
+        <span class="n">terminated</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;terminated&quot;</span>
+        <span class="n">sample_log_prob</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;sample_log_prob&quot;</span>
 
     <span class="n">default_keys</span> <span class="o">=</span> <span class="n">_AcceptedKeys</span><span class="p">()</span>
     <span class="n">default_value_estimator</span><span class="p">:</span> <span class="n">ValueEstimators</span> <span class="o">=</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">GAE</span>
@@ -621,6 +642,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="p">,</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">),</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span>
             <span class="o">*</span><span class="p">[(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span><span class="p">],</span>
         <span class="p">]</span>
@@ -652,6 +674,7 @@
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                 <span class="n">reward</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
                 <span class="n">done</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+                <span class="n">terminated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -675,8 +698,8 @@
                 <span class="sa">f</span><span class="s2">&quot;tensordict stored </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s2"> require grad.&quot;</span>
             <span class="p">)</span>
         <span class="n">tensordict_clone</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-
-        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict_clone</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">get_dist</span><span class="p">(</span><span class="n">tensordict_clone</span><span class="p">)</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="n">log_prob</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">log_prob</span><span class="p">,</span> <span class="n">dist</span>
@@ -687,10 +710,10 @@
             <span class="c1"># overhead that we could easily reduce.</span>
             <span class="n">target_return</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value_target</span><span class="p">)</span>
             <span class="n">tensordict_select</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
-            <span class="n">state_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">(</span>
-                <span class="n">tensordict_select</span><span class="p">,</span>
-                <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_params</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">):</span>
+                <span class="n">state_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">(</span>
+                    <span class="n">tensordict_select</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
             <span class="n">loss_value</span> <span class="o">=</span> <span class="n">distance_loss</span><span class="p">(</span>
                 <span class="n">target_return</span><span class="p">,</span>
                 <span class="n">state_value</span><span class="p">,</span>
@@ -722,6 +745,7 @@
                 <span class="n">target_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_critic_params</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">advantage</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">advantage</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">advantage</span><span class="o">.</span><span class="n">requires_grad</span>
         <span class="n">log_probs</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_probs</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">log_probs</span> <span class="o">*</span> <span class="n">advantage</span><span class="p">)</span>
         <span class="n">td_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;loss_objective&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()},</span> <span class="p">[])</span>
@@ -740,6 +764,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">value_type</span> <span class="o">=</span> <span class="n">value_type</span>
         <span class="n">hp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">default_value_kwargs</span><span class="p">(</span><span class="n">value_type</span><span class="p">))</span>
         <span class="n">hp</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">hyperparams</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">):</span>
             <span class="n">hp</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TD1</span><span class="p">:</span>
@@ -750,6 +775,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">GAE</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TDLambda</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TDLambdaEstimator</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">VTrace</span><span class="p">:</span>
+            <span class="c1"># VTrace currently does not support functional call on the actor</span>
+            <span class="n">actor_with_params</span> <span class="o">=</span> <span class="n">repopulate_module</span><span class="p">(</span>
+                <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_params</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">VTrace</span><span class="p">(</span>
+                <span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="n">actor_network</span><span class="o">=</span><span class="n">actor_with_params</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown value type </span><span class="si">{</span><span class="n">value_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -759,6 +792,8 @@
             <span class="s2">&quot;value_target&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value_target</span><span class="p">,</span>
             <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span>
             <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">done</span><span class="p">,</span>
+            <span class="s2">&quot;terminated&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span>
+            <span class="s2">&quot;sample_log_prob&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">sample_log_prob</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span><span class="o">.</span><span class="n">set_keys</span><span class="p">(</span><span class="o">**</span><span class="n">tensor_keys</span><span class="p">)</span></div></div>
 </pre></div>
@@ -814,6 +849,7 @@
          <script src="../../../_static/underscore.js"></script>
          <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/design-tabs.js"></script>
      
 
   
@@ -956,7 +992,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

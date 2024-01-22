@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -392,7 +393,9 @@
 Defaults to “l2”.</p></li>
 <li><p><strong>delay_value</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to duplicate the value network
 into a new target value network to
-create a double DQN. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+create a DQN with a target network. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>double_dqn</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether or not to use Double DQN, as described in
+<a class="reference external" href="https://arxiv.org/abs/1509.06461">https://arxiv.org/abs/1509.06461</a>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>action_space</strong> (<em>str</em><em> or </em><a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><em>TensorSpec</em></a><em>, </em><em>optional</em>) – Action space. Must be one of
 <code class="docutils literal notranslate"><span class="pre">&quot;one-hot&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mult_one_hot&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;binary&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;categorical&quot;</span></code>,
 or an instance of the corresponding specs (<a class="reference internal" href="torchrl.data.OneHotDiscreteTensorSpec.html#torchrl.data.OneHotDiscreteTensorSpec" title="torchrl.data.OneHotDiscreteTensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.OneHotDiscreteTensorSpec</span></code></a>,
@@ -421,6 +424,7 @@ to this ReplayBuffer.  This is to be used when the sampler is of type
 <span class="gp">... </span>    <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;terminated&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">):</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="gp">... </span><span class="p">},</span> <span class="n">batch</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -435,7 +439,7 @@ to this ReplayBuffer.  This is to be used when the sampler is of type
 <p>This class is compatible with non-tensordict based modules too and can be
 used without recurring to any tensordict-related primitive. In this case,
 the expected keyword arguments are:
-<code class="docutils literal notranslate"><span class="pre">[&quot;observation&quot;,</span> <span class="pre">&quot;next_observation&quot;,</span> <span class="pre">&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">[&quot;observation&quot;,</span> <span class="pre">&quot;next_observation&quot;,</span> <span class="pre">&quot;action&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;,</span> <span class="pre">&quot;next_terminated&quot;]</span></code>,
 and a single loss value is returned.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.objectives</span> <span class="kn">import</span> <span class="n">DQNLoss</span>
@@ -453,17 +457,19 @@ and a single loss value is returned.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">action</span> <span class="o">=</span> <span class="n">action_spec</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">next_reward</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">next_done</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">next_terminated</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_val</span> <span class="o">=</span> <span class="n">dqn_loss</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">observation</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_observation</span><span class="o">=</span><span class="n">next_observation</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_reward</span><span class="o">=</span><span class="n">next_reward</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_done</span><span class="o">=</span><span class="n">next_done</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">next_terminated</span><span class="o">=</span><span class="n">next_terminated</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.objectives.DQNLoss.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorDictBase</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.1.2+37e66d1 ))"><span class="pre">TensorDict</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/dqn.html#DQNLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.DQNLoss.forward" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDict</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/objectives/dqn.html#DQNLoss.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.objectives.DQNLoss.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the DQN loss given a tensordict sampled from the replay buffer.</p>
 <dl class="simple">
 <dt>This function will also write a “td_error” key that can be used by prioritized replay buffers to assign</dt><dd><p>a priority to items in the tensordict.</p>
@@ -472,7 +478,7 @@ and a single loss value is returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tensordict</strong> (<em>TensorDictBase</em>) – a tensordict with keys [“action”] and the in_keys of
-the value network (observations, “done”, “reward” in a “next” tensordict).</p>
+the value network (observations, “done”, “terminated”, “reward” in a “next” tensordict).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a tensor containing the DQN loss.</p>
@@ -586,6 +592,7 @@ used.</p></li>
          <script src="../../_static/underscore.js"></script>
          <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/design-tabs.js"></script>
      
 
   
@@ -728,7 +735,7 @@ used.</p></li>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>

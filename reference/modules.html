@@ -34,12 +34,13 @@
   <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
   <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-beta/dist/katex.min.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Actor" href="generated/torchrl.modules.tensordict_module.Actor.html" />
-    <link rel="prev" title="VmasWrapper" href="generated/torchrl.envs.libs.vmas.VmasWrapper.html" />
+    <link rel="prev" title="set_gym_backend" href="generated/torchrl.envs.set_gym_backend.html" />
   <!-- Google Analytics -->
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117752657-2"></script>
@@ -95,7 +96,7 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
@@ -229,7 +230,7 @@
               
               
                 <div class="version">
-                  main (None )
+                  main (0.3.0 )
                 </div>
               
             
@@ -380,7 +381,7 @@
 <h2>TensorDict modules: Actors, exploration, value models and generative models<a class="headerlink" href="#tensordict-modules-actors-exploration-value-models-and-generative-models" title="Permalink to this heading">¶</a></h2>
 <p>TorchRL offers a series of module wrappers aimed at making it easy to build
 RL models from the ground up. These wrappers are exclusively based on
-<a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictModule</span></code></a> and <a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictSequential</span></code></a>.
+<a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictModule</span></code></a> and <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictSequential</span></code></a>.
 They can loosely be split in three categories:
 policies (actors), including exploration strategies,
 value model and simulation models (in model-based contexts).</p>
@@ -416,7 +417,7 @@ projected (in a L1-manner) into the desired domain.</p>
 <td><p>General class for deterministic actors in RL.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.SafeModule.html#torchrl.modules.tensordict_module.SafeModule" title="torchrl.modules.tensordict_module.SafeModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SafeModule</span></code></a>(*args, **kwargs)</p></td>
-<td><p><a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictModule</span></code></a> subclass that accepts a <a class="reference internal" href="generated/torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorSpec</span></code></a> as argument to control the output domain.</p></td>
+<td><p><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictModule</span></code></a> subclass that accepts a <a class="reference internal" href="generated/torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorSpec</span></code></a> as argument to control the output domain.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.SafeSequential.html#torchrl.modules.tensordict_module.SafeSequential" title="torchrl.modules.tensordict_module.SafeSequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SafeSequential</span></code></a>(*args, **kwargs)</p></td>
 <td><p>A safe sequence of TensorDictModules.</p></td>
@@ -439,10 +440,13 @@ other cases, the action written in the tensordict is simply the network output.<
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.AdditiveGaussianWrapper.html#torchrl.modules.tensordict_module.AdditiveGaussianWrapper" title="torchrl.modules.tensordict_module.AdditiveGaussianWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdditiveGaussianWrapper</span></code></a>(*args, **kwargs)</p></td>
 <td><p>Additive Gaussian PO wrapper.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.EGreedyWrapper.html#torchrl.modules.tensordict_module.EGreedyWrapper" title="torchrl.modules.tensordict_module.EGreedyWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EGreedyWrapper</span></code></a>(*args, **kwargs)</p></td>
-<td><p>Epsilon-Greedy PO wrapper.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.EGreedyModule.html#torchrl.modules.tensordict_module.EGreedyModule" title="torchrl.modules.tensordict_module.EGreedyModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EGreedyModule</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Epsilon-Greedy exploration module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper.html#torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper" title="torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OrnsteinUhlenbeckProcessWrapper</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.EGreedyWrapper.html#torchrl.modules.tensordict_module.EGreedyWrapper" title="torchrl.modules.tensordict_module.EGreedyWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EGreedyWrapper</span></code></a>(*args, **kwargs)</p></td>
+<td><p>[Deprecated] Epsilon-Greedy PO wrapper.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper.html#torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper" title="torchrl.modules.tensordict_module.OrnsteinUhlenbeckProcessWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OrnsteinUhlenbeckProcessWrapper</span></code></a>(*args, **kwargs)</p></td>
 <td><p>Ornstein-Uhlenbeck exploration policy wrapper.</p></td>
 </tr>
 </tbody>
@@ -509,7 +513,7 @@ of this action.</p>
 <td><p>General class for probabilistic actors in RL.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.SafeProbabilisticModule.html#torchrl.modules.tensordict_module.SafeProbabilisticModule" title="torchrl.modules.tensordict_module.SafeProbabilisticModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SafeProbabilisticModule</span></code></a>(*args, **kwargs)</p></td>
-<td><p><a class="reference external" href="https://pytorch-labs.github.io/tensordict/reference/generated/tensordict.nn.ProbabilisticTensorDictModule.html#tensordict.nn.ProbabilisticTensorDictModule" title="(in tensordict vmain (0.1.2+37e66d1 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.ProbabilisticTensorDictModule</span></code></a> subclass that accepts a <code class="xref py py-class docutils literal notranslate"><span class="pre">TensorSpec</span></code> as argument to control the output domain.</p></td>
+<td><p><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.ProbabilisticTensorDictModule.html#tensordict.nn.ProbabilisticTensorDictModule" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.ProbabilisticTensorDictModule</span></code></a> subclass that accepts a <code class="xref py py-class docutils literal notranslate"><span class="pre">TensorSpec</span></code> as argument to control the output domain.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.SafeProbabilisticTensorDictSequential.html#torchrl.modules.tensordict_module.SafeProbabilisticTensorDictSequential" title="torchrl.modules.tensordict_module.SafeProbabilisticTensorDictSequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SafeProbabilisticTensorDictSequential</span></code></a>(*args, ...)</p></td>
 <td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.ProbabilisticTensorDictSequential</span></code> subclass that accepts a <code class="xref py py-class docutils literal notranslate"><span class="pre">TensorSpec</span></code> as argument to control the output domain.</p></td>
@@ -648,6 +652,9 @@ without shared parameters. It is mainly intended as a replacement for
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.ValueOperator.html#torchrl.modules.tensordict_module.ValueOperator" title="torchrl.modules.tensordict_module.ValueOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueOperator</span></code></a>(*args, **kwargs)</p></td>
 <td><p>General class for value functions in RL.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper.html#torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper" title="torchrl.modules.tensordict_module.DecisionTransformerInferenceWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DecisionTransformerInferenceWrapper</span></code></a>(*args, ...)</p></td>
+<td><p>Inference Action Wrapper for the Decision Transformer.</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -696,13 +703,16 @@ classes for RL usage.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.ConvNet.html#torchrl.modules.ConvNet" title="torchrl.modules.ConvNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConvNet</span></code></a>(in_features, depth, num_cells, ...)</p></td>
 <td><p>A convolutional neural network.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTMNet.html#torchrl.modules.LSTMNet" title="torchrl.modules.LSTMNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMNet</span></code></a>(out_features, lstm_kwargs, mlp_kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.Conv3dNet.html#torchrl.modules.Conv3dNet" title="torchrl.modules.Conv3dNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Conv3dNet</span></code></a>(in_features, depth, num_cells, ...)</p></td>
+<td><p>A 3D-convolutional neural network.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTMNet.html#torchrl.modules.LSTMNet" title="torchrl.modules.LSTMNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMNet</span></code></a>(out_features, lstm_kwargs, mlp_kwargs)</p></td>
 <td><p>An embedder for an LSTM preceded by an MLP.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.SqueezeLayer.html#torchrl.modules.SqueezeLayer" title="torchrl.modules.SqueezeLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SqueezeLayer</span></code></a>([dims])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.SqueezeLayer.html#torchrl.modules.SqueezeLayer" title="torchrl.modules.SqueezeLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SqueezeLayer</span></code></a>([dims])</p></td>
 <td><p>Squeezing layer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.Squeeze2dLayer.html#torchrl.modules.Squeeze2dLayer" title="torchrl.modules.Squeeze2dLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Squeeze2dLayer</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.Squeeze2dLayer.html#torchrl.modules.Squeeze2dLayer" title="torchrl.modules.Squeeze2dLayer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Squeeze2dLayer</span></code></a>()</p></td>
 <td><p>Squeezing layer for convolutional neural networks.</p></td>
 </tr>
 </tbody>
@@ -714,41 +724,65 @@ classes for RL usage.</p>
 algorithms, such as DQN, DDPG or Dreamer.</p>
 <table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DTActor.html#torchrl.modules.DTActor" title="torchrl.modules.DTActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DTActor</span></code></a>(state_dim, action_dim[, ...])</p></td>
+<td><p>Decision Transformer Actor class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgCnnActor.html#torchrl.modules.DdpgCnnActor" title="torchrl.modules.DdpgCnnActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgCnnActor</span></code></a>(action_dim[, conv_net_kwargs, ...])</p></td>
+<td><p>DDPG Convolutional Actor class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgCnnQNet.html#torchrl.modules.DdpgCnnQNet" title="torchrl.modules.DdpgCnnQNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgCnnQNet</span></code></a>([conv_net_kwargs, ...])</p></td>
+<td><p>DDPG Convolutional Q-value class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgMlpActor.html#torchrl.modules.DdpgMlpActor" title="torchrl.modules.DdpgMlpActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgMlpActor</span></code></a>(action_dim[, mlp_net_kwargs, ...])</p></td>
+<td><p>DDPG Actor class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgMlpQNet.html#torchrl.modules.DdpgMlpQNet" title="torchrl.modules.DdpgMlpQNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgMlpQNet</span></code></a>([mlp_net_kwargs_net1, ...])</p></td>
+<td><p>DDPG Q-value MLP class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DecisionTransformer.html#torchrl.modules.DecisionTransformer" title="torchrl.modules.DecisionTransformer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DecisionTransformer</span></code></a>(state_dim, action_dim[, ...])</p></td>
+<td><p>Online Decion Transformer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DistributionalDQNnet.html#torchrl.modules.DistributionalDQNnet" title="torchrl.modules.DistributionalDQNnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DistributionalDQNnet</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Distributional Deep Q-Network.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DreamerActor.html#torchrl.modules.DreamerActor" title="torchrl.modules.DreamerActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DreamerActor</span></code></a>(out_features[, depth, ...])</p></td>
+<td><p>Dreamer actor network.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DuelingCnnDQNet.html#torchrl.modules.DuelingCnnDQNet" title="torchrl.modules.DuelingCnnDQNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DuelingCnnDQNet</span></code></a>(out_features[, ...])</p></td>
 <td><p>Dueling CNN Q-network.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DistributionalDQNnet.html#torchrl.modules.DistributionalDQNnet" title="torchrl.modules.DistributionalDQNnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DistributionalDQNnet</span></code></a>(*args, **kwargs)</p></td>
-<td><p>Distributional Deep Q-Network.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.GRUCell.html#torchrl.modules.GRUCell" title="torchrl.modules.GRUCell"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRUCell</span></code></a>(input_size, hidden_size[, bias, ...])</p></td>
+<td><p>A gated recurrent unit (GRU) cell that performs the same operation as nn.LSTMCell but is fully coded in Python.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgCnnActor.html#torchrl.modules.DdpgCnnActor" title="torchrl.modules.DdpgCnnActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgCnnActor</span></code></a>(action_dim[, conv_net_kwargs, ...])</p></td>
-<td><p>DDPG Convolutional Actor class.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.GRU.html#torchrl.modules.GRU" title="torchrl.modules.GRU"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRU</span></code></a>(input_size, hidden_size[, num_layers, ...])</p></td>
+<td><p>A PyTorch module for executing multiple steps of a multi-layer GRU.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgCnnQNet.html#torchrl.modules.DdpgCnnQNet" title="torchrl.modules.DdpgCnnQNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgCnnQNet</span></code></a>([conv_net_kwargs, ...])</p></td>
-<td><p>DDPG Convolutional Q-value class.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.GRUModule.html#torchrl.modules.GRUModule" title="torchrl.modules.GRUModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRUModule</span></code></a>(*args, **kwargs)</p></td>
+<td><p>An embedder for an GRU module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgMlpActor.html#torchrl.modules.DdpgMlpActor" title="torchrl.modules.DdpgMlpActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgMlpActor</span></code></a>(action_dim[, mlp_net_kwargs, ...])</p></td>
-<td><p>DDPG Actor class.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTMCell.html#torchrl.modules.LSTMCell" title="torchrl.modules.LSTMCell"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMCell</span></code></a>(input_size, hidden_size[, bias, ...])</p></td>
+<td><p>A long short-term memory (LSTM) cell that performs the same operation as nn.LSTMCell but is fully coded in Python.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.DdpgMlpQNet.html#torchrl.modules.DdpgMlpQNet" title="torchrl.modules.DdpgMlpQNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DdpgMlpQNet</span></code></a>([mlp_net_kwargs_net1, ...])</p></td>
-<td><p>DDPG Q-value MLP class.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTM.html#torchrl.modules.LSTM" title="torchrl.modules.LSTM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTM</span></code></a>(input_size, hidden_size[, num_layers, ...])</p></td>
+<td><p>A PyTorch module for executing multiple steps of a multi-layer LSTM.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.DreamerActor.html#torchrl.modules.DreamerActor" title="torchrl.modules.DreamerActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DreamerActor</span></code></a>(out_features[, depth, ...])</p></td>
-<td><p>Dreamer actor network.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTMModule.html#torchrl.modules.LSTMModule" title="torchrl.modules.LSTMModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMModule</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.LSTMModule.html#torchrl.modules.LSTMModule" title="torchrl.modules.LSTMModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMModule</span></code></a>(*args, **kwargs)</p></td>
 <td><p>An embedder for an LSTM module.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.ObsEncoder.html#torchrl.modules.ObsEncoder" title="torchrl.modules.ObsEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObsEncoder</span></code></a>([channels, num_layers, depth])</p></td>
-<td><p>Observation encoder network.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.ObsDecoder.html#torchrl.modules.ObsDecoder" title="torchrl.modules.ObsDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObsDecoder</span></code></a>([channels, num_layers, ...])</p></td>
 <td><p>Observation decoder network.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.RSSMPrior.html#torchrl.modules.RSSMPrior" title="torchrl.modules.RSSMPrior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RSSMPrior</span></code></a>(action_spec[, hidden_dim, ...])</p></td>
-<td><p>The prior network of the RSSM.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.ObsEncoder.html#torchrl.modules.ObsEncoder" title="torchrl.modules.ObsEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObsEncoder</span></code></a>([channels, num_layers, depth])</p></td>
+<td><p>Observation encoder network.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.RSSMPosterior.html#torchrl.modules.RSSMPosterior" title="torchrl.modules.RSSMPosterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RSSMPosterior</span></code></a>([hidden_dim, state_dim, scale_lb])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.OnlineDTActor.html#torchrl.modules.OnlineDTActor" title="torchrl.modules.OnlineDTActor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OnlineDTActor</span></code></a>(state_dim, action_dim[, ...])</p></td>
+<td><p>Online Decision Transformer Actor class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.RSSMPosterior.html#torchrl.modules.RSSMPosterior" title="torchrl.modules.RSSMPosterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RSSMPosterior</span></code></a>([hidden_dim, state_dim, scale_lb])</p></td>
 <td><p>The posterior network of the RSSM.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.RSSMPrior.html#torchrl.modules.RSSMPrior" title="torchrl.modules.RSSMPrior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RSSMPrior</span></code></a>(action_spec[, hidden_dim, ...])</p></td>
+<td><p>The prior network of the RSSM.</p></td>
 </tr>
 </tbody>
 </table>
@@ -762,10 +796,13 @@ multi-agent contexts.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.MultiAgentMLP.html#torchrl.modules.MultiAgentMLP" title="torchrl.modules.MultiAgentMLP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiAgentMLP</span></code></a>(n_agent_inputs, ...)</p></td>
 <td><p>Mult-agent MLP.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.QMixer.html#torchrl.modules.QMixer" title="torchrl.modules.QMixer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QMixer</span></code></a>(state_shape, mixing_embed_dim, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.MultiAgentConvNet.html#torchrl.modules.MultiAgentConvNet" title="torchrl.modules.MultiAgentConvNet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiAgentConvNet</span></code></a>(n_agents, centralised, ...)</p></td>
+<td><p>Multi-agent CNN.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.QMixer.html#torchrl.modules.QMixer" title="torchrl.modules.QMixer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QMixer</span></code></a>(state_shape, mixing_embed_dim, ...)</p></td>
 <td><p>QMix mixer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.VDNMixer.html#torchrl.modules.VDNMixer" title="torchrl.modules.VDNMixer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VDNMixer</span></code></a>(n_agents, device)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.VDNMixer.html#torchrl.modules.VDNMixer" title="torchrl.modules.VDNMixer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VDNMixer</span></code></a>(n_agents, device)</p></td>
 <td><p>Value-Decomposition Network mixer.</p></td>
 </tr>
 </tbody>
@@ -830,10 +867,13 @@ configuration.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.TanhDelta.html#torchrl.modules.TanhDelta" title="torchrl.modules.TanhDelta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TanhDelta</span></code></a>(param[, min, max, event_dims, ...])</p></td>
 <td><p>Implements a Tanh transformed_in Delta distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.OneHotCategorical.html#torchrl.modules.OneHotCategorical" title="torchrl.modules.OneHotCategorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHotCategorical</span></code></a>([logits, probs])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.OneHotCategorical.html#torchrl.modules.OneHotCategorical" title="torchrl.modules.OneHotCategorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHotCategorical</span></code></a>([logits, probs, grad_method])</p></td>
 <td><p>One-hot categorical distribution.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.modules.MaskedCategorical.html#torchrl.modules.MaskedCategorical" title="torchrl.modules.MaskedCategorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaskedCategorical</span></code></a>([logits, probs, mask, ...])</p></td>
+<td><p>MaskedCategorical distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.modules.MaskedOneHotCategorical.html#torchrl.modules.MaskedOneHotCategorical" title="torchrl.modules.MaskedOneHotCategorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaskedOneHotCategorical</span></code></a>([logits, probs, ...])</p></td>
 <td><p>MaskedCategorical distribution.</p></td>
 </tr>
 </tbody>
@@ -875,7 +915,7 @@ configuration.</p>
         <a href="generated/torchrl.modules.tensordict_module.Actor.html" class="btn btn-neutral float-right" title="Actor" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="generated/torchrl.envs.libs.vmas.VmasWrapper.html" class="btn btn-neutral" title="VmasWrapper" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="generated/torchrl.envs.set_gym_backend.html" class="btn btn-neutral" title="set_gym_backend" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -952,6 +992,7 @@ configuration.</p>
          <script src="../_static/underscore.js"></script>
          <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
+         <script src="../_static/design-tabs.js"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 
@@ -1095,7 +1136,7 @@ configuration.</p>
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
