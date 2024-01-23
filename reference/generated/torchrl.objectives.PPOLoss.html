@@ -534,13 +534,8 @@ used without recurring to any tensordict-related primitive. In this case,
 the expected keyword arguments are:
 <code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;,</span> <span class="pre">&quot;sample_log_prob&quot;,</span> <span class="pre">&quot;next_reward&quot;,</span> <span class="pre">&quot;next_done&quot;,</span> <span class="pre">&quot;next_terminated&quot;]</span></code> + in_keys of the actor and value network.
 The return value is a tuple of tensors in the following order:
-<code class="docutils literal notranslate"><span class="pre">[&quot;loss_objective&quot;]</span></code> + <code class="docutils literal notranslate"><span class="pre">[&quot;entropy&quot;,</span> <span class="pre">&quot;loss_entropy&quot;]</span></code> if entropy_bonus is set</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;loss_critic&quot;</span></code> if critic_coef is not None.</p></li>
-</ul>
-</div></blockquote>
-<p>The output keys can also be filtered using <code class="xref py py-meth docutils literal notranslate"><span class="pre">PPOLoss.select_out_keys()</span></code> method.</p>
+<code class="docutils literal notranslate"><span class="pre">[&quot;loss_objective&quot;]</span></code> + <code class="docutils literal notranslate"><span class="pre">[&quot;entropy&quot;,</span> <span class="pre">&quot;loss_entropy&quot;]</span></code> if entropy_bonus is set + <code class="docutils literal notranslate"><span class="pre">&quot;loss_critic&quot;</span></code> if critic_coef is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+The output keys can also be filtered using <code class="xref py py-meth docutils literal notranslate"><span class="pre">PPOLoss.select_out_keys()</span></code> method.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>

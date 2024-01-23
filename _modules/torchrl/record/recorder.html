@@ -401,7 +401,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        logger (Logger): a Logger instance where the video</span>
-<span class="sd">            should be written.</span>
+<span class="sd">            should be written. To save the video under a memmap tensor or an mp4 file, use</span>
+<span class="sd">            the :class:`~torchrl.record.loggers.CSVLogger` class.</span>
 <span class="sd">        tag (str): the video tag in the logger.</span>
 <span class="sd">        in_keys (Sequence of NestedKey, optional): keys to be read to produce the video.</span>
 <span class="sd">            Default is :obj:`&quot;pixels&quot;`.</span>
@@ -413,6 +414,29 @@
 <span class="sd">            size. Default is True.</span>
 <span class="sd">        out_keys (sequence of NestedKey, optional): destination keys. Defaults</span>
 <span class="sd">            to ``in_keys`` if not provided.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        The following example shows how to save a rollout under a video. First a few imports:</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.record import VideoRecorder</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.record.loggers.csv import CSVLogger</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import TransformedEnv, DMControlEnv</span>
+
+<span class="sd">        The video format is chosen in the logger. Wandb and tensorboard will take care of that</span>
+<span class="sd">        on their own, CSV accepts various video formats.</span>
+<span class="sd">        &gt;&gt;&gt; logger = CSVLogger(exp_name=&quot;cheetah&quot;, log_dir=&quot;cheetah_videos&quot;, video_format=&quot;mp4&quot;)</span>
+
+<span class="sd">        Some envs (eg, Atari games) natively return images, some require the user to ask for them.</span>
+<span class="sd">        Check :class:`~torchrl.env.GymEnv` or :class:`~torchrl.envs.DMControlEnv` to see how to render images</span>
+<span class="sd">        in these contexts.</span>
+<span class="sd">        &gt;&gt;&gt; base_env = DMControlEnv(&quot;cheetah&quot;, &quot;run&quot;, from_pixels=True)</span>
+<span class="sd">        &gt;&gt;&gt; env = TransformedEnv(base_env, VideoRecorder(logger=logger, tag=&quot;run_video&quot;))</span>
+<span class="sd">        &gt;&gt;&gt; env.rollout(100)</span>
+
+<span class="sd">        All transforms have a dump function, mostly a no-op except for ``VideoRecorder``, and :class:`~torchrl.envs.transforms.Composite`</span>
+<span class="sd">        which will dispatch the `dumps` to all its members.</span>
+<span class="sd">        &gt;&gt;&gt; env.transform.dump()</span>
+
+<span class="sd">    Our video is available under ``./cheetah_videos/cheetah/videos/run_video_0.mp4``!</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 

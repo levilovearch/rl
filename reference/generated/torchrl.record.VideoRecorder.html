@@ -389,7 +389,8 @@ to a Logger object when needed.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>logger</strong> (<em>Logger</em>) – a Logger instance where the video
-should be written.</p></li>
+should be written. To save the video under a memmap tensor or an mp4 file, use
+the <code class="xref py py-class docutils literal notranslate"><span class="pre">CSVLogger</span></code> class.</p></li>
 <li><p><strong>tag</strong> (<em>str</em>) – the video tag in the logger.</p></li>
 <li><p><strong>in_keys</strong> (<em>Sequence of NestedKey</em><em>, </em><em>optional</em>) – keys to be read to produce the video.
 Default is <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;pixels&quot;</span></code>.</p></li>
@@ -404,6 +405,24 @@ to <code class="docutils literal notranslate"><span class="pre">in_keys</span></
 </ul>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>The following example shows how to save a rollout under a video. First a few imports:
+&gt;&gt;&gt; from torchrl.record import VideoRecorder
+&gt;&gt;&gt; from torchrl.record.loggers.csv import CSVLogger
+&gt;&gt;&gt; from torchrl.envs import TransformedEnv, DMControlEnv</p>
+<p>The video format is chosen in the logger. Wandb and tensorboard will take care of that
+on their own, CSV accepts various video formats.
+&gt;&gt;&gt; logger = CSVLogger(exp_name=”cheetah”, log_dir=”cheetah_videos”, video_format=”mp4”)</p>
+<p>Some envs (eg, Atari games) natively return images, some require the user to ask for them.
+Check <code class="xref py py-class docutils literal notranslate"><span class="pre">GymEnv</span></code> or <a class="reference internal" href="torchrl.envs.DMControlEnv.html#torchrl.envs.DMControlEnv" title="torchrl.envs.DMControlEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">DMControlEnv</span></code></a> to see how to render images
+in these contexts.
+&gt;&gt;&gt; base_env = DMControlEnv(“cheetah”, “run”, from_pixels=True)
+&gt;&gt;&gt; env = TransformedEnv(base_env, VideoRecorder(logger=logger, tag=”run_video”))
+&gt;&gt;&gt; env.rollout(100)</p>
+<p>All transforms have a dump function, mostly a no-op except for <code class="docutils literal notranslate"><span class="pre">VideoRecorder</span></code>, and <code class="xref py py-class docutils literal notranslate"><span class="pre">Composite</span></code>
+which will dispatch the <cite>dumps</cite> to all its members.
+&gt;&gt;&gt; env.transform.dump()</p>
+<p>Our video is available under <code class="docutils literal notranslate"><span class="pre">./cheetah_videos/cheetah/videos/run_video_0.mp4</span></code>!</p>
 </dd></dl>
 
 </section>
