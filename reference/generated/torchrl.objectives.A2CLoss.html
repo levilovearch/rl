@@ -391,8 +391,8 @@ objective function to improve exploration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>actor</strong> (<em>ProbabilisticTensorDictSequential</em>) – policy operator.</p></li>
-<li><p><strong>critic</strong> (<a class="reference internal" href="torchrl.modules.tensordict_module.ValueOperator.html#torchrl.modules.tensordict_module.ValueOperator" title="torchrl.modules.tensordict_module.ValueOperator"><em>ValueOperator</em></a>) – value operator.</p></li>
+<li><p><strong>actor_network</strong> (<em>ProbabilisticTensorDictSequential</em>) – policy operator.</p></li>
+<li><p><strong>critic_network</strong> (<a class="reference internal" href="torchrl.modules.tensordict_module.ValueOperator.html#torchrl.modules.tensordict_module.ValueOperator" title="torchrl.modules.tensordict_module.ValueOperator"><em>ValueOperator</em></a>) – value operator.</p></li>
 <li><p><strong>entropy_bonus</strong> (<em>bool</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, an entropy bonus will be added to the
 loss to favour exploratory policies.</p></li>
 <li><p><strong>samples_mc_entropy</strong> (<em>int</em>) – if the distribution retrieved from the policy
@@ -413,6 +413,10 @@ parameters for both policy and critic losses.</p></li>
 The input tensordict key where the advantage is expected to be written.  default: “advantage”</p></li>
 <li><p><strong>value_target_key</strong> (<em>str</em>) – [Deprecated, use set_keys() instead] the input
 tensordict key where the target state value is expected to be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;value_target&quot;</span></code>.</p></li>
+<li><p><strong>functional</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether modules should be functionalized.
+Functionalizing permits features like meta-RL, but makes it
+impossible to use distributed models (DDP, FSDP, …) and comes
+with a little cost. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </dd>
 </dl>

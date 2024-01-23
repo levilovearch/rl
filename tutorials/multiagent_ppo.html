@@ -1057,8 +1057,8 @@ value that the value network should represent with the input observation.
 Both of these will be used by <code class="xref py py-class docutils literal notranslate"><span class="pre">ClipPPOLoss</span></code> to
 return the policy and value losses.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">loss_module</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">ClipPPOLoss</span></a><span class="p">(</span>
-    <span class="n">actor</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
-    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">,</span>
+    <span class="n">actor_network</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+    <span class="n">critic_network</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">critic</span></a><span class="p">,</span>
     <span class="n">clip_epsilon</span><span class="o">=</span><span class="n">clip_epsilon</span><span class="p">,</span>
     <span class="n">entropy_coef</span><span class="o">=</span><span class="n">entropy_eps</span><span class="p">,</span>
     <span class="n">normalize_advantage</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Important to avoid normalizing across the agent dimension</span>
@@ -1140,8 +1140,8 @@ The steps include:</p>
     <span class="k">with</span> <a href="https://pytorch.org/docs/stable/generated/torch.no_grad.html#torch.no_grad" title="torch.no_grad" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span></a><span class="p">():</span>
         <span class="n">GAE</span><span class="p">(</span>
             <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict_data</span></a><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictParams.html#tensordict.TensorDictParams" title="tensordict.TensorDictParams" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_module</span><span class="o">.</span><span class="n">critic_params</span></a><span class="p">,</span>
-            <span class="n">target_params</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">loss_module</span><span class="o">.</span><span class="n">target_critic_params</span></a><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">loss_module</span><span class="o">.</span><span class="n">critic_params</span><span class="p">,</span>
+            <span class="n">target_params</span><span class="o">=</span><span class="n">loss_module</span><span class="o">.</span><span class="n">target_critic_params</span><span class="p">,</span>
         <span class="p">)</span>  <span class="c1"># Compute GAE and add it to the data</span>
 
     <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_view</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict.reshape" title="tensordict.TensorDict.reshape" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-method"><span class="n">tensordict_data</span><span class="o">.</span><span class="n">reshape</span></a><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Flatten the batch size to shuffle data</span>
@@ -1180,16 +1180,16 @@ The steps include:</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>episode_reward_mean = 0:   0%|          | 0/10 [00:00&lt;?, ?it/s]
-episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:12&lt;01:50, 12.31s/it]
-episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:24&lt;01:37, 12.24s/it]
-episode_reward_mean = 1.0600677728652954:  30%|███       | 3/10 [00:36&lt;01:25, 12.21s/it]
-episode_reward_mean = 1.4344534873962402:  40%|████      | 4/10 [00:48&lt;01:13, 12.21s/it]
-episode_reward_mean = 2.1100871562957764:  50%|█████     | 5/10 [01:01&lt;01:01, 12.21s/it]
-episode_reward_mean = 2.304917335510254:  60%|██████    | 6/10 [01:13&lt;00:48, 12.20s/it]
-episode_reward_mean = 2.6943857669830322:  70%|███████   | 7/10 [01:25&lt;00:36, 12.21s/it]
-episode_reward_mean = 2.871443748474121:  80%|████████  | 8/10 [01:37&lt;00:24, 12.29s/it]
-episode_reward_mean = 2.8500826358795166:  90%|█████████ | 9/10 [01:50&lt;00:12, 12.42s/it]
-episode_reward_mean = 2.759843587875366: 100%|██████████| 10/10 [02:03&lt;00:00, 12.63s/it]
+episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:12&lt;01:51, 12.36s/it]
+episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:24&lt;01:38, 12.34s/it]
+episode_reward_mean = 1.0600677728652954:  30%|███       | 3/10 [00:37&lt;01:26, 12.37s/it]
+episode_reward_mean = 1.4344534873962402:  40%|████      | 4/10 [00:49&lt;01:14, 12.39s/it]
+episode_reward_mean = 2.1100871562957764:  50%|█████     | 5/10 [01:01&lt;01:01, 12.39s/it]
+episode_reward_mean = 2.304917335510254:  60%|██████    | 6/10 [01:14&lt;00:49, 12.35s/it]
+episode_reward_mean = 2.6943857669830322:  70%|███████   | 7/10 [01:26&lt;00:37, 12.34s/it]
+episode_reward_mean = 2.871443748474121:  80%|████████  | 8/10 [01:39&lt;00:24, 12.41s/it]
+episode_reward_mean = 2.8500826358795166:  90%|█████████ | 9/10 [01:51&lt;00:12, 12.52s/it]
+episode_reward_mean = 2.759843587875366: 100%|██████████| 10/10 [02:04&lt;00:00, 12.70s/it]
 </pre></div>
 </div>
 </section>
@@ -1280,8 +1280,8 @@ Here are a few videos of some possible scenarios you can try in VMAS.</p>
 <p><span class="caption-text">Scenarios available in <a class="reference external" href="https://github.com/proroklab/VectorizedMultiAgentSimulator">VMAS</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 2.391 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  41 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 0.826 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  52 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-multiagent-ppo-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/a977047786179278d12b52546e1c0da8/multiagent_ppo.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">multiagent_ppo.ipynb</span></code></a></p>

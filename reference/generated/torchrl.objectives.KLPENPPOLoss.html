@@ -392,8 +392,8 @@ favouring a certain level of distancing between the two while still preventing t
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>actor</strong> (<em>ProbabilisticTensorDictSequential</em>) – policy operator.</p></li>
-<li><p><strong>critic</strong> (<a class="reference internal" href="torchrl.modules.tensordict_module.ValueOperator.html#torchrl.modules.tensordict_module.ValueOperator" title="torchrl.modules.tensordict_module.ValueOperator"><em>ValueOperator</em></a>) – value operator.</p></li>
+<li><p><strong>actor_network</strong> (<em>ProbabilisticTensorDictSequential</em>) – policy operator.</p></li>
+<li><p><strong>critic_network</strong> (<a class="reference internal" href="torchrl.modules.tensordict_module.ValueOperator.html#torchrl.modules.tensordict_module.ValueOperator" title="torchrl.modules.tensordict_module.ValueOperator"><em>ValueOperator</em></a>) – value operator.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
@@ -436,6 +436,10 @@ value is expected to be written. Defaults to <code class="docutils literal notra
 <li><p><strong>value_key</strong> (<em>str</em><em>, </em><em>optional</em>) – [Deprecated, use set_keys(value_key) instead]
 The input tensordict key where the state
 value is expected to be written. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;state_value&quot;</span></code>.</p></li>
+<li><p><strong>functional</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether modules should be functionalized.
+Functionalizing permits features like meta-RL, but makes it
+impossible to use distributed models (DDP, FSDP, …) and comes
+with a little cost. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
