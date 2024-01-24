@@ -387,12 +387,15 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensordict</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensorclass</span>
 <span class="kn">from</span> <span class="nn">tensordict.memmap</span> <span class="kn">import</span> <span class="n">MemmapTensor</span><span class="p">,</span> <span class="n">MemoryMappedTensor</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">_STRDTYPE2DTYPE</span><span class="p">,</span> <span class="n">expand_right</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">multiprocessing</span> <span class="k">as</span> <span class="n">mp</span>
+
+<span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">LeafSpec</span><span class="p">,</span> <span class="n">tree_flatten</span><span class="p">,</span> <span class="n">tree_map</span><span class="p">,</span> <span class="n">tree_unflatten</span>
 
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_CKPT_BACKEND</span><span class="p">,</span> <span class="n">implement_for</span><span class="p">,</span> <span class="n">VERBOSE</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="n">INT_CLASSES</span>
@@ -403,6 +406,10 @@
     <span class="n">_has_ts</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">_has_ts</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">SINGLE_TENSOR_BUFFER_NAME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;SINGLE_TENSOR_BUFFER_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;_-single-tensor-_&quot;</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="Storage"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage">[docs]</a><span class="k">class</span> <span class="nc">Storage</span><span class="p">:</span>
@@ -491,6 +498,10 @@
 <div class="viewcode-block" id="ListStorage"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage">[docs]</a><span class="k">class</span> <span class="nc">ListStorage</span><span class="p">(</span><span class="n">Storage</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A storage stored in a list.</span>
 
+<span class="sd">    This class cannot be extended with PyTrees, the data provided during calls to</span>
+<span class="sd">    :meth:`~torchrl.data.replay_buffers.ReplayBuffer.extend` should be iterables</span>
+<span class="sd">    (like lists, tuples, tensors or tensordicts with non-empty batch-size).</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        max_size (int): the maximum number of elements stored in the storage.</span>
 
@@ -520,8 +531,26 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
                 <span class="k">return</span>
-            <span class="k">for</span> <span class="n">_cursor</span><span class="p">,</span> <span class="n">_data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">_cursor</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="nb">list</span><span class="p">,</span>
+                    <span class="nb">tuple</span><span class="p">,</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+                    <span class="n">TensorDictBase</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">tensordict</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">_ACCEPTED_CLASSES</span><span class="p">,</span>
+                    <span class="nb">range</span><span class="p">,</span>
+                    <span class="nb">set</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">):</span>
+                <span class="k">for</span> <span class="n">_cursor</span><span class="p">,</span> <span class="n">_data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">_cursor</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot extend a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> with data of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Provide a list, tuple, set, range, np.ndarray, tensor or tensordict subclass instead.&quot;</span>
+                <span class="p">)</span>
             <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">cursor</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">):</span>
@@ -659,7 +688,10 @@
                     <span class="sa">f</span><span class="s2">&quot;max_size=</span><span class="si">{</span><span class="n">max_size</span><span class="si">}</span><span class="s2"> for a storage of shape </span><span class="si">{</span><span class="n">storage</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
         <span class="k">elif</span> <span class="n">storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">max_size</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">storage</span><span class="p">):</span>
+                <span class="n">max_size</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">max_size</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">storage</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">max_size</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="n">storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
@@ -681,35 +713,22 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot save a non-initialized storage.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span>
-                    <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                    <span class="n">filename</span><span class="o">=</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;storage.memmap&quot;</span><span class="p">,</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-                <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_tensor</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;storage.memmap&quot;</span><span class="p">,</span> <span class="n">copy_existing</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-            <span class="n">is_tensor</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">dtype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">):</span>
             <span class="c1"># try to load the path and overwrite.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">memmap</span><span class="p">(</span>
                 <span class="n">path</span><span class="p">,</span> <span class="n">copy_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span>
             <span class="p">)</span>
-            <span class="n">is_tensor</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">is_pytree</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_save_pytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">is_pytree</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;storage_metadata.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;is_tensor&quot;</span><span class="p">:</span> <span class="n">is_tensor</span><span class="p">,</span>
-                    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">,</span>
-                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span>
+                    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">metadata</span><span class="p">,</span>
+                    <span class="s2">&quot;is_pytree&quot;</span><span class="p">:</span> <span class="n">is_pytree</span><span class="p">,</span>
                     <span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="n">file</span><span class="p">,</span>
@@ -718,24 +737,50 @@
     <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;storage_metadata.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-        <span class="n">is_tensor</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;is_tensor&quot;</span><span class="p">]</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
-        <span class="n">dtype</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span>
+        <span class="n">is_pytree</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;is_pytree&quot;</span><span class="p">]</span>
         <span class="n">_len</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;len&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">dtype</span> <span class="o">=</span> <span class="n">_STRDTYPE2DTYPE</span><span class="p">[</span><span class="n">dtype</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">is_tensor</span><span class="p">:</span>
-            <span class="n">_storage</span> <span class="o">=</span> <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span>
-                <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;storage.memmap&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_pytree</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">local_path</span><span class="p">,</span> <span class="n">md</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># load tensor</span>
+                <span class="n">local_path_dot</span> <span class="o">=</span> <span class="n">local_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+                <span class="n">total_tensor_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="p">(</span><span class="n">local_path_dot</span> <span class="o">+</span> <span class="s2">&quot;.memmap&quot;</span><span class="p">)</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="n">_STRDTYPE2DTYPE</span><span class="p">[</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]]</span>
+                <span class="n">tensor</span> <span class="o">=</span> <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="n">total_tensor_path</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
+                <span class="p">)</span>
+                <span class="c1"># split path</span>
+                <span class="n">local_path</span> <span class="o">=</span> <span class="n">local_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                <span class="c1"># replace potential dots</span>
+                <span class="n">local_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&lt;dot&gt;_&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_path</span> <span class="ow">in</span> <span class="n">local_path</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+                    <span class="c1"># copy in-place</span>
+                    <span class="n">_storage_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span>
+                    <span class="c1"># in this case there is a single tensor, so we skip</span>
+                    <span class="k">if</span> <span class="n">local_path</span> <span class="o">!=</span> <span class="p">[</span><span class="s2">&quot;_-single-tensor-_&quot;</span><span class="p">]:</span>
+                        <span class="k">for</span> <span class="n">_path</span> <span class="ow">in</span> <span class="n">local_path</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">_path</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                                <span class="n">_path_attempt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_path</span><span class="p">)</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="n">_storage_tensor</span> <span class="o">=</span> <span class="n">_storage_tensor</span><span class="p">[</span><span class="n">_path_attempt</span><span class="p">]</span>
+                                    <span class="k">continue</span>
+                                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                                    <span class="k">pass</span>
+                            <span class="n">_storage_tensor</span> <span class="o">=</span> <span class="n">_storage_tensor</span><span class="p">[</span><span class="n">_path</span><span class="p">]</span>
+                    <span class="n">_storage_tensor</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Cannot fill a non-initialized pytree-based TensorStorage.&quot;</span>
+                    <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_storage</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="o">.</span><span class="n">load_memmap</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">_storage</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+                <span class="c1"># this should not be reached if is_pytree=True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">_storage</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">_len</span>
 
     <span class="nd">@property</span>
@@ -825,7 +870,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({},</span> <span class="p">[])</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Cannot copy a storage of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2"> onto another of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot copy a storage of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2"> onto another of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2">. If your storage is pytree-based, use the dumps/load API instead.&quot;</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
@@ -833,6 +878,22 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;initialized&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;_len&quot;</span><span class="p">]</span>
+
+    <span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_set_tree_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">storage</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">set_tensor</span><span class="p">(</span><span class="n">datum</span><span class="p">,</span> <span class="n">store</span><span class="p">):</span>
+            <span class="n">store</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">datum</span>
+
+        <span class="c1"># this won&#39;t be available until v2.3</span>
+        <span class="n">tree_map</span><span class="p">(</span><span class="n">set_tensor</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">storage</span><span class="p">)</span>
+
+    <span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_set_tree_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">storage</span><span class="p">):</span>  <span class="c1"># noqa: 534</span>
+        <span class="c1"># flatten data and cursor</span>
+        <span class="n">data_flat</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">storage_flat</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">storage</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">datum</span><span class="p">,</span> <span class="n">store</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_flat</span><span class="p">,</span> <span class="n">storage_flat</span><span class="p">):</span>
+            <span class="n">store</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">datum</span>
 
     <span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">set</span><span class="p">(</span>
@@ -847,10 +908,16 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_tree_map</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
 
     <span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;2.0&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">set</span><span class="p">(</span>  <span class="c1"># noqa: F811</span>
@@ -863,6 +930,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;storage extension with pytrees is only available with torch &gt;= 2.0. If you need this &quot;</span>
+                <span class="s2">&quot;feature, please open an issue on TorchRL&#39;s github repository.&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -885,19 +957,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
 
     <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">slice</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">_storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span>
+        <span class="n">is_tc</span> <span class="o">=</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">:</span>
-            <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">is_tc</span><span class="p">:</span>
+                <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">storage</span> <span class="o">=</span> <span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Cannot get an item from an unitialized LazyMemmapStorage&quot;</span>
             <span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">_reset_batch_size</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">out</span>  <span class="c1"># .unlock_()</span>
-        <span class="k">return</span> <span class="n">out</span>
+        <span class="k">if</span> <span class="n">is_tc</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">_reset_batch_size</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">storage</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
@@ -978,30 +1055,36 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="n">max_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="s2">&quot;PyTree&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating a TensorStorage...&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-            <span class="c1"># if Tensor, we just create a MemoryMappedTensor of the desired shape, device and dtype</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span>
-                <span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
             <span class="n">out</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
             <span class="n">out</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
                 <span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
                 <span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if Tensor, we just create a MemoryMappedTensor of the desired shape, device and dtype</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">tree_map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">data</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">out</span>
@@ -1091,7 +1174,7 @@
             <span class="n">_storage</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Objects of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2"> are not supported by LazyTensorStorage.state_dict&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Objects of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span><span class="si">}</span><span class="s2"> are not supported by LazyTensorStorage.state_dict. If you are trying to serialize a PyTree, the storage.dumps/loads is preferred.&quot;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;_storage&quot;</span><span class="p">:</span> <span class="n">_storage</span><span class="p">,</span>
@@ -1163,29 +1246,23 @@
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">filesize</span><span class="si">}</span><span class="s2"> Mb of storage (size: </span><span class="si">{</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">).&quot;</span>
                     <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># If not a tensorclass/tensordict, it must be a tensor(-like)</span>
-            <span class="c1"># if Tensor, we just create a MemoryMappedTensor of the desired shape, device and dtype</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">_make_empty_memmap</span><span class="p">(</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span> <span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch_dir</span> <span class="o">+</span> <span class="s2">&quot;/tensor.memmap&quot;</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
-                <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The storage was created in </span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2"> and occupies </span><span class="si">{</span><span class="n">filesize</span><span class="si">}</span><span class="s2"> Mb of storage.&quot;</span>
-                <span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">_init_pytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_size</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">out</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">slice</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
         <span class="c1"># to be deprecated in v0.4</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">def</span> <span class="nf">map_device</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tensor</span>
+
+        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">map_device</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tree_map</span><span class="p">(</span><span class="n">map_device</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="StorageEnsemble"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble">[docs]</a><span class="k">class</span> <span class="nc">StorageEnsemble</span><span class="p">(</span><span class="n">Storage</span><span class="p">):</span>
@@ -1440,6 +1517,170 @@
 
 <span class="k">def</span> <span class="nf">_make_empty_memmap</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_path2str</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">default_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Uses the Keys defined in pytree to build a path</span>
+    <span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">MappingKey</span><span class="p">,</span> <span class="n">SequenceKey</span>
+
+    <span class="k">if</span> <span class="n">default_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">default_name</span> <span class="o">=</span> <span class="n">SINGLE_TENSOR_BUFFER_NAME</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_name</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_path2str</span><span class="p">(</span><span class="n">_sub</span><span class="p">,</span> <span class="n">default_name</span><span class="o">=</span><span class="n">default_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">_sub</span> <span class="ow">in</span> <span class="n">path</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">MappingKey</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Values must be of type int, str or bytes in PyTree maps.&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">default_name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;A tensor had the same identifier as the default name used when the buffer contains &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;a single tensor (name=</span><span class="si">{</span><span class="n">default_name</span><span class="si">}</span><span class="s2">). This behaviour is not allowed. Please rename your &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;tensor in the map/dict or set a new default name with the environment variable SINGLE_TENSOR_BUFFER_NAME.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">SequenceKey</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">idx</span><span class="p">)</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_path2str</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">default_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># noqa: F811</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span>
+
+
+<span class="k">def</span> <span class="nf">_get_paths</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">cumulpath</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="c1"># alternative way to build a path without the keys</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">LeafSpec</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">cumulpath</span> <span class="k">if</span> <span class="n">cumulpath</span> <span class="k">else</span> <span class="n">SINGLE_TENSOR_BUFFER_NAME</span>
+
+    <span class="n">contexts</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">context</span>
+    <span class="n">children_specs</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">children_specs</span>
+    <span class="k">if</span> <span class="n">contexts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">contexts</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">children_specs</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">context</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">contexts</span><span class="p">,</span> <span class="n">children_specs</span><span class="p">):</span>
+        <span class="n">cpath</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">cumulpath</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">context</span><span class="p">)))</span> <span class="k">if</span> <span class="n">cumulpath</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">_get_paths</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">cpath</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_save_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">tensor_path</span><span class="p">:</span>
+        <span class="n">tensor_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;_&lt;dot&gt;_&quot;</span><span class="p">)</span>
+    <span class="n">total_tensor_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="p">(</span><span class="n">tensor_path</span> <span class="o">+</span> <span class="s2">&quot;.memmap&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">total_tensor_path</span><span class="p">):</span>
+        <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_filename</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">total_tensor_path</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">total_tensor_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">from_tensor</span><span class="p">(</span>
+            <span class="n">tensor</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">total_tensor_path</span><span class="p">,</span>
+            <span class="n">copy_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">copy_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">tensor_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="s2">&quot;At least two values have conflicting representations in &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;the data structure to be serialized: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_save_pytree</span><span class="p">(</span><span class="n">_storage</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">tree_map_with_path</span>
+
+    <span class="k">def</span> <span class="nf">save_tensor</span><span class="p">(</span>
+        <span class="n">tensor_path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span>
+    <span class="p">):</span>
+        <span class="n">tensor_path</span> <span class="o">=</span> <span class="n">_path2str</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">)</span>
+        <span class="n">_save_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+    <span class="n">tree_map_with_path</span><span class="p">(</span><span class="n">save_tensor</span><span class="p">,</span> <span class="n">_storage</span><span class="p">)</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_save_pytree</span><span class="p">(</span><span class="n">_storage</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>  <span class="c1"># noqa: F811</span>
+
+    <span class="n">flat_storage</span><span class="p">,</span> <span class="n">storage_specs</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">_storage</span><span class="p">)</span>
+    <span class="n">storage_paths</span> <span class="o">=</span> <span class="n">_get_paths</span><span class="p">(</span><span class="n">storage_specs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save_tensor</span><span class="p">(</span>
+        <span class="n">tensor_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span>
+    <span class="p">):</span>
+        <span class="n">_save_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">tensor_path</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flat_storage</span><span class="p">,</span> <span class="n">storage_paths</span><span class="p">):</span>
+        <span class="n">save_tensor</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_init_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">scratch_dir</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">tensor_path</span><span class="p">:</span>
+        <span class="n">tensor_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;_&lt;dot&gt;_&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scratch_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">total_tensor_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">scratch_dir</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tensor_path</span> <span class="o">+</span> <span class="s2">&quot;.memmap&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">total_tensor_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The storage of tensor </span><span class="si">{</span><span class="n">total_tensor_path</span><span class="si">}</span><span class="s2"> already exists. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;To load an existing replay buffer, use storage.loads. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Choose a different path to store your buffer or delete the existing files.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">total_tensor_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">total_tensor_path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">MemoryMappedTensor</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">max_size</span><span class="p">,</span> <span class="o">*</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">total_tensor_path</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The storage was created in </span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2"> and occupies </span><span class="si">{</span><span class="n">filesize</span><span class="si">}</span><span class="s2"> Mb of storage.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_init_pytree</span><span class="p">(</span><span class="n">scratch_dir</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">tree_map_with_path</span>
+
+    <span class="c1"># If not a tensorclass/tensordict, it must be a tensor(-like) or a PyTree</span>
+    <span class="c1"># if Tensor, we just create a MemoryMappedTensor of the desired shape, device and dtype</span>
+    <span class="k">def</span> <span class="nf">save_tensor</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">tensor_path</span> <span class="o">=</span> <span class="n">_path2str</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_init_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">scratch_dir</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tree_map_with_path</span><span class="p">(</span><span class="n">save_tensor</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="nd">@implement_for</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;2.3&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_init_pytree</span><span class="p">(</span><span class="n">scratch_dir</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>  <span class="c1"># noqa: F811</span>
+
+    <span class="n">flat_data</span><span class="p">,</span> <span class="n">data_specs</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data_paths</span> <span class="o">=</span> <span class="n">_get_paths</span><span class="p">(</span><span class="n">data_specs</span><span class="p">)</span>
+    <span class="n">data_paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_paths</span><span class="p">)</span>
+
+    <span class="c1"># If not a tensorclass/tensordict, it must be a tensor(-like) or a PyTree</span>
+    <span class="c1"># if Tensor, we just create a MemoryMappedTensor of the desired shape, device and dtype</span>
+    <span class="k">def</span> <span class="nf">save_tensor</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_init_pytree_common</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">scratch_dir</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">tensor</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">tensor_path</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flat_data</span><span class="p">,</span> <span class="n">data_paths</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_tensor</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">tree_unflatten</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">data_specs</span><span class="p">)</span>
 </pre></div>
 
              </article>

@@ -378,12 +378,20 @@
 
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">distutils.util</span> <span class="kn">import</span> <span class="n">strtobool</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
+<span class="n">AUTO_MAKE_FUNCTIONAL</span> <span class="o">=</span> <span class="n">strtobool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AUTO_MAKE_FUNCTIONAL&quot;</span><span class="p">,</span> <span class="s2">&quot;True&quot;</span><span class="p">))</span>
+
+
+<span class="n">DISPATCH_TDNN_MODULES</span> <span class="o">=</span> <span class="n">strtobool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DISPATCH_TDNN_MODULES&quot;</span><span class="p">,</span> <span class="s2">&quot;True&quot;</span><span class="p">))</span>
+
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mappings&quot;</span><span class="p">,</span> <span class="s2">&quot;inv_softplus&quot;</span><span class="p">,</span> <span class="s2">&quot;biased_softplus&quot;</span><span class="p">]</span>
+
 <span class="n">_SKIP_EXISTING</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="kn">from</span> <span class="nn">tensordict._contextlib</span> <span class="kn">import</span> <span class="n">_DecoratorContextManager</span>
@@ -658,6 +666,56 @@
 
 <span class="c1"># For backward compatibility in imports</span>
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">Buffer</span>  <span class="c1"># noqa</span>
+
+
+<span class="k">def</span> <span class="nf">_auto_make_functional</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns ``True`` if TensorDictModuleBase subclasses are automatically made functional with the old API.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">AUTO_MAKE_FUNCTIONAL</span>
+    <span class="k">return</span> <span class="n">AUTO_MAKE_FUNCTIONAL</span>
+
+
+<span class="k">class</span> <span class="nc">_set_auto_make_functional</span><span class="p">(</span><span class="n">_DecoratorContextManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Controls if TensorDictModule subclasses should be made functional automatically with the old API.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">AUTO_MAKE_FUNCTIONAL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_mode</span> <span class="o">=</span> <span class="n">AUTO_MAKE_FUNCTIONAL</span>
+        <span class="n">AUTO_MAKE_FUNCTIONAL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">AUTO_MAKE_FUNCTIONAL</span>
+        <span class="n">AUTO_MAKE_FUNCTIONAL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_mode</span>
+
+
+<span class="k">def</span> <span class="nf">_dispatch_td_nn_modules</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns ``True`` if @dispatch should be used. Not using dispatch is faster and also better compatible with torch.compile.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">DISPATCH_TDNN_MODULES</span>
+    <span class="k">return</span> <span class="n">DISPATCH_TDNN_MODULES</span>
+
+
+<span class="k">class</span> <span class="nc">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">_DecoratorContextManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Controls whether @dispatch should be used. Not using dispatch is faster and also better compatible with torch.compile.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">DISPATCH_TDNN_MODULES</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_mode</span> <span class="o">=</span> <span class="n">DISPATCH_TDNN_MODULES</span>
+        <span class="n">DISPATCH_TDNN_MODULES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">DISPATCH_TDNN_MODULES</span>
+        <span class="n">DISPATCH_TDNN_MODULES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_mode</span>
 </pre></div>
 
              </article>

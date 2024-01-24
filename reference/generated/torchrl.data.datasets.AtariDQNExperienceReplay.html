@@ -774,6 +774,18 @@ buffer.</p>
 <dd class="field-even"><p>Indices of the data added to the replay buffer.</p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code> can have an
+ambiguous signature when dealing with lists of values, which should be interpreted
+either as PyTree (in which case all elements in the list will be put in a slice
+in the stored PyTree in the storage) or a list of values to add one at a time.
+To solve this, TorchRL makes the clear-cut distinction between list and tuple:
+a tuple will be viewed as a PyTree, a list (at the root level) will be interpreted
+as a stack of values to add one at a time to the buffer.
+For <a class="reference internal" href="torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code></a> instances, only
+unbound elements can be provided (no PyTrees).</p>
+</div>
 </dd></dl>
 
 <dl class="py method">

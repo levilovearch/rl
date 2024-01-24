@@ -388,7 +388,8 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensorclass</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensorclass</span><span class="p">,</span> <span class="n">unravel_key</span>
+<span class="kn">from</span> <span class="nn">tensordict.nn.utils</span> <span class="kn">import</span> <span class="n">_set_dispatch_td_nn_modules</span>
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">is_tensor_collection</span><span class="p">,</span>
     <span class="n">LazyStackedTensorDict</span><span class="p">,</span>
@@ -449,12 +450,11 @@
 <span class="sd">        prefetch (int, optional): number of next batches to be prefetched</span>
 <span class="sd">            using multithreading. Defaults to None (no prefetching).</span>
 <span class="sd">        transform (Transform, optional): Transform to be executed when</span>
-<span class="sd">            sample() is called.</span>
+<span class="sd">            :meth:`~.sample` is called.</span>
 <span class="sd">            To chain transforms use the :class:`~torchrl.envs.Compose` class.</span>
 <span class="sd">            Transforms should be used with :class:`tensordict.TensorDict`</span>
-<span class="sd">            content. If used with other structures, the transforms should be</span>
-<span class="sd">            encoded with a ``&quot;data&quot;`` leading key that will be used to</span>
-<span class="sd">            construct a tensordict from the non-tensordict content.</span>
+<span class="sd">            content. A generic callable can also be passed if the replay buffer</span>
+<span class="sd">            is used with PyTree structures (see example below).</span>
 <span class="sd">        batch_size (int, optional): the batch size to be used when sample() is</span>
 <span class="sd">            called.</span>
 <span class="sd">            .. note::</span>
@@ -500,7 +500,7 @@
 
 <span class="sd">    Replay buffers accept *any* kind of data. Not all storage types</span>
 <span class="sd">    will work, as some expect numerical data only, but the default</span>
-<span class="sd">    :class:`torchrl.data.ListStorage` will:</span>
+<span class="sd">    :class:`~torchrl.data.ListStorage` will:</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; torch.manual_seed(0)</span>
@@ -508,6 +508,32 @@
 <span class="sd">        &gt;&gt;&gt; indices = buffer.extend([&quot;a&quot;, 1, None])</span>
 <span class="sd">        &gt;&gt;&gt; buffer.sample(3)</span>
 <span class="sd">        [None, &#39;a&#39;, None]</span>
+
+<span class="sd">    The :class:`~torchrl.data.replay_buffers.TensorStorage`, :class:`~torchrl.data.replay_buffers.LazyMemmapStorage`</span>
+<span class="sd">    and :class:`~torchrl.data.replay_buffers.LazyTensorStorage` also work</span>
+<span class="sd">    with any PyTree structure (a PyTree is a nested structure of arbitrary depth made of dicts,</span>
+<span class="sd">    lists or tuples where the leaves are tensors) provided that it only contains</span>
+<span class="sd">    tensor data.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torch.utils._pytree import tree_map</span>
+<span class="sd">        &gt;&gt;&gt; def transform(x):</span>
+<span class="sd">        ...     # Zeros all the data in the pytree</span>
+<span class="sd">        ...     return tree_map(lambda y: y * 0, x)</span>
+<span class="sd">        &gt;&gt;&gt; rb = ReplayBuffer(storage=LazyMemmapStorage(100), transform=transform)</span>
+<span class="sd">        &gt;&gt;&gt; data = {</span>
+<span class="sd">        ...     &quot;a&quot;: torch.randn(3),</span>
+<span class="sd">        ...     &quot;b&quot;: {&quot;c&quot;: (torch.zeros(2), [torch.ones(1)])},</span>
+<span class="sd">        ...     30: -torch.ones(()),</span>
+<span class="sd">        ... }</span>
+<span class="sd">        &gt;&gt;&gt; rb.add(data)</span>
+<span class="sd">        &gt;&gt;&gt; # The sample has a similar structure to the data (with a leading dimension of 10 for each tensor)</span>
+<span class="sd">        &gt;&gt;&gt; s = rb.sample(10)</span>
+<span class="sd">        &gt;&gt;&gt; # let&#39;s check that our transform did its job:</span>
+<span class="sd">        &gt;&gt;&gt; def assert0(x):</span>
+<span class="sd">        &gt;&gt;&gt;     assert (x == 0).all()</span>
+<span class="sd">        &gt;&gt;&gt; tree_map(assert0, s)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -539,11 +565,18 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_replay_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_futures_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
-        <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.transforms</span> <span class="kn">import</span> <span class="n">Compose</span>
+        <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.transforms</span> <span class="kn">import</span> <span class="n">_CallableTransform</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.transforms</span> <span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">Transform</span>
 
         <span class="k">if</span> <span class="n">transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">()</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Compose</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Transform</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">_CallableTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Transform</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;transform must be either a Transform instance or a callable.&quot;</span>
+                <span class="p">)</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
         <span class="n">transform</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="o">=</span> <span class="n">transform</span>
@@ -618,6 +651,8 @@
 
     <span class="nd">@pin_memory_output</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">unravel_key</span><span class="p">(</span><span class="n">index</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[:][</span><span class="n">index</span><span class="p">]</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">_to_numpy</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replay_lock</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
@@ -733,10 +768,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            index where the data lives in the replay buffer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
-            <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -762,11 +796,21 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Indices of the data added to the replay buffer.</span>
+
+<span class="sd">        .. warning:: :meth:`~torchrl.data.replay_buffers.ReplayBuffer.extend` can have an</span>
+<span class="sd">          ambiguous signature when dealing with lists of values, which should be interpreted</span>
+<span class="sd">          either as PyTree (in which case all elements in the list will be put in a slice</span>
+<span class="sd">          in the stored PyTree in the storage) or a list of values to add one at a time.</span>
+<span class="sd">          To solve this, TorchRL makes the clear-cut distinction between list and tuple:</span>
+<span class="sd">          a tuple will be viewed as a PyTree, a list (at the root level) will be interpreted</span>
+<span class="sd">          as a stack of values to add one at a time to the buffer.</span>
+<span class="sd">          For :class:`~torchrl.data.replay_buffers.ListStorage` instances, only</span>
+<span class="sd">          unbound elements can be provided (no PyTrees).</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
-            <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">update_priority</span><span class="p">(</span>
@@ -786,18 +830,16 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collate_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">):</span>
-            <span class="n">is_td</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">},</span> <span class="p">[])</span>
-                <span class="n">is_td</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">is_locked</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">is_locked</span>
-            <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">unlock_</span><span class="p">()</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_td</span><span class="p">:</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <span class="n">is_td</span> <span class="o">=</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_td</span><span class="p">:</span>
+                <span class="n">is_locked</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">is_locked</span>
+                <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">unlock_</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">is_td</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_td</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">info</span>
 
@@ -868,6 +910,11 @@
 <span class="sd">        Args:</span>
 <span class="sd">            transform (Transform): The transform to be appended</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.transforms</span> <span class="kn">import</span> <span class="n">_CallableTransform</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.transforms</span> <span class="kn">import</span> <span class="n">Transform</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Transform</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">_CallableTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
         <span class="n">transform</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span></div>
 
@@ -1178,7 +1225,8 @@
 
 <div class="viewcode-block" id="TensorDictReplayBuffer.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.TensorDictReplayBuffer.html#torchrl.data.TensorDictReplayBuffer.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
             <span class="n">data_add</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
@@ -1284,7 +1332,8 @@
             <span class="p">)</span>
 
         <span class="n">data</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">return_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">include_info</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">is_tc</span> <span class="o">=</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_tc</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">include_info</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">is_locked</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">is_locked</span>
             <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">unlock_</span><span class="p">()</span>
@@ -1295,6 +1344,8 @@
                 <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_tc</span> <span class="ow">and</span> <span class="n">include_info</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot include info in non-tensordict data&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">return_info</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">info</span>
         <span class="k">return</span> <span class="n">data</span></div></div>

@@ -400,7 +400,104 @@ widely used replay buffers:</p>
 </section>
 <section id="composable-replay-buffers">
 <h2>Composable Replay Buffers<a class="headerlink" href="#composable-replay-buffers" title="Permalink to this heading">¶</a></h2>
-<p>We also give users the ability to compose a replay buffer using the following components:</p>
+<p>We also give users the ability to compose a replay buffer.
+We provide a wide panel of solutions for replay buffer usage, including support for
+almost any data type; storage in memory, on device or on physical memory;
+several sampling strategies; usage of transforms etc.</p>
+<section id="supported-data-types-and-choosing-a-storage">
+<h3>Supported data types and choosing a storage<a class="headerlink" href="#supported-data-types-and-choosing-a-storage" title="Permalink to this heading">¶</a></h3>
+<p>In theory, replay buffers support any data type but we can’t guarantee that each
+component will support any data type. The most crude replay buffer implementation
+is made of a <code class="xref py py-class docutils literal notranslate"><span class="pre">ReplayBuffer</span></code> base with a
+<a class="reference internal" href="generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code></a> storage. This is very inefficient
+but it will allow you to store complex data structures with non-tensor data.
+Storages in contiguous memory include <a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>,
+<a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyTensorStorage.html#torchrl.data.replay_buffers.LazyTensorStorage" title="torchrl.data.replay_buffers.LazyTensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyTensorStorage</span></code></a> and
+<a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a>.
+These classes support <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorDict</span></code></a> data as first-class citizens, but also
+any PyTree data structure (eg, tuples, lists, dictionaries and nested versions
+of these). The <a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a> storage requires
+you to provide the storage at construction time, whereas <a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>
+(RAM, CUDA) and <a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a> (physical memory)
+will preallocate the storage for you after they’ve been extended the first time.</p>
+<p>Here are a few examples, starting with the generic <a class="reference internal" href="generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">ListStorage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">ListStorage</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;a string!&quot;</span><span class="p">)</span> <span class="c1"># first element will be a string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">30</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>  <span class="c1"># element [1] is an int, [2] is None</span>
+</pre></div>
+</div>
+<p>Using a <a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a> we tell our RB that
+we want the storage to be contiguous, which is by far more efficient but also
+more restrictive:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">TensorStorage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">container</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">unit8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">TensorStorage</span><span class="p">(</span><span class="n">container</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next we can avoid creating the container and ask the storage to do it automatically.
+This is very useful when using PyTrees and tensordicts! For PyTrees as other data
+structures, <code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code> considers the sampled
+passed to it as a single instance of the type. <code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code>
+on the other hand will consider that the data is an iterable. For tensors, tensordicts
+and lists (see below), the iterable is looked for at the root level. For PyTrees,
+we assume that the leading dimension of all the leaves (tensors) in the tree
+match. If they don’t, <code class="docutils literal notranslate"><span class="pre">extend</span></code> will throw an exception.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">LazyMemmapStorage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb_td</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">LazyMemmapStorage</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># max 10 elements stored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb_td</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;img&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">unit8</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="p">())},</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">[]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb_pytree</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">LazyMemmapStorage</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>  <span class="c1"># max 10 elements stored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># extend with a PyTree where all tensors have the same leading dim (3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb_pytree</span><span class="o">.</span><span class="n">extend</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),)]}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rb_pytree</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># the replay buffer has 3 elements!</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code> can have an
+ambiguous signature when dealing with lists of values, which should be interpreted
+either as PyTree (in which case all elements in the list will be put in a slice
+in the stored PyTree in the storage) or a list of values to add one at a time.
+To solve this, TorchRL makes the clear-cut distinction between list and tuple:
+a tuple will be viewed as a PyTree, a list (at the root level) will be interpreted
+as a stack of values to add one at a time to the buffer.</p>
+</div>
+</section>
+<section id="sampling-and-indexing">
+<h3>Sampling and indexing<a class="headerlink" href="#sampling-and-indexing" title="Permalink to this heading">¶</a></h3>
+<p>Replay buffers can be indexed and sampled.
+Indexing and sampling collect data at given indices in the storage and then process them
+through a series of transforms and <code class="docutils literal notranslate"><span class="pre">collate_fn</span></code> that can be passed to the <cite>__init__</cite>
+function of the replay buffer. <code class="docutils literal notranslate"><span class="pre">collate_fn</span></code> comes with default values that should
+match user expectations in the majority of cases, such that you should not have
+to worry about it most of the time. Transforms are usually instances of <a class="reference internal" href="generated/torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform" title="torchrl.envs.transforms.Transform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transform</span></code></a>
+even though regular functions will work too (in the latter case, the <code class="xref py py-meth docutils literal notranslate"><span class="pre">inv()</span></code>
+method will obviously be ignored, whereas in the first case it can be used to
+preprocess the data before it is passed to the buffer).
+Finally, sampling can be achieved using multithreading by passing the number of threads
+to the constructor through the <code class="docutils literal notranslate"><span class="pre">prefetch</span></code> keyword argument. We advise users to
+benchmark this technique in real life settings before adopting it, as there is
+no guarantee that it will lead to a faster throughput in practice depending on
+the machine and setting where it is used.</p>
+<p>When sampling, the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> can be either passed during construction
+(e.g., if it’s constant throughout training) or
+to the <code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code> method.</p>
+<p>To further refine the sampling strategy, we advise you to look into our samplers!</p>
+<p>Here are a couple of examples of how to get data out of a replay buffer:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_elt</span> <span class="o">=</span> <span class="n">rb_td</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">storage</span> <span class="o">=</span> <span class="n">rb_td</span><span class="p">[:]</span> <span class="c1"># returns all valid elements from the buffer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">rb_td</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">rb_td</span><span class="p">:</span>  <span class="c1"># iterate over the buffer using the sampler -- batch-size was set in the constructor to 1</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>using the following components:</p>
 <table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.Sampler.html#torchrl.data.replay_buffers.Sampler" title="torchrl.data.replay_buffers.Sampler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sampler</span></code></a>()</p></td>
@@ -453,9 +550,14 @@ widely used replay buffers:</p>
 </tr>
 </tbody>
 </table>
-<p>Storage choice is very influential on replay buffer sampling latency, especially in distributed reinforcement learning settings with larger data volumes.
-<a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a> is highly advised in distributed settings with shared storage due to the lower serialisation cost of MemmapTensors as well as the ability to specify file storage locations for improved node failure recovery.
-The following mean sampling latency improvements over using ListStorage were found from rough benchmarking in <a class="reference external" href="https://github.com/pytorch/rl/tree/main/benchmarks/storage">https://github.com/pytorch/rl/tree/main/benchmarks/storage</a>.</p>
+<p>Storage choice is very influential on replay buffer sampling latency, especially
+in distributed reinforcement learning settings with larger data volumes.
+<a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.storages.LazyMemmapStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a> is highly
+advised in distributed settings with shared storage due to the lower serialisation
+cost of MemoryMappedTensors as well as the ability to specify file storage locations
+for improved node failure recovery.
+The following mean sampling latency improvements over using <a class="reference internal" href="generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code></a>
+were found from rough benchmarking in <a class="reference external" href="https://github.com/pytorch/rl/tree/main/benchmarks/storage">https://github.com/pytorch/rl/tree/main/benchmarks/storage</a>.</p>
 <table class="docutils # Necessary for the table generated by autosummary to look decent align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Storage Type</p></th>
@@ -474,6 +576,7 @@ The following mean sampling latency improvements over using ListStorage were fou
 </tr>
 </tbody>
 </table>
+</section>
 <section id="sharing-replay-buffers-across-processes">
 <h3>Sharing replay buffers across processes<a class="headerlink" href="#sharing-replay-buffers-across-processes" title="Permalink to this heading">¶</a></h3>
 <p>Replay buffers can be shared between processes as long as their components are
@@ -857,6 +960,8 @@ efficient sampling.</p>
 <li><a class="reference internal" href="#">torchrl.data package</a><ul>
 <li><a class="reference internal" href="#replay-buffers">Replay Buffers</a></li>
 <li><a class="reference internal" href="#composable-replay-buffers">Composable Replay Buffers</a><ul>
+<li><a class="reference internal" href="#supported-data-types-and-choosing-a-storage">Supported data types and choosing a storage</a></li>
+<li><a class="reference internal" href="#sampling-and-indexing">Sampling and indexing</a></li>
 <li><a class="reference internal" href="#sharing-replay-buffers-across-processes">Sharing replay buffers across processes</a></li>
 <li><a class="reference internal" href="#storing-trajectories">Storing trajectories</a></li>
 <li><a class="reference internal" href="#checkpointing-replay-buffers">Checkpointing Replay Buffers</a></li>

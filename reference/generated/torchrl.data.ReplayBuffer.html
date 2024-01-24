@@ -404,12 +404,11 @@ samples.</p></li>
 <li><p><strong>prefetch</strong> (<em>int</em><em>, </em><em>optional</em>) – number of next batches to be prefetched
 using multithreading. Defaults to None (no prefetching).</p></li>
 <li><p><strong>transform</strong> (<a class="reference internal" href="torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform" title="torchrl.envs.transforms.Transform"><em>Transform</em></a><em>, </em><em>optional</em>) – Transform to be executed when
-sample() is called.
+<a class="reference internal" href="#torchrl.data.ReplayBuffer.sample" title="torchrl.data.ReplayBuffer.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> is called.
 To chain transforms use the <code class="xref py py-class docutils literal notranslate"><span class="pre">Compose</span></code> class.
 Transforms should be used with <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a>
-content. If used with other structures, the transforms should be
-encoded with a <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> leading key that will be used to
-construct a tensordict from the non-tensordict content.</p></li>
+content. A generic callable can also be passed if the replay buffer
+is used with PyTree structures (see example below).</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>the batch size to be used when sample() is
 called.
 .. note:</p>
@@ -461,13 +460,38 @@ batch-size in advance) as well as with samplers that have a
 </div>
 <p>Replay buffers accept <em>any</em> kind of data. Not all storage types
 will work, as some expect numerical data only, but the default
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.ListStorage</span></code> will:</p>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code> will:</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">ListStorage</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">collate_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">[None, &#39;a&#39;, None]</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>, <a class="reference internal" href="torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a>
+and <a class="reference internal" href="torchrl.data.replay_buffers.LazyTensorStorage.html#torchrl.data.replay_buffers.LazyTensorStorage" title="torchrl.data.replay_buffers.LazyTensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyTensorStorage</span></code></a> also work
+with any PyTree structure (a PyTree is a nested structure of arbitrary depth made of dicts,
+lists or tuples where the leaves are tensors) provided that it only contains
+tensor data.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">tree_map</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="c1"># Zeros all the data in the pytree</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span> <span class="o">*</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">LazyMemmapStorage</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)])},</span>
+<span class="gp">... </span>    <span class="mi">30</span><span class="p">:</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(()),</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The sample has a similar structure to the data (with a leading dimension of 10 for each tensor)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># let&#39;s check that our transform did its job:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">assert0</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">assert</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree_map</span><span class="p">(</span><span class="n">assert0</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -558,6 +582,18 @@ buffer.</p>
 <dd class="field-even"><p>Indices of the data added to the replay buffer.</p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code> can have an
+ambiguous signature when dealing with lists of values, which should be interpreted
+either as PyTree (in which case all elements in the list will be put in a slice
+in the stored PyTree in the storage) or a list of values to add one at a time.
+To solve this, TorchRL makes the clear-cut distinction between list and tuple:
+a tuple will be viewed as a PyTree, a list (at the root level) will be interpreted
+as a stack of values to add one at a time to the buffer.
+For <a class="reference internal" href="torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ListStorage</span></code></a> instances, only
+unbound elements can be provided (no PyTrees).</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
