@@ -81,16 +81,23 @@ Imports and setup
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 68, in <module>
+        assert multiprocessing.get_start_method() == "fork"
+    AssertionError
 
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 67-68
+.. GENERATED FROM PYTHON SOURCE LINES 77-78
 
 We will execute the policy on cuda if available
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-72
+.. GENERATED FROM PYTHON SOURCE LINES 78-82
 
 .. code-block:: Python
 
@@ -99,13 +106,7 @@ We will execute the policy on cuda if available
     )
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 73-158
+.. GENERATED FROM PYTHON SOURCE LINES 83-168
 
 torchrl :class:`~torchrl.objectives.LossModule`
 -----------------------------------------------
@@ -193,7 +194,7 @@ actor parameters.
 Later, we will see how the target parameters should be updated in torchrl.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-190
+.. GENERATED FROM PYTHON SOURCE LINES 168-200
 
 .. code-block:: Python
 
@@ -230,13 +231,7 @@ Later, we will see how the target parameters should be updated in torchrl.
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 191-207
+.. GENERATED FROM PYTHON SOURCE LINES 201-217
 
 The value estimator loss method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -255,7 +250,7 @@ pointers to all the value estimators implemented. Let us define the default
 value function here. We will take the simplest version (TD(0)), and show later
 on how this can be changed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 207-212
+.. GENERATED FROM PYTHON SOURCE LINES 217-222
 
 .. code-block:: Python
 
@@ -265,19 +260,13 @@ on how this can be changed.
     default_value_estimator = ValueEstimators.TD0
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 213-216
+.. GENERATED FROM PYTHON SOURCE LINES 223-226
 
 We also need to give some instructions to DDPG on how to build the value
 estimator, depending on the user query. Depending on the estimator provided,
 we will build the corresponding module to be used at train time:
 
-.. GENERATED FROM PYTHON SOURCE LINES 216-247
+.. GENERATED FROM PYTHON SOURCE LINES 226-257
 
 .. code-block:: Python
 
@@ -313,13 +302,7 @@ we will build the corresponding module to be used at train time:
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 248-264
+.. GENERATED FROM PYTHON SOURCE LINES 258-274
 
 The ``make_value_estimator`` method can but does not need to be called: if
 not, the :class:`~torchrl.objectives.LossModule` will query this method with
@@ -338,7 +321,7 @@ of the graph, otherwise the actor and value loss will be mixed up.
 For this, the :func:`~torchrl.objectives.utils.hold_out_params` function
 can be used.
 
-.. GENERATED FROM PYTHON SOURCE LINES 264-281
+.. GENERATED FROM PYTHON SOURCE LINES 274-291
 
 .. code-block:: Python
 
@@ -360,13 +343,7 @@ can be used.
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 282-288
+.. GENERATED FROM PYTHON SOURCE LINES 292-298
 
 The value loss method
 ~~~~~~~~~~~~~~~~~~~~~
@@ -375,7 +352,7 @@ We now need to optimize our value network parameters.
 To do this, we will rely on the value estimator of our class:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 288-325
+.. GENERATED FROM PYTHON SOURCE LINES 298-335
 
 .. code-block:: Python
 
@@ -417,13 +394,7 @@ To do this, we will rely on the value estimator of our class:
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 326-332
+.. GENERATED FROM PYTHON SOURCE LINES 336-342
 
 Putting things together in a forward call
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,7 +403,7 @@ The only missing piece is the forward method, which will glue together the
 value and actor loss, collect the cost values and write them in a tensordict
 delivered to the user.
 
-.. GENERATED FROM PYTHON SOURCE LINES 332-376
+.. GENERATED FROM PYTHON SOURCE LINES 342-386
 
 .. code-block:: Python
 
@@ -481,13 +452,7 @@ delivered to the user.
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 377-415
+.. GENERATED FROM PYTHON SOURCE LINES 387-425
 
 Now that we have our loss, we can use it to train a policy to solve a
 control task.
@@ -528,7 +493,7 @@ We write a :func:`make_env` helper function that will create an environment
 with either one of the two backends considered above (dm-control or gym).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 415-450
+.. GENERATED FROM PYTHON SOURCE LINES 425-460
 
 .. code-block:: Python
 
@@ -568,13 +533,7 @@ with either one of the two backends considered above (dm-control or gym).
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 451-478
+.. GENERATED FROM PYTHON SOURCE LINES 461-488
 
 Transforms
 ~~~~~~~~~~
@@ -604,7 +563,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
   take care of computing the normalizing constants later on.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 478-544
+.. GENERATED FROM PYTHON SOURCE LINES 488-554
 
 .. code-block:: Python
 
@@ -675,13 +634,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 545-569
+.. GENERATED FROM PYTHON SOURCE LINES 555-579
 
 Parallel execution
 ~~~~~~~~~~~~~~~~~~
@@ -708,7 +661,7 @@ To leverage the vectorization capabilities of PyTorch, we adopt
 the first method:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 569-604
+.. GENERATED FROM PYTHON SOURCE LINES 579-614
 
 .. code-block:: Python
 
@@ -748,13 +701,7 @@ the first method:
     backend = "gym"
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 605-619
+.. GENERATED FROM PYTHON SOURCE LINES 615-629
 
 .. note::
   ``frame_skip`` batches multiple step together with a single action
@@ -771,25 +718,19 @@ the first method:
 Scaling the reward helps us control the signal magnitude for a more
 efficient learning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 619-621
+.. GENERATED FROM PYTHON SOURCE LINES 629-631
 
 .. code-block:: Python
 
     reward_scaling = 5.0
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 622-624
+.. GENERATED FROM PYTHON SOURCE LINES 632-634
 
 We also define when a trajectory will be truncated. A thousand steps (500 if
 frame-skip = 2) is a good number to use for cheetah:
 
-.. GENERATED FROM PYTHON SOURCE LINES 624-627
+.. GENERATED FROM PYTHON SOURCE LINES 634-637
 
 .. code-block:: Python
 
@@ -797,13 +738,7 @@ frame-skip = 2) is a good number to use for cheetah:
     max_frames_per_traj = 500
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 628-638
+.. GENERATED FROM PYTHON SOURCE LINES 638-648
 
 Normalization of the observations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -816,7 +751,7 @@ environment and run it for a given number of steps, collect data over a given
 number of steps and compute its summary statistics.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 638-650
+.. GENERATED FROM PYTHON SOURCE LINES 648-660
 
 .. code-block:: Python
 
@@ -833,19 +768,13 @@ number of steps and compute its summary statistics.
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 651-654
+.. GENERATED FROM PYTHON SOURCE LINES 661-664
 
 Normalization stats
 ~~~~~~~~~~~~~~~~~~~
 Number of random steps used as for stats computation using ObservationNorm
 
-.. GENERATED FROM PYTHON SOURCE LINES 654-659
+.. GENERATED FROM PYTHON SOURCE LINES 664-669
 
 .. code-block:: Python
 
@@ -855,35 +784,23 @@ Number of random steps used as for stats computation using ObservationNorm
     transform_state_dict = get_env_stats()
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 660-661
+.. GENERATED FROM PYTHON SOURCE LINES 670-671
 
 Number of environments in each data collector
 
-.. GENERATED FROM PYTHON SOURCE LINES 661-663
+.. GENERATED FROM PYTHON SOURCE LINES 671-673
 
 .. code-block:: Python
 
     env_per_collector = 4
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 664-666
+.. GENERATED FROM PYTHON SOURCE LINES 674-676
 
 We pass the stats computed earlier to normalize the output of our
 environment:
 
-.. GENERATED FROM PYTHON SOURCE LINES 666-675
+.. GENERATED FROM PYTHON SOURCE LINES 676-685
 
 .. code-block:: Python
 
@@ -897,13 +814,7 @@ environment:
     from torchrl.data import CompositeSpec
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 676-707
+.. GENERATED FROM PYTHON SOURCE LINES 686-717
 
 Building the model
 ------------------
@@ -937,7 +848,7 @@ sample of data. For this purpose, we generate fake data from the
 environment specs.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 707-767
+.. GENERATED FROM PYTHON SOURCE LINES 717-777
 
 .. code-block:: Python
 
@@ -1002,13 +913,7 @@ environment specs.
     )
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 768-774
+.. GENERATED FROM PYTHON SOURCE LINES 778-784
 
 Exploration
 ~~~~~~~~~~~
@@ -1017,7 +922,7 @@ The policy is wrapped in a :class:`~torchrl.modules.OrnsteinUhlenbeckProcessWrap
 exploration module, as suggesed in the original paper.
 Let's define the number of frames before OU noise reaches its minimum value
 
-.. GENERATED FROM PYTHON SOURCE LINES 774-784
+.. GENERATED FROM PYTHON SOURCE LINES 784-794
 
 .. code-block:: Python
 
@@ -1032,13 +937,7 @@ Let's define the number of frames before OU noise reaches its minimum value
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 785-826
+.. GENERATED FROM PYTHON SOURCE LINES 795-836
 
 Data collector
 --------------
@@ -1082,20 +981,14 @@ One should also pass:
 
 The total frames we will use during training should be around 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 826-828
+.. GENERATED FROM PYTHON SOURCE LINES 836-838
 
 .. code-block:: Python
 
     total_frames = 10_000  # 1_000_000
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 829-837
+.. GENERATED FROM PYTHON SOURCE LINES 839-847
 
 The number of frames returned by the collector at each iteration of the outer
 loop is equal to the length of each sub-trajectories times the number of envs
@@ -1106,7 +999,7 @@ In other words, we expect batches from the collector to have a shape
 ``traj_len=frames_per_batch/env_per_collector``:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 837-865
+.. GENERATED FROM PYTHON SOURCE LINES 847-875
 
 .. code-block:: Python
 
@@ -1139,13 +1032,7 @@ In other words, we expect batches from the collector to have a shape
     )
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 866-876
+.. GENERATED FROM PYTHON SOURCE LINES 876-886
 
 Evaluator: building your recorder object
 ----------------------------------------
@@ -1158,7 +1045,7 @@ from these simulations.
 
 The following helper function builds this object:
 
-.. GENERATED FROM PYTHON SOURCE LINES 876-897
+.. GENERATED FROM PYTHON SOURCE LINES 886-907
 
 .. code-block:: Python
 
@@ -1184,17 +1071,11 @@ The following helper function builds this object:
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 898-899
+.. GENERATED FROM PYTHON SOURCE LINES 908-909
 
 We will be recording the performance every 10 batch collected
 
-.. GENERATED FROM PYTHON SOURCE LINES 899-912
+.. GENERATED FROM PYTHON SOURCE LINES 909-922
 
 .. code-block:: Python
 
@@ -1212,13 +1093,7 @@ We will be recording the performance every 10 batch collected
     )
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 913-926
+.. GENERATED FROM PYTHON SOURCE LINES 923-936
 
 Replay buffer
 -------------
@@ -1234,7 +1109,7 @@ function takes care of creating the replay buffer with the desired
 hyperparameters:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 926-953
+.. GENERATED FROM PYTHON SOURCE LINES 936-963
 
 .. code-block:: Python
 
@@ -1266,17 +1141,11 @@ hyperparameters:
 
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 954-955
+.. GENERATED FROM PYTHON SOURCE LINES 964-965
 
 We'll store the replay buffer in a temporary dirrectory on disk
 
-.. GENERATED FROM PYTHON SOURCE LINES 955-961
+.. GENERATED FROM PYTHON SOURCE LINES 965-971
 
 .. code-block:: Python
 
@@ -1287,13 +1156,7 @@ We'll store the replay buffer in a temporary dirrectory on disk
     buffer_scratch_dir = tmpdir.name
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 962-983
+.. GENERATED FROM PYTHON SOURCE LINES 972-993
 
 Replay buffer storage and batch size
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1317,7 +1180,7 @@ samples sub-trajectories of 2 time steps each.
 
 Let's start with the number of frames stored in the buffer
 
-.. GENERATED FROM PYTHON SOURCE LINES 983-992
+.. GENERATED FROM PYTHON SOURCE LINES 993-1002
 
 .. code-block:: Python
 
@@ -1331,72 +1194,48 @@ Let's start with the number of frames stored in the buffer
     buffer_size = ceil_div(buffer_size, traj_len)
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 993-994
+.. GENERATED FROM PYTHON SOURCE LINES 1003-1004
 
 Prioritized replay buffer is disabled by default
 
-.. GENERATED FROM PYTHON SOURCE LINES 994-996
+.. GENERATED FROM PYTHON SOURCE LINES 1004-1006
 
 .. code-block:: Python
 
     prb = False
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 997-999
+.. GENERATED FROM PYTHON SOURCE LINES 1007-1009
 
 We also need to define how many updates we'll be doing per batch of data
 collected. This is known as the update-to-data or UTD ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 999-1001
+.. GENERATED FROM PYTHON SOURCE LINES 1009-1011
 
 .. code-block:: Python
 
     update_to_data = 64
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1002-1003
+.. GENERATED FROM PYTHON SOURCE LINES 1012-1013
 
 We'll be feeding the loss with trajectories of length 25:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1003-1005
+.. GENERATED FROM PYTHON SOURCE LINES 1013-1015
 
 .. code-block:: Python
 
     random_crop_len = 25
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1006-1010
+.. GENERATED FROM PYTHON SOURCE LINES 1016-1020
 
 In the original paper, the authors perform one update with a batch of 64
 elements for each frame collected. Here, we reproduce the same ratio
 but while realizing several updates at each batch collection. We
 adapt our batch-size to achieve the same number of update-per-frame ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1010-1021
+.. GENERATED FROM PYTHON SOURCE LINES 1020-1031
 
 .. code-block:: Python
 
@@ -1412,13 +1251,7 @@ adapt our batch-size to achieve the same number of update-per-frame ratio:
     )
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1022-1029
+.. GENERATED FROM PYTHON SOURCE LINES 1032-1039
 
 Loss module construction
 ------------------------
@@ -1428,7 +1261,7 @@ Because we have target parameters to update, we _must_ create a target network
 updater.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1029-1036
+.. GENERATED FROM PYTHON SOURCE LINES 1039-1046
 
 .. code-block:: Python
 
@@ -1440,30 +1273,18 @@ updater.
     loss_module = DDPGLoss(actor, qnet)
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1037-1038
+.. GENERATED FROM PYTHON SOURCE LINES 1047-1048
 
 let's use the TD(lambda) estimator!
 
-.. GENERATED FROM PYTHON SOURCE LINES 1038-1040
+.. GENERATED FROM PYTHON SOURCE LINES 1048-1050
 
 .. code-block:: Python
 
     loss_module.make_value_estimator(ValueEstimators.TDLambda, gamma=gamma, lmbda=lmbda)
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1041-1059
+.. GENERATED FROM PYTHON SOURCE LINES 1051-1069
 
 .. note::
   Off-policy usually dictates a TD(0) estimator. Here, we use a TD(:math:`\lambda`)
@@ -1484,7 +1305,7 @@ classes. They're built with the loss module as argument, and the update is
 achieved via a call to `updater.step()` at the appropriate location in the
 training loop.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1059-1064
+.. GENERATED FROM PYTHON SOURCE LINES 1069-1074
 
 .. code-block:: Python
 
@@ -1494,20 +1315,14 @@ training loop.
     target_net_updater = SoftUpdate(loss_module, eps=1 - tau)
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1065-1069
+.. GENERATED FROM PYTHON SOURCE LINES 1075-1079
 
 Optimizer
 ~~~~~~~~~
 
 Finally, we will use the Adam optimizer for the policy and value network:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1069-1080
+.. GENERATED FROM PYTHON SOURCE LINES 1079-1090
 
 .. code-block:: Python
 
@@ -1523,13 +1338,7 @@ Finally, we will use the Adam optimizer for the policy and value network:
     total_collection_steps = total_frames // frames_per_batch
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1081-1087
+.. GENERATED FROM PYTHON SOURCE LINES 1091-1097
 
 Time to train the policy
 ------------------------
@@ -1538,7 +1347,7 @@ The training loop is pretty straightforward now that we have built all the
 modules we need.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1087-1173
+.. GENERATED FROM PYTHON SOURCE LINES 1097-1183
 
 .. code-block:: Python
 
@@ -1629,18 +1438,7 @@ modules we need.
     del collector
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-      0%|          | 0/10000 [00:00<?, ?it/s]      8%|▊         | 800/10000 [00:00<00:03, 2512.26it/s]     16%|█▌        | 1600/10000 [00:01<00:08, 1024.25it/s]     32%|███▏      | 3200/10000 [00:01<00:03, 2102.63it/s]     48%|████▊     | 4800/10000 [00:01<00:01, 3000.98it/s]    reward: -2.86 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-3.11/6.06, grad norm= 162.14, loss_value= 334.63, loss_actor= 15.38, target value: -19.59:  56%|█████▌    | 5600/10000 [00:03<00:01, 3000.98it/s]    reward: -2.86 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-3.11/6.06, grad norm= 162.14, loss_value= 334.63, loss_actor= 15.38, target value: -19.59:  64%|██████▍   | 6400/10000 [00:03<00:02, 1421.61it/s]    reward: -2.51 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-1.90/6.38, grad norm= 95.90, loss_value= 416.66, loss_actor= 13.86, target value: -13.16:  64%|██████▍   | 6400/10000 [00:05<00:02, 1421.61it/s]     reward: -2.51 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-1.90/6.38, grad norm= 95.90, loss_value= 416.66, loss_actor= 13.86, target value: -13.16:  72%|███████▏  | 7200/10000 [00:05<00:03, 932.10it/s]     reward: -0.95 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-2.74/5.51, grad norm= 132.15, loss_value= 246.72, loss_actor= 14.41, target value: -17.35:  72%|███████▏  | 7200/10000 [00:07<00:03, 932.10it/s]    reward: -0.95 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-2.74/5.51, grad norm= 132.15, loss_value= 246.72, loss_actor= 14.41, target value: -17.35:  80%|████████  | 8000/10000 [00:07<00:02, 704.13it/s]    reward: -3.53 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-2.11/5.23, grad norm= 69.99, loss_value= 223.91, loss_actor= 14.67, target value: -15.58:  80%|████████  | 8000/10000 [00:09<00:02, 704.13it/s]     reward: -3.53 (r0 = -1.91), reward eval: reward: -0.01, reward normalized=-2.11/5.23, grad norm= 69.99, loss_value= 223.91, loss_actor= 14.67, target value: -15.58:  88%|████████▊ | 8800/10000 [00:09<00:02, 589.18it/s]    reward: -4.22 (r0 = -1.91), reward eval: reward: -5.40, reward normalized=-2.46/5.19, grad norm= 82.03, loss_value= 204.53, loss_actor= 18.25, target value: -16.87:  88%|████████▊ | 8800/10000 [00:13<00:02, 589.18it/s]    reward: -4.22 (r0 = -1.91), reward eval: reward: -5.40, reward normalized=-2.46/5.19, grad norm= 82.03, loss_value= 204.53, loss_actor= 18.25, target value: -16.87:  96%|█████████▌| 9600/10000 [00:13<00:00, 431.74it/s]    reward: -4.70 (r0 = -1.91), reward eval: reward: -5.40, reward normalized=-2.39/5.49, grad norm= 86.43, loss_value= 216.92, loss_actor= 15.37, target value: -17.74:  96%|█████████▌| 9600/10000 [00:15<00:00, 431.74it/s]    reward: -4.70 (r0 = -1.91), reward eval: reward: -5.40, reward normalized=-2.39/5.49, grad norm= 86.43, loss_value= 216.92, loss_actor= 15.37, target value: -17.74: : 10400it [00:15, 422.96it/s]                            reward: -4.43 (r0 = -1.91), reward eval: reward: -5.40, reward normalized=-2.38/4.61, grad norm= 54.79, loss_value= 122.19, loss_actor= 14.29, target value: -17.57: : 10400it [00:17, 422.96it/s]
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1174-1183
+.. GENERATED FROM PYTHON SOURCE LINES 1184-1193
 
 Experiment results
 ------------------
@@ -1652,7 +1450,7 @@ that our policy learned quite well to solve the task.
   As already mentioned above, to get a more reasonable performance,
   use a greater value for ``total_frames`` e.g. 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1183-1194
+.. GENERATED FROM PYTHON SOURCE LINES 1193-1204
 
 .. code-block:: Python
 
@@ -1668,18 +1466,7 @@ that our policy learned quite well to solve the task.
     plt.tight_layout()
 
 
-
-
-.. image-sg:: /tutorials/images/sphx_glr_coding_ddpg_001.png
-   :alt: coding ddpg
-   :srcset: /tutorials/images/sphx_glr_coding_ddpg_001.png
-   :class: sphx-glr-single-img
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 1195-1208
+.. GENERATED FROM PYTHON SOURCE LINES 1205-1218
 
 Conclusion
 ----------
@@ -1698,9 +1485,9 @@ The key takeaways are:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 57.468 seconds)
+   **Total running time of the script:** (0 minutes 0.312 seconds)
 
-**Estimated memory usage:**  15 MB
+**Estimated memory usage:**  536 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ddpg.py:

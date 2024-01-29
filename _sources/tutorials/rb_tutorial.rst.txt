@@ -65,9 +65,11 @@ replay buffer is a straightforward process, as shown in the following
 example:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-56
+.. GENERATED FROM PYTHON SOURCE LINES 49-58
 
 .. code-block:: Python
+
+
 
     import tempfile
 
@@ -78,19 +80,26 @@ example:
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/rb_tutorial.py", line 62, in <module>
+        assert multiprocessing.get_start_method() == "fork"
+    AssertionError
 
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 57-61
+.. GENERATED FROM PYTHON SOURCE LINES 74-78
 
 By default, this replay buffer will have a size of 1000. Let's check this
 by populating our buffer using the :meth:`torchrl.data.ReplayBuffer.extend`
 method:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-71
+.. GENERATED FROM PYTHON SOURCE LINES 78-88
 
 .. code-block:: Python
 
@@ -105,20 +114,7 @@ method:
     from tensordict import TensorDict
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    length before adding elements: 0
-    length after adding elements: 1000
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 72-114
+.. GENERATED FROM PYTHON SOURCE LINES 89-131
 
 We have used the :meth:`torchrl.data.ReplayBuffer.extend` method which is
 designed to add multiple items all at once. If the object that is passed
@@ -163,7 +159,7 @@ TorchRL proposes three types of storages:
 
 Let us see how we can use each of these storages:
 
-.. GENERATED FROM PYTHON SOURCE LINES 114-121
+.. GENERATED FROM PYTHON SOURCE LINES 131-138
 
 .. code-block:: Python
 
@@ -175,18 +171,12 @@ Let us see how we can use each of these storages:
     size = 10_000
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 122-124
+.. GENERATED FROM PYTHON SOURCE LINES 139-141
 
 A buffer with a list storage buffer can store any kind of data (but we must
 change the ``collate_fn`` since the default expects numerical data):
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-128
+.. GENERATED FROM PYTHON SOURCE LINES 141-145
 
 .. code-block:: Python
 
@@ -195,19 +185,7 @@ change the ``collate_fn`` since the default expects numerical data):
     print(buffer_list.sample(3))
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    ['a', 'a', 'a']
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 129-135
+.. GENERATED FROM PYTHON SOURCE LINES 146-152
 
 Because it is the one with the lowest amount of assumption, the
 :class:`torchrl.data.ListStorage` is the default storage in TorchRL.
@@ -216,7 +194,7 @@ A :class:`torchrl.data.LazyTensorStorage` can store data contiguously.
 This should be the preferred option when dealing with complicated but
 unchanging data structures of medium size:
 
-.. GENERATED FROM PYTHON SOURCE LINES 135-138
+.. GENERATED FROM PYTHON SOURCE LINES 152-155
 
 .. code-block:: Python
 
@@ -224,19 +202,13 @@ unchanging data structures of medium size:
     buffer_lazytensor = ReplayBuffer(storage=LazyTensorStorage(size))
 
 
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 139-142
+.. GENERATED FROM PYTHON SOURCE LINES 156-159
 
 Let us create a batch of data of size ``torch.Size([3])` with 2 tensors
 stored in it:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-151
+.. GENERATED FROM PYTHON SOURCE LINES 159-168
 
 .. code-block:: Python
 
@@ -250,36 +222,13 @@ stored in it:
     print(data)
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    TensorDict(
-        fields={
-            a: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.int64, is_shared=False),
-            b: TensorDict(
-                fields={
-                    c: Tensor(shape=torch.Size([3, 5]), device=cpu, dtype=torch.int64, is_shared=False)},
-                batch_size=torch.Size([3]),
-                device=None,
-                is_shared=False)},
-        batch_size=torch.Size([3]),
-        device=None,
-        is_shared=False)
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 152-155
+.. GENERATED FROM PYTHON SOURCE LINES 169-172
 
 The first call to :meth:`torchrl.data.ReplayBuffer.extend` will
 instantiate the storage. The first dimension of the data is unbound into
 separate datapoints:
 
-.. GENERATED FROM PYTHON SOURCE LINES 155-159
+.. GENERATED FROM PYTHON SOURCE LINES 172-176
 
 .. code-block:: Python
 
@@ -288,24 +237,12 @@ separate datapoints:
     print(f"The buffer has {len(buffer_lazytensor)} elements")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    The buffer has 3 elements
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 160-162
+.. GENERATED FROM PYTHON SOURCE LINES 177-179
 
 Let us sample from the buffer, and print the data:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 162-166
+.. GENERATED FROM PYTHON SOURCE LINES 179-183
 
 .. code-block:: Python
 
@@ -314,32 +251,12 @@ Let us sample from the buffer, and print the data:
     print("samples", sample["a"], sample["b", "c"])
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    samples tensor([[ 0,  1,  2,  3],
-            [ 8,  9, 10, 11],
-            [ 8,  9, 10, 11],
-            [ 4,  5,  6,  7],
-            [ 4,  5,  6,  7]]) tensor([[ 0,  1,  2,  3,  4],
-            [10, 11, 12, 13, 14],
-            [10, 11, 12, 13, 14],
-            [ 5,  6,  7,  8,  9],
-            [ 5,  6,  7,  8,  9]])
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 167-169
+.. GENERATED FROM PYTHON SOURCE LINES 184-186
 
 A :class:`torchrl.data.LazyMemmapStorage` is created in the same manner:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 169-176
+.. GENERATED FROM PYTHON SOURCE LINES 186-193
 
 .. code-block:: Python
 
@@ -351,34 +268,12 @@ A :class:`torchrl.data.LazyMemmapStorage` is created in the same manner:
     print("samples: a=", sample["a"], "\n('b', 'c'):", sample["b", "c"])
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    The buffer has 3 elements
-    samples: a= tensor([[ 0,  1,  2,  3],
-            [ 0,  1,  2,  3],
-            [ 8,  9, 10, 11],
-            [ 8,  9, 10, 11],
-            [ 4,  5,  6,  7]]) 
-    ('b', 'c'): tensor([[ 0,  1,  2,  3,  4],
-            [ 0,  1,  2,  3,  4],
-            [10, 11, 12, 13, 14],
-            [10, 11, 12, 13, 14],
-            [ 5,  6,  7,  8,  9]])
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 177-179
+.. GENERATED FROM PYTHON SOURCE LINES 194-196
 
 We can also customize the storage location on disk:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-190
+.. GENERATED FROM PYTHON SOURCE LINES 196-207
 
 .. code-block:: Python
 
@@ -394,21 +289,7 @@ We can also customize the storage location on disk:
 
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    The buffer has 3 elements
-    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpm_soz1gw'>/a.memmap
-    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpm_soz1gw'>/b/c.memmap
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 191-206
+.. GENERATED FROM PYTHON SOURCE LINES 208-223
 
 Integration with TensorDict
 ---------------------------
@@ -426,7 +307,7 @@ It can be built in the same manner as a standard :class:`torchrl.data.ReplayBuff
 generally be used interchangeably.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-219
+.. GENERATED FROM PYTHON SOURCE LINES 223-236
 
 .. code-block:: Python
 
@@ -444,38 +325,13 @@ generally be used interchangeably.
     print("sample:", sample)
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    The buffer has 3 elements
-    sample: TensorDict(
-        fields={
-            a: Tensor(shape=torch.Size([12, 4]), device=cpu, dtype=torch.int64, is_shared=False),
-            b: TensorDict(
-                fields={
-                    c: Tensor(shape=torch.Size([12, 5]), device=cpu, dtype=torch.int64, is_shared=False)},
-                batch_size=torch.Size([12]),
-                device=cpu,
-                is_shared=False),
-            index: Tensor(shape=torch.Size([12]), device=cpu, dtype=torch.int64, is_shared=False)},
-        batch_size=torch.Size([12]),
-        device=cpu,
-        is_shared=False)
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 220-223
+.. GENERATED FROM PYTHON SOURCE LINES 237-240
 
 Our sample now has an extra ``"index"`` key that indicates what indices
 were sampled.
 Let us have a look at these indices:
 
-.. GENERATED FROM PYTHON SOURCE LINES 223-226
+.. GENERATED FROM PYTHON SOURCE LINES 240-243
 
 .. code-block:: Python
 
@@ -483,19 +339,7 @@ Let us have a look at these indices:
     print(sample["index"])
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    tensor([1, 0, 1, 0, 2, 2, 2, 0, 2, 2, 2, 0])
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 227-233
+.. GENERATED FROM PYTHON SOURCE LINES 244-250
 
 Integration with tensorclass
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -504,7 +348,7 @@ The ReplayBuffer class and associated subclasses also work natively with
 :class:`tensordict.tensorclass` classes, which can conviniently be used to
 encode datasets in a more explicit manner:
 
-.. GENERATED FROM PYTHON SOURCE LINES 233-262
+.. GENERATED FROM PYTHON SOURCE LINES 250-279
 
 .. code-block:: Python
 
@@ -538,25 +382,7 @@ encode datasets in a more explicit manner:
 
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    The buffer has 1000 elements
-    sample: MyData(
-        images=Tensor(shape=torch.Size([12, 64, 64, 3]), device=cpu, dtype=torch.int64, is_shared=False),
-        labels=Tensor(shape=torch.Size([12]), device=cpu, dtype=torch.int64, is_shared=False),
-        batch_size=torch.Size([12]),
-        device=cpu,
-        is_shared=False)
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 263-278
+.. GENERATED FROM PYTHON SOURCE LINES 280-295
 
 As expected. the data has the proper class and shape!
 
@@ -574,7 +400,7 @@ or :class:`~torchrl.data.replay_buffers.LazyTensorStorage` all accept this kind 
 Here is a bried demonstration of what this feature looks like:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 278-338
+.. GENERATED FROM PYTHON SOURCE LINES 295-355
 
 .. code-block:: Python
 
@@ -639,36 +465,7 @@ Here is a bried demonstration of what this feature looks like:
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
-.. code-block:: pytb
-
-    Traceback (most recent call last):
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/rb_tutorial.py", line 334, in <module>
-        buffer_lazymemmap.extend(data)
-      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 443, in extend
-        return self._extend(data)
-      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 413, in _extend
-        index = self._writer.extend(data)
-      File "/pytorch/rl/torchrl/data/replay_buffers/writers.py", line 140, in extend
-        self._storage[index] = data
-      File "/pytorch/rl/torchrl/data/replay_buffers/storages.py", line 101, in __setitem__
-        ret = self.set(index, value)
-      File "/pytorch/rl/torchrl/data/replay_buffers/storages.py", line 543, in set
-        self._init(tree_map(lambda x: x[0], data))
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_pytree.py", line 898, in tree_map
-        return treespec.unflatten(map(func, *flat_args))
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_pytree.py", line 734, in unflatten
-        leaves = list(leaves)
-      File "/pytorch/rl/torchrl/data/replay_buffers/storages.py", line 543, in <lambda>
-        self._init(tree_map(lambda x: x[0], data))
-    IndexError: invalid index of a 0-dim tensor. Use `tensor.item()` in Python or `tensor.item<T>()` in C++ to convert a 0-dim tensor to a number
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 339-344
+.. GENERATED FROM PYTHON SOURCE LINES 356-361
 
 This batch of data has the size that we wanted it to have (128).
 
@@ -676,7 +473,7 @@ To enable multithreaded sampling, just pass a positive integer to the
 ``prefetch`` keyword argument during construction. This should speed up
 sampling considerably:
 
-.. GENERATED FROM PYTHON SOURCE LINES 344-353
+.. GENERATED FROM PYTHON SOURCE LINES 361-370
 
 .. code-block:: Python
 
@@ -690,7 +487,7 @@ sampling considerably:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 354-359
+.. GENERATED FROM PYTHON SOURCE LINES 371-376
 
 Fixed batch-size, iterating over the buffer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -698,7 +495,7 @@ Fixed batch-size, iterating over the buffer
 We can also iterate over the buffer like we would do with a regular
 dataloader, as long as the batch-size is predefined:
 
-.. GENERATED FROM PYTHON SOURCE LINES 359-367
+.. GENERATED FROM PYTHON SOURCE LINES 376-384
 
 .. code-block:: Python
 
@@ -711,7 +508,7 @@ dataloader, as long as the batch-size is predefined:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 368-373
+.. GENERATED FROM PYTHON SOURCE LINES 385-390
 
 Due to the fact that our sampling technique is entirely random and does not
 prevent replacement, the iterator in question is infinite. However, we can
@@ -719,7 +516,7 @@ make use of the :class:`torchrl.data.replay_buffers.SamplerWithoutReplacement`
 instead, which will transform our buffer into a finite iterator:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 373-379
+.. GENERATED FROM PYTHON SOURCE LINES 390-396
 
 .. code-block:: Python
 
@@ -730,11 +527,11 @@ instead, which will transform our buffer into a finite iterator:
         storage=LazyMemmapStorage(size), batch_size=32, sampler=SamplerWithoutReplacement()
     )
 
-.. GENERATED FROM PYTHON SOURCE LINES 380-381
+.. GENERATED FROM PYTHON SOURCE LINES 397-398
 
 we create a data that is big enough to get a couple of samples
 
-.. GENERATED FROM PYTHON SOURCE LINES 381-395
+.. GENERATED FROM PYTHON SOURCE LINES 398-412
 
 .. code-block:: Python
 
@@ -753,7 +550,7 @@ we create a data that is big enough to get a couple of samples
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 396-401
+.. GENERATED FROM PYTHON SOURCE LINES 413-418
 
 Dynamic batch-size
 ~~~~~~~~~~~~~~~~~~
@@ -761,7 +558,7 @@ Dynamic batch-size
 In contrast to what we have seen earlier, the ``batch_size`` keyword
 argument can be omitted and passed directly to the `sample` method:
 
-.. GENERATED FROM PYTHON SOURCE LINES 401-410
+.. GENERATED FROM PYTHON SOURCE LINES 418-427
 
 .. code-block:: Python
 
@@ -775,7 +572,7 @@ argument can be omitted and passed directly to the `sample` method:
     print("sampling 5 elements:", buffer_lazymemmap.sample(5))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 411-425
+.. GENERATED FROM PYTHON SOURCE LINES 428-442
 
 Prioritized Replay buffers
 --------------------------
@@ -792,7 +589,7 @@ Let us first see how to build a prioritized replay buffer in the generic
 case. The :math:`\alpha` and :math:`\beta` hyperparameters
 have to be manually set:
 
-.. GENERATED FROM PYTHON SOURCE LINES 425-437
+.. GENERATED FROM PYTHON SOURCE LINES 442-454
 
 .. code-block:: Python
 
@@ -809,12 +606,12 @@ have to be manually set:
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 438-440
+.. GENERATED FROM PYTHON SOURCE LINES 455-457
 
 Extending the replay buffer returns the items indices, which we will need
 later to update the priority:
 
-.. GENERATED FROM PYTHON SOURCE LINES 440-443
+.. GENERATED FROM PYTHON SOURCE LINES 457-460
 
 .. code-block:: Python
 
@@ -822,7 +619,7 @@ later to update the priority:
     indices = rb.extend([1, "foo", None])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 444-453
+.. GENERATED FROM PYTHON SOURCE LINES 461-470
 
 The sampler expects to have a priority for each element. When added to the
 buffer, the priority is set to a default value of 1. Once the priority has
@@ -834,20 +631,20 @@ We assign an artificially high priority to the second sample in the dataset
 to observe its effect on sampling:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 453-455
+.. GENERATED FROM PYTHON SOURCE LINES 470-472
 
 .. code-block:: Python
 
     rb.update_priority(index=indices, priority=torch.tensor([0, 1_000, 0.1]))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 456-459
+.. GENERATED FROM PYTHON SOURCE LINES 473-476
 
 We observe that sampling from the buffer returns mostly the second sample
 (``"foo"``):
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 459-463
+.. GENERATED FROM PYTHON SOURCE LINES 476-480
 
 .. code-block:: Python
 
@@ -856,11 +653,11 @@ We observe that sampling from the buffer returns mostly the second sample
     print(sample)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 464-465
+.. GENERATED FROM PYTHON SOURCE LINES 481-482
 
 The info contains the relative weights of the items as well as the indices.
 
-.. GENERATED FROM PYTHON SOURCE LINES 465-468
+.. GENERATED FROM PYTHON SOURCE LINES 482-485
 
 .. code-block:: Python
 
@@ -868,7 +665,7 @@ The info contains the relative weights of the items as well as the indices.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 469-506
+.. GENERATED FROM PYTHON SOURCE LINES 486-523
 
 We see that using a prioritized replay buffer requires a series of extra
 steps in the training loop compared with a regular buffer:
@@ -908,7 +705,7 @@ The following code illustrates these concepts. We build a replay buffer with
 a prioritized sampler, and indicate in the constructor the entry where
 the priority signal should be fetched:
 
-.. GENERATED FROM PYTHON SOURCE LINES 506-515
+.. GENERATED FROM PYTHON SOURCE LINES 523-532
 
 .. code-block:: Python
 
@@ -922,12 +719,12 @@ the priority signal should be fetched:
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 516-518
+.. GENERATED FROM PYTHON SOURCE LINES 533-535
 
 Let us choose a priority signal that is proportional to the storage index:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 518-524
+.. GENERATED FROM PYTHON SOURCE LINES 535-541
 
 .. code-block:: Python
 
@@ -938,11 +735,11 @@ Let us choose a priority signal that is proportional to the storage index:
     sample = rb.sample()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 525-526
+.. GENERATED FROM PYTHON SOURCE LINES 542-543
 
 higher indices should occur more frequently:
 
-.. GENERATED FROM PYTHON SOURCE LINES 526-531
+.. GENERATED FROM PYTHON SOURCE LINES 543-548
 
 .. code-block:: Python
 
@@ -952,7 +749,7 @@ higher indices should occur more frequently:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 532-538
+.. GENERATED FROM PYTHON SOURCE LINES 549-555
 
 Once we have worked with our sample, we update the priority key using
 the :meth:`torchrl.data.TensorDictReplayBuffer.update_tensordict_priority`
@@ -961,7 +758,7 @@ For the sake of showing how this works, let us revert the priority of the
 sampled items:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 538-542
+.. GENERATED FROM PYTHON SOURCE LINES 555-559
 
 .. code-block:: Python
 
@@ -970,11 +767,11 @@ sampled items:
     rb.update_tensordict_priority(sample)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 543-544
+.. GENERATED FROM PYTHON SOURCE LINES 560-561
 
 Now, higher indices should occur less frequently:
 
-.. GENERATED FROM PYTHON SOURCE LINES 544-550
+.. GENERATED FROM PYTHON SOURCE LINES 561-567
 
 .. code-block:: Python
 
@@ -985,7 +782,7 @@ Now, higher indices should occur less frequently:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 551-574
+.. GENERATED FROM PYTHON SOURCE LINES 568-591
 
 Using transforms
 ----------------
@@ -1011,7 +808,7 @@ The following script show how one can build a collector that returns only
 the raw images but uses the transformed ones for inference, and how these
 transformations can be recycled in the replay buffer:
 
-.. GENERATED FROM PYTHON SOURCE LINES 574-589
+.. GENERATED FROM PYTHON SOURCE LINES 591-606
 
 .. code-block:: Python
 
@@ -1031,11 +828,11 @@ transformations can be recycled in the replay buffer:
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 590-591
+.. GENERATED FROM PYTHON SOURCE LINES 607-608
 
 let us have a look at a rollout:
 
-.. GENERATED FROM PYTHON SOURCE LINES 591-595
+.. GENERATED FROM PYTHON SOURCE LINES 608-612
 
 .. code-block:: Python
 
@@ -1044,7 +841,7 @@ let us have a look at a rollout:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 596-601
+.. GENERATED FROM PYTHON SOURCE LINES 613-618
 
 We have just created an environment that produces pixels. These images
 are processed to be fed to a policy.
@@ -1052,7 +849,7 @@ We would like to store the raw images, and not their transforms.
 To do this, we will append a transform to the collector to select the keys
 we want to see appearing:
 
-.. GENERATED FROM PYTHON SOURCE LINES 601-613
+.. GENERATED FROM PYTHON SOURCE LINES 618-630
 
 .. code-block:: Python
 
@@ -1069,12 +866,12 @@ we want to see appearing:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 614-616
+.. GENERATED FROM PYTHON SOURCE LINES 631-633
 
 Let us have a look at a batch of data, and control that the
 ``"pixels_trsf"`` keys have been discarded:
 
-.. GENERATED FROM PYTHON SOURCE LINES 616-623
+.. GENERATED FROM PYTHON SOURCE LINES 633-640
 
 .. code-block:: Python
 
@@ -1086,7 +883,7 @@ Let us have a look at a batch of data, and control that the
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 624-633
+.. GENERATED FROM PYTHON SOURCE LINES 641-650
 
 We create a replay buffer with the same transform as the environment.
 There is, however, a detail that needs to be addressed: transforms
@@ -1098,7 +895,7 @@ Nevertheless, our data comes with a nested "next" tensordict that will be
 ignored by our transform if we don't explicitly instruct it to take care of
 it. We manually add these keys to the transform:
 
-.. GENERATED FROM PYTHON SOURCE LINES 633-647
+.. GENERATED FROM PYTHON SOURCE LINES 650-664
 
 .. code-block:: Python
 
@@ -1117,12 +914,12 @@ it. We manually add these keys to the transform:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 648-650
+.. GENERATED FROM PYTHON SOURCE LINES 665-667
 
 We can check that a ``sample`` method sees the transformed images reappear:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 650-653
+.. GENERATED FROM PYTHON SOURCE LINES 667-670
 
 .. code-block:: Python
 
@@ -1130,7 +927,7 @@ We can check that a ``sample`` method sees the transformed images reappear:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 654-665
+.. GENERATED FROM PYTHON SOURCE LINES 671-682
 
 A more complex examples: using CatFrames
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1144,7 +941,7 @@ problematic when the n-back window needs to be different (usually longer)
 during training and inference. We solve this problem by executing the
 ``CatFrames`` transform separately in the two phases.
 
-.. GENERATED FROM PYTHON SOURCE LINES 665-668
+.. GENERATED FROM PYTHON SOURCE LINES 682-685
 
 .. code-block:: Python
 
@@ -1152,12 +949,12 @@ during training and inference. We solve this problem by executing the
     from torchrl.envs import CatFrames, UnsqueezeTransform
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 669-671
+.. GENERATED FROM PYTHON SOURCE LINES 686-688
 
 We create a standard list of transforms for environments that return pixel-based
 observations:
 
-.. GENERATED FROM PYTHON SOURCE LINES 671-691
+.. GENERATED FROM PYTHON SOURCE LINES 688-708
 
 .. code-block:: Python
 
@@ -1182,13 +979,13 @@ observations:
         break
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 692-695
+.. GENERATED FROM PYTHON SOURCE LINES 709-712
 
 The buffer transform looks pretty much like the environment one, but with
 extra ``("next", ...)`` keys like before:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 695-709
+.. GENERATED FROM PYTHON SOURCE LINES 712-726
 
 .. code-block:: Python
 
@@ -1207,14 +1004,14 @@ extra ``("next", ...)`` keys like before:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 710-714
+.. GENERATED FROM PYTHON SOURCE LINES 727-731
 
 Let us sample one element from the buffer. The shape of the transformed
 pixel keys should have a length of 4 along the 4th dimension starting from
 the end:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 714-718
+.. GENERATED FROM PYTHON SOURCE LINES 731-735
 
 .. code-block:: Python
 
@@ -1223,12 +1020,12 @@ the end:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 719-721
+.. GENERATED FROM PYTHON SOURCE LINES 736-738
 
 After a bit of processing (excluding non-used keys etc), we see that the
 data generated online and offline match!
 
-.. GENERATED FROM PYTHON SOURCE LINES 721-724
+.. GENERATED FROM PYTHON SOURCE LINES 738-741
 
 .. code-block:: Python
 
@@ -1236,7 +1033,7 @@ data generated online and offline match!
     assert (data.exclude("collector") == s.squeeze(0).exclude("index", "collector")).all()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 725-737
+.. GENERATED FROM PYTHON SOURCE LINES 742-754
 
 Conclusion
 ----------
@@ -1254,9 +1051,9 @@ You should now be able to:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 54.290 seconds)
+   **Total running time of the script:** (0 minutes 0.309 seconds)
 
-**Estimated memory usage:**  4453 MB
+**Estimated memory usage:**  536 MB
 
 
 .. _sphx_glr_download_tutorials_rb_tutorial.py:

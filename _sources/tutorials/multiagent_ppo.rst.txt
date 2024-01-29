@@ -1066,8 +1066,8 @@ The steps include:
         with torch.no_grad():
             GAE(
                 tensordict_data,
-                params=loss_module.critic_params,
-                target_params=loss_module.target_critic_params,
+                params=loss_module.critic_network_params,
+                target_params=loss_module.target_critic_network_params,
             )  # Compute GAE and add it to the data
 
         data_view = tensordict_data.reshape(-1)  # Flatten the batch size to shuffle data
@@ -1112,7 +1112,7 @@ The steps include:
 
  .. code-block:: none
 
-    episode_reward_mean = 0:   0%|          | 0/10 [00:00<?, ?it/s]    episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:12<01:49, 12.17s/it]    episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:24<01:37, 12.16s/it]     episode_reward_mean = 1.0600677728652954:  30%|███       | 3/10 [00:36<01:25, 12.15s/it]    episode_reward_mean = 1.4344534873962402:  40%|████      | 4/10 [00:48<01:12, 12.15s/it]    episode_reward_mean = 2.1100871562957764:  50%|█████     | 5/10 [01:00<01:00, 12.15s/it]    episode_reward_mean = 2.304917335510254:  60%|██████    | 6/10 [01:12<00:48, 12.15s/it]     episode_reward_mean = 2.6943857669830322:  70%|███████   | 7/10 [01:25<00:36, 12.16s/it]    episode_reward_mean = 2.871443748474121:  80%|████████  | 8/10 [01:37<00:24, 12.25s/it]     episode_reward_mean = 2.8500826358795166:  90%|█████████ | 9/10 [01:50<00:12, 12.36s/it]    episode_reward_mean = 2.759843587875366: 100%|██████████| 10/10 [02:03<00:00, 12.55s/it]
+    episode_reward_mean = 0:   0%|          | 0/10 [00:00<?, ?it/s]    episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:11<01:42, 11.34s/it]    episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:22<01:30, 11.34s/it]     episode_reward_mean = 1.0384122133255005:  30%|███       | 3/10 [00:33<01:19, 11.33s/it]    episode_reward_mean = 1.4766207933425903:  40%|████      | 4/10 [00:45<01:07, 11.32s/it]    episode_reward_mean = 2.1231958866119385:  50%|█████     | 5/10 [00:56<00:56, 11.34s/it]    episode_reward_mean = 2.2764601707458496:  60%|██████    | 6/10 [01:08<00:45, 11.37s/it]    episode_reward_mean = 2.6702916622161865:  70%|███████   | 7/10 [01:19<00:34, 11.38s/it]    episode_reward_mean = 2.791975259780884:  80%|████████  | 8/10 [01:31<00:22, 11.46s/it]     episode_reward_mean = 2.7550878524780273:  90%|█████████ | 9/10 [01:43<00:11, 11.63s/it]    episode_reward_mean = 2.8176751136779785: 100%|██████████| 10/10 [01:55<00:00, 11.85s/it]
 
 
 
@@ -1240,9 +1240,9 @@ Here are a few videos of some possible scenarios you can try in VMAS.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (3 minutes 1.961 seconds)
+   **Total running time of the script:** (2 minutes 48.708 seconds)
 
-**Estimated memory usage:**  15 MB
+**Estimated memory usage:**  145 MB
 
 
 .. _sphx_glr_download_tutorials_multiagent_ppo.py:

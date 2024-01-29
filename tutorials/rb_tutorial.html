@@ -419,6 +419,12 @@ example:</p>
 <span class="n">buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/rb_tutorial.py&quot;</span>, line <span class="m">62</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="k">assert</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_start_method</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;fork&quot;</span>
+<span class="gr">AssertionError</span>
+</pre></div>
+</div>
 <p>By default, this replay buffer will have a size of 1000. Let’s check this
 by populating our buffer using the <a class="reference internal" href="../reference/generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.extend" title="torchrl.data.ReplayBuffer.extend"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torchrl.data.ReplayBuffer.extend()</span></code></a>
 method:</p>
@@ -429,11 +435,7 @@ method:</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;length after adding elements:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">))</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class"><span class="n">TensorDict</span></a>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>length before adding elements: 0
-length after adding elements: 1000
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a>
 </pre></div>
 </div>
 <p>We have used the <a class="reference internal" href="../reference/generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.extend" title="torchrl.data.ReplayBuffer.extend"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torchrl.data.ReplayBuffer.extend()</span></code></a> method which is
@@ -487,9 +489,6 @@ change the <code class="docutils literal notranslate"><span class="pre">collate_
 <span class="nb">print</span><span class="p">(</span><span class="n">buffer_list</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;a&#39;, &#39;a&#39;, &#39;a&#39;]
-</pre></div>
-</div>
 <p>Because it is the one with the lowest amount of assumption, the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.ListStorage</span></code> is the default storage in TorchRL.</p>
 <p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.LazyTensorStorage</span></code> can store data contiguously.
@@ -500,7 +499,7 @@ unchanging data structures of medium size:</p>
 </div>
 <p>Let us create a batch of data of size <a href="#id1"><span class="problematic" id="id2">``</span></a>torch.Size([3])` with 2 tensors
 stored in it:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class"><span class="n">TensorDict</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">&quot;a&quot;</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/generated/torch.arange.html#torch.arange" title="torch.arange" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
         <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span> <a href="https://pytorch.org/docs/stable/generated/torch.arange.html#torch.arange" title="torch.arange" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
@@ -510,20 +509,6 @@ stored in it:</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorDict(
-    fields={
-        a: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.int64, is_shared=False),
-        b: TensorDict(
-            fields={
-                c: Tensor(shape=torch.Size([3, 5]), device=cpu, dtype=torch.int64, is_shared=False)},
-            batch_size=torch.Size([3]),
-            device=None,
-            is_shared=False)},
-    batch_size=torch.Size([3]),
-    device=None,
-    is_shared=False)
-</pre></div>
-</div>
 <p>The first call to <a class="reference internal" href="../reference/generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.extend" title="torchrl.data.ReplayBuffer.extend"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torchrl.data.ReplayBuffer.extend()</span></code></a> will
 instantiate the storage. The first dimension of the data is unbound into
 separate datapoints:</p>
@@ -531,23 +516,9 @@ separate datapoints:</p>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The buffer has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">buffer_lazytensor</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-</pre></div>
-</div>
 <p>Let us sample from the buffer, and print the data:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">buffer_lazytensor</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">],</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>samples tensor([[ 0,  1,  2,  3],
-        [ 8,  9, 10, 11],
-        [ 8,  9, 10, 11],
-        [ 4,  5,  6,  7],
-        [ 4,  5,  6,  7]]) tensor([[ 0,  1,  2,  3,  4],
-        [10, 11, 12, 13, 14],
-        [10, 11, 12, 13, 14],
-        [ 5,  6,  7,  8,  9],
-        [ 5,  6,  7,  8,  9]])
 </pre></div>
 </div>
 <p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.data.LazyMemmapStorage</span></code> is created in the same manner:</p>
@@ -556,19 +527,6 @@ separate datapoints:</p>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The buffer has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">buffer_lazymemmap</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements&quot;</span><span class="p">)</span>
 <span class="n">sample</span> <span class="o">=</span> <span class="n">buffer_lazytensor</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;samples: a=&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">],</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">(&#39;b&#39;, &#39;c&#39;):&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-samples: a= tensor([[ 0,  1,  2,  3],
-        [ 0,  1,  2,  3],
-        [ 8,  9, 10, 11],
-        [ 8,  9, 10, 11],
-        [ 4,  5,  6,  7]])
-(&#39;b&#39;, &#39;c&#39;): tensor([[ 0,  1,  2,  3,  4],
-        [ 0,  1,  2,  3,  4],
-        [10, 11, 12, 13, 14],
-        [10, 11, 12, 13, 14],
-        [ 5,  6,  7,  8,  9]])
 </pre></div>
 </div>
 <p>We can also customize the storage location on disk:</p>
@@ -581,11 +539,6 @@ samples: a= tensor([[ 0,  1,  2,  3],
     <span class="s2">&quot;the (&#39;b&#39;, &#39;c&#39;) tensor is stored in&quot;</span><span class="p">,</span>
     <span class="n">buffer_lazymemmap</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-the &#39;a&#39; tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmpm_soz1gw&#39;&gt;/a.memmap
-the (&#39;b&#39;, &#39;c&#39;) tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmpm_soz1gw&#39;&gt;/b/c.memmap
 </pre></div>
 </div>
 </section>
@@ -614,29 +567,10 @@ generally be used interchangeably.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sample:&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-sample: TensorDict(
-    fields={
-        a: Tensor(shape=torch.Size([12, 4]), device=cpu, dtype=torch.int64, is_shared=False),
-        b: TensorDict(
-            fields={
-                c: Tensor(shape=torch.Size([12, 5]), device=cpu, dtype=torch.int64, is_shared=False)},
-            batch_size=torch.Size([12]),
-            device=cpu,
-            is_shared=False),
-        index: Tensor(shape=torch.Size([12]), device=cpu, dtype=torch.int64, is_shared=False)},
-    batch_size=torch.Size([12]),
-    device=cpu,
-    is_shared=False)
-</pre></div>
-</div>
 <p>Our sample now has an extra <code class="docutils literal notranslate"><span class="pre">&quot;index&quot;</span></code> key that indicates what indices
 were sampled.
 Let us have a look at these indices:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>tensor([1, 0, 1, 0, 2, 2, 2, 0, 2, 2, 2, 0])
 </pre></div>
 </div>
 <section id="integration-with-tensorclass">
@@ -649,8 +583,8 @@ encode datasets in a more explicit manner:</p>
 
 <span class="nd">@tensorclass</span>
 <span class="k">class</span> <span class="nc">MyData</span><span class="p">:</span>
-    <span class="n">images</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></a>
-    <span class="n">labels</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></a>
+    <span class="n">images</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></a>
+    <span class="n">labels</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></a>
 
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">MyData</span><span class="p">(</span>
@@ -670,15 +604,6 @@ encode datasets in a more explicit manner:</p>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The buffer has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">buffer_lazymemmap</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements&quot;</span><span class="p">)</span>
 <span class="n">sample</span> <span class="o">=</span> <span class="n">buffer_lazymemmap</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sample:&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 1000 elements
-sample: MyData(
-    images=Tensor(shape=torch.Size([12, 64, 64, 3]), device=cpu, dtype=torch.int64, is_shared=False),
-    labels=Tensor(shape=torch.Size([12]), device=cpu, dtype=torch.int64, is_shared=False),
-    batch_size=torch.Size([12]),
-    device=cpu,
-    is_shared=False)
 </pre></div>
 </div>
 <p>As expected. the data has the proper class and shape!</p>
@@ -752,28 +677,6 @@ or <a class="reference internal" href="../reference/generated/torchrl.data.repla
 <span class="n">buffer_lazymemmap</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/rb_tutorial.py&quot;</span>, line <span class="m">334</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="n">buffer_lazymemmap</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py&quot;</span>, line <span class="m">443</span>, in <span class="n">extend</span>
-<span class="w">    </span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py&quot;</span>, line <span class="m">413</span>, in <span class="n">_extend</span>
-<span class="w">    </span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/writers.py&quot;</span>, line <span class="m">140</span>, in <span class="n">extend</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/storages.py&quot;</span>, line <span class="m">101</span>, in <span class="n">__setitem__</span>
-<span class="w">    </span><span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/storages.py&quot;</span>, line <span class="m">543</span>, in <span class="n">set</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">))</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_pytree.py&quot;</span>, line <span class="m">898</span>, in <span class="n">tree_map</span>
-<span class="w">    </span><span class="k">return</span> <span class="n">treespec</span><span class="o">.</span><span class="n">unflatten</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">flat_args</span><span class="p">))</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_pytree.py&quot;</span>, line <span class="m">734</span>, in <span class="n">unflatten</span>
-<span class="w">    </span><span class="n">leaves</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">leaves</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/storages.py&quot;</span>, line <span class="m">543</span>, in <span class="n">&lt;lambda&gt;</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">))</span>
-<span class="gr">IndexError</span>: <span class="n">invalid index of a 0-dim tensor. Use `tensor.item()` in Python or `tensor.item&lt;T&gt;()` in C++ to convert a 0-dim tensor to a number</span>
-</pre></div>
-</div>
 <p>This batch of data has the size that we wanted it to have (128).</p>
 <p>To enable multithreaded sampling, just pass a positive integer to the
 <code class="docutils literal notranslate"><span class="pre">prefetch</span></code> keyword argument during construction. This should speed up
@@ -808,7 +711,7 @@ instead, which will transform our buffer into a finite iterator:</p>
 </pre></div>
 </div>
 <p>we create a data that is big enough to get a couple of samples</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class"><span class="n">TensorDict</span></a><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">&quot;a&quot;</span><span class="p">:</span> <a href="https://pytorch.org/docs/stable/generated/torch.arange.html#torch.arange" title="torch.arange" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
         <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span> <a href="https://pytorch.org/docs/stable/generated/torch.arange.html#torch.arange" title="torch.arange" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">1024</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
@@ -1130,8 +1033,8 @@ You should now be able to:</p>
 <li><p>Choose the best storage type for your problem (list, memory or disk-based);</p></li>
 <li><p>Minimize the memory footprint of your buffer.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 54.290 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  4453 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.309 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  536 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-rb-tutorial-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/c64b1e484ba3e0219549719cc3c37479/rb_tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">rb_tutorial.ipynb</span></code></a></p>
