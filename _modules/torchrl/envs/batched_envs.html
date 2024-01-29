@@ -396,7 +396,7 @@
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_check_for_faulty_process</span><span class="p">,</span> <span class="n">_ProcessNoWarn</span><span class="p">,</span> <span class="n">VERBOSE</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">CompositeSpec</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">CloudpickleWrapper</span><span class="p">,</span> <span class="n">contains_lazy_spec</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">EnvBase</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_EnvPostInit</span><span class="p">,</span> <span class="n">EnvBase</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.env_creator</span> <span class="kn">import</span> <span class="n">get_env_metadata</span>
 
 <span class="c1"># legacy</span>
@@ -475,6 +475,19 @@
     <span class="k">return</span> <span class="n">new_fun</span>
 
 
+<span class="k">class</span> <span class="nc">_PEnvMeta</span><span class="p">(</span><span class="n">_EnvPostInit</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">serial_for_single</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;serial_for_single&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">serial_for_single</span><span class="p">:</span>
+            <span class="n">num_workers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_workers&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">num_workers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">num_workers</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># We still use a serial to keep the shape unchanged</span>
+                <span class="k">return</span> <span class="n">SerialEnv</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
 <span class="k">class</span> <span class="nc">_BatchedEnv</span><span class="p">(</span><span class="n">EnvBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Batched environments allow the user to query an arbitrary method / attribute of the environment running remotely.</span>
 
@@ -491,12 +504,14 @@
 <span class="sd">            If a single task is used, a callable should be used and not a list of identical callables:</span>
 <span class="sd">            if a list of callable is provided, the environment will be executed as if multiple, diverse tasks were</span>
 <span class="sd">            needed, which comes with a slight compute overhead;</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        create_env_kwargs (dict or list of dicts, optional): kwargs to be used with the environments being created;</span>
 <span class="sd">        share_individual_td (bool, optional): if ``True``, a different tensordict is created for every process/worker and a lazy</span>
 <span class="sd">            stack is returned.</span>
 <span class="sd">            default = None (False if single task);</span>
-<span class="sd">        shared_memory (bool): whether or not the returned tensordict will be placed in shared memory;</span>
-<span class="sd">        memmap (bool): whether or not the returned tensordict will be placed in memory map.</span>
+<span class="sd">        shared_memory (bool): whether the returned tensordict will be placed in shared memory;</span>
+<span class="sd">        memmap (bool): whether the returned tensordict will be placed in memory map.</span>
 <span class="sd">        policy_proof (callable, optional): if provided, it&#39;ll be used to get the list of</span>
 <span class="sd">            tensors to return through the :obj:`step()` and :obj:`reset()` methods, such as :obj:`&quot;hidden&quot;` etc.</span>
 <span class="sd">        device (str, int, torch.device): The device of the batched environment can be passed.</span>
@@ -518,7 +533,84 @@
 <span class="sd">            Defaults to 1 for safety: if none is indicated, launching multiple</span>
 <span class="sd">            workers may charge the cpu load too much and harm performance.</span>
 <span class="sd">            This parameter has no effect for the :class:`~SerialEnv` class.</span>
+<span class="sd">        serial_for_single (bool, optional): if ``True``, creating a parallel environment</span>
+<span class="sd">            with a single worker will return a :class:`~SerialEnv` instead.</span>
+<span class="sd">            This option has no effect with :class:`~SerialEnv`. Defaults to ``False``.</span>
 
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import GymEnv, ParallelEnv, SerialEnv, EnvCreator</span>
+<span class="sd">        &gt;&gt;&gt; make_env = EnvCreator(lambda: GymEnv(&quot;Pendulum-v1&quot;)) # EnvCreator ensures that the env is sharable. Optional in most cases.</span>
+<span class="sd">        &gt;&gt;&gt; env = SerialEnv(2, make_env)  # Makes 2 identical copies of the Pendulum env, runs them on the same process serially</span>
+<span class="sd">        &gt;&gt;&gt; env = ParallelEnv(2, make_env)  # Makes 2 identical copies of the Pendulum env, runs them on dedicated processes</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import DMControlEnv</span>
+<span class="sd">        &gt;&gt;&gt; env = ParallelEnv(2, [</span>
+<span class="sd">        ...     lambda: DMControlEnv(&quot;humanoid&quot;, &quot;stand&quot;),</span>
+<span class="sd">        ...     lambda: DMControlEnv(&quot;humanoid&quot;, &quot;walk&quot;)])  # Creates two independent copies of Humanoid, one that walks one that stands</span>
+<span class="sd">        &gt;&gt;&gt; r = env.rollout(10)  # executes 10 random steps in the environment</span>
+<span class="sd">        &gt;&gt;&gt; r[0]  # data for Humanoid stand</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([10]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([10]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; r[1]  # data for Humanoid walk</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                        truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([10]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="sd">                truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([10]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; env = ParallelEnv(1, make_env, serial_for_single=True)</span>
+<span class="sd">        &gt;&gt;&gt; assert isinstance(env, SerialEnv)  # serial_for_single allows you to avoid creating parallel envs when not necessary</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">VERBOSE</span>
@@ -533,6 +625,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">create_env_fn</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">EnvBase</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">EnvBase</span><span class="p">]]],</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">create_env_kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">pin_memory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">share_individual_td</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -543,8 +636,10 @@
         <span class="n">allow_step_when_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">num_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_sub_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">serial_for_single</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serial_for_single</span> <span class="o">=</span> <span class="n">serial_for_single</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_threads</span> <span class="o">=</span> <span class="n">num_workers</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># 1 more thread for this proc</span>
@@ -1131,7 +1226,7 @@
         <span class="k">return</span> <span class="bp">self</span></div></div>
 
 
-<div class="viewcode-block" id="ParallelEnv"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.ParallelEnv.html#torchrl.envs.ParallelEnv">[docs]</a><span class="k">class</span> <span class="nc">ParallelEnv</span><span class="p">(</span><span class="n">_BatchedEnv</span><span class="p">):</span>
+<div class="viewcode-block" id="ParallelEnv"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.ParallelEnv.html#torchrl.envs.ParallelEnv">[docs]</a><span class="k">class</span> <span class="nc">ParallelEnv</span><span class="p">(</span><span class="n">_BatchedEnv</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">_PEnvMeta</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates one environment per process.</span>
 
 <span class="sd">    TensorDicts are passed via shared memory or memory map.</span>

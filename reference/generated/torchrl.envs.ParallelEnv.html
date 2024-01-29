@@ -401,12 +401,16 @@ creation.
 If a single task is used, a callable should be used and not a list of identical callables:
 if a list of callable is provided, the environment will be executed as if multiple, diverse tasks were
 needed, which comes with a slight compute overhead;</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>create_env_kwargs</strong> (<em>dict</em><em> or </em><em>list of dicts</em><em>, </em><em>optional</em>) – kwargs to be used with the environments being created;</p></li>
 <li><p><strong>share_individual_td</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, a different tensordict is created for every process/worker and a lazy
 stack is returned.
 default = None (False if single task);</p></li>
-<li><p><strong>shared_memory</strong> (<em>bool</em>) – whether or not the returned tensordict will be placed in shared memory;</p></li>
-<li><p><strong>memmap</strong> (<em>bool</em>) – whether or not the returned tensordict will be placed in memory map.</p></li>
+<li><p><strong>shared_memory</strong> (<em>bool</em>) – whether the returned tensordict will be placed in shared memory;</p></li>
+<li><p><strong>memmap</strong> (<em>bool</em>) – whether the returned tensordict will be placed in memory map.</p></li>
 <li><p><strong>policy_proof</strong> (<em>callable</em><em>, </em><em>optional</em>) – if provided, it’ll be used to get the list of
 tensors to return through the <a class="reference internal" href="torchrl.envs.ModelBasedEnvBase.html#torchrl.envs.step" title="torchrl.envs.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step()</span></code></a> and <a class="reference internal" href="torchrl.envs.ModelBasedEnvBase.html#torchrl.envs.reset" title="torchrl.envs.reset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset()</span></code></a> methods, such as <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;hidden&quot;</span></code> etc.</p></li>
 <li><p><strong>device</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a>) – The device of the batched environment can be passed.
@@ -428,9 +432,88 @@ This parameter has no effect for the <a class="reference internal" href="torchrl
 Defaults to 1 for safety: if none is indicated, launching multiple
 workers may charge the cpu load too much and harm performance.
 This parameter has no effect for the <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a> class.</p></li>
+<li><p><strong>serial_for_single</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, creating a parallel environment
+with a single worker will return a <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a> instead.
+This option has no effect with <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">GymEnv</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">,</span> <span class="n">SerialEnv</span><span class="p">,</span> <span class="n">EnvCreator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_env</span> <span class="o">=</span> <span class="n">EnvCreator</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">))</span> <span class="c1"># EnvCreator ensures that the env is sharable. Optional in most cases.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">SerialEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">make_env</span><span class="p">)</span>  <span class="c1"># Makes 2 identical copies of the Pendulum env, runs them on the same process serially</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">make_env</span><span class="p">)</span>  <span class="c1"># Makes 2 identical copies of the Pendulum env, runs them on dedicated processes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">DMControlEnv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="k">lambda</span><span class="p">:</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="k">lambda</span><span class="p">:</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">)])</span>  <span class="c1"># Creates two independent copies of Humanoid, one that walks one that stands</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># executes 10 random steps in the environment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># data for Humanoid stand</span>
+<span class="go">TensorDict(</span>
+<span class="go">    fields={</span>
+<span class="go">        action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        next: TensorDict(</span>
+<span class="go">            fields={</span>
+<span class="go">                com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                reward: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="go">            batch_size=torch.Size([10]),</span>
+<span class="go">            device=cpu,</span>
+<span class="go">            is_shared=False),</span>
+<span class="go">        terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="go">    batch_size=torch.Size([10]),</span>
+<span class="go">    device=cpu,</span>
+<span class="go">    is_shared=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># data for Humanoid walk</span>
+<span class="go">TensorDict(</span>
+<span class="go">    fields={</span>
+<span class="go">        action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        next: TensorDict(</span>
+<span class="go">            fields={</span>
+<span class="go">                com_velocity: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                done: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                extremities: Tensor(shape=torch.Size([10, 12]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                head_height: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                joint_angles: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                reward: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">                truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="go">            batch_size=torch.Size([10]),</span>
+<span class="go">            device=cpu,</span>
+<span class="go">            is_shared=False),</span>
+<span class="go">        terminated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        torso_vertical: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float64, is_shared=False),</span>
+<span class="go">        truncated: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        velocity: Tensor(shape=torch.Size([10, 27]), device=cpu, dtype=torch.float64, is_shared=False)},</span>
+<span class="go">    batch_size=torch.Size([10]),</span>
+<span class="go">    device=cpu,</span>
+<span class="go">    is_shared=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">make_env</span><span class="p">,</span> <span class="n">serial_for_single</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">SerialEnv</span><span class="p">)</span>  <span class="c1"># serial_for_single allows you to avoid creating parallel envs when not necessary</span>
+</pre></div>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>TorchRL’s ParallelEnv is quite stringent when it comes to env specs, since

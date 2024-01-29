@@ -202,7 +202,7 @@ change the ``collate_fn`` since the default expects numerical data):
 
  .. code-block:: none
 
-    ['b', 0, 'a']
+    ['a', 0, 'a']
 
 
 
@@ -321,13 +321,13 @@ Let us sample from the buffer, and print the data:
 
  .. code-block:: none
 
-    samples tensor([[ 8,  9, 10, 11],
-            [ 0,  1,  2,  3],
-            [ 0,  1,  2,  3],
+    samples tensor([[ 4,  5,  6,  7],
+            [ 4,  5,  6,  7],
+            [ 4,  5,  6,  7],
             [ 8,  9, 10, 11],
-            [ 0,  1,  2,  3]]) tensor([[10, 11, 12, 13, 14],
-            [ 0,  1,  2,  3,  4],
-            [ 0,  1,  2,  3,  4],
+            [ 0,  1,  2,  3]]) tensor([[ 5,  6,  7,  8,  9],
+            [ 5,  6,  7,  8,  9],
+            [ 5,  6,  7,  8,  9],
             [10, 11, 12, 13, 14],
             [ 0,  1,  2,  3,  4]])
 
@@ -361,14 +361,14 @@ A :class:`torchrl.data.LazyMemmapStorage` is created in the same manner:
     The buffer has 3 elements
     samples: a= tensor([[ 0,  1,  2,  3],
             [ 8,  9, 10, 11],
-            [ 4,  5,  6,  7],
             [ 8,  9, 10, 11],
-            [ 0,  1,  2,  3]]) 
+            [ 0,  1,  2,  3],
+            [ 4,  5,  6,  7]]) 
     ('b', 'c'): tensor([[ 0,  1,  2,  3,  4],
             [10, 11, 12, 13, 14],
-            [ 5,  6,  7,  8,  9],
             [10, 11, 12, 13, 14],
-            [ 0,  1,  2,  3,  4]])
+            [ 0,  1,  2,  3,  4],
+            [ 5,  6,  7,  8,  9]])
 
 
 
@@ -402,8 +402,8 @@ We can also customize the storage location on disk:
  .. code-block:: none
 
     The buffer has 3 elements
-    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpda1p_qf9'>/a.memmap
-    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpda1p_qf9'>/b/c.memmap
+    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpg6dn49ri'>/a.memmap
+    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpg6dn49ri'>/b/c.memmap
 
 
 
@@ -490,7 +490,7 @@ Let us have a look at these indices:
 
  .. code-block:: none
 
-    tensor([2, 1, 2, 1, 1, 1, 2, 2, 2, 1, 0, 0])
+    tensor([2, 2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0])
 
 
 
@@ -1254,9 +1254,9 @@ You should now be able to:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 53.589 seconds)
+   **Total running time of the script:** (0 minutes 54.008 seconds)
 
-**Estimated memory usage:**  4169 MB
+**Estimated memory usage:**  4107 MB
 
 
 .. _sphx_glr_download_tutorials_rb_tutorial.py:
