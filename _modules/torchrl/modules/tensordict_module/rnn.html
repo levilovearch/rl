@@ -383,7 +383,7 @@
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">TensorDictModuleBase</span> <span class="k">as</span> <span class="n">ModuleBase</span>
 
 <span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">NO_DEFAULT</span>
-<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">expand_as_right</span><span class="p">,</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">expand_as_right</span><span class="p">,</span> <span class="n">prod</span><span class="p">,</span> <span class="n">set_lazy_legacy</span>
 
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn.modules.rnn</span> <span class="kn">import</span> <span class="n">RNNCellBase</span>
@@ -1668,7 +1668,8 @@
         <span class="n">out</span><span class="o">.</span><span class="n">_recurrent_mode</span> <span class="o">=</span> <span class="n">mode</span>
         <span class="k">return</span> <span class="n">out</span></div>
 
-<div class="viewcode-block" id="GRUModule.forward"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.GRUModule.html#torchrl.modules.GRUModule.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">):</span>
+<div class="viewcode-block" id="GRUModule.forward"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.GRUModule.html#torchrl.modules.GRUModule.forward">[docs]</a>    <span class="nd">@set_lazy_legacy</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">):</span>
         <span class="c1"># we want to get an error if the value input is missing, but not the hidden states</span>
         <span class="n">defaults</span> <span class="o">=</span> <span class="p">[</span><span class="n">NO_DEFAULT</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span>
@@ -1689,8 +1690,6 @@
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tensordict_shaped</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c1"># TODO: replace by contiguous, or ultimately deprecate the default lazy unsqueeze</span>
-        <span class="n">tensordict_shaped</span> <span class="o">=</span> <span class="n">tensordict_shaped</span><span class="o">.</span><span class="n">to_tensordict</span><span class="p">()</span>
 
         <span class="n">is_init</span> <span class="o">=</span> <span class="n">tensordict_shaped</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_init&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">splits</span> <span class="o">=</span> <span class="kc">None</span>

@@ -593,15 +593,13 @@ initialize them before creating an optimizer and such.
             done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
             embed: Tensor(shape=torch.Size([128]), device=cpu, dtype=torch.float32, is_shared=False),
             is_init: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
-            next: _SqueezedTensorDict(
-            	source=TensorDict(
-            	    fields={
-            	        recurrent_state_c: Tensor(shape=torch.Size([1, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-            	        recurrent_state_h: Tensor(shape=torch.Size([1, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False)},
-            	    batch_size=torch.Size([1]),
-            	    device=cpu,
-            	    is_shared=False), 
-            	op=squeeze(dim=0)),
+            next: TensorDict(
+                fields={
+                    recurrent_state_c: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
+                    recurrent_state_h: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False)},
+                batch_size=torch.Size([]),
+                device=cpu,
+                is_shared=False),
             pixels: Tensor(shape=torch.Size([1, 84, 84]), device=cpu, dtype=torch.float32, is_shared=False),
             recurrent_state_c: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
             recurrent_state_h: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
@@ -790,7 +788,7 @@ every 50 data collection, and plot the results after training.
         batch_size=torch.Size([50]),
         device=cpu,
         is_shared=False)
-      0%|          | 50/1000000 [00:00<2:26:58, 113.39it/s]      0%|          | 50/1000000 [00:18<2:26:58, 113.39it/s]    steps: 10, loss_val:  0.0004, action_spread: tensor([ 3, 47]):   0%|          | 50/1000000 [00:36<2:26:58, 113.39it/s]    steps: 10, loss_val:  0.0004, action_spread: tensor([ 3, 47]):   0%|          | 100/1000000 [00:36<119:41:12,  2.32it/s]    steps: 10, loss_val:  0.0003, action_spread: tensor([ 4, 46]):   0%|          | 100/1000000 [01:12<119:41:12,  2.32it/s]    steps: 10, loss_val:  0.0003, action_spread: tensor([ 4, 46]):   0%|          | 150/1000000 [01:13<157:03:37,  1.77it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 150/1000000 [01:48<157:03:37,  1.77it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 200/1000000 [01:49<174:49:39,  1.59it/s]    steps: 18, loss_val:  0.0003, action_spread: tensor([37, 13]):   0%|          | 200/1000000 [02:25<174:49:39,  1.59it/s]
+      0%|          | 50/1000000 [00:00<2:16:20, 122.24it/s]      0%|          | 50/1000000 [00:18<2:16:20, 122.24it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([43,  7]):   0%|          | 50/1000000 [00:35<2:16:20, 122.24it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([43,  7]):   0%|          | 100/1000000 [00:36<118:44:48,  2.34it/s]    steps: 15, loss_val:  0.0004, action_spread: tensor([13, 37]):   0%|          | 100/1000000 [01:11<118:44:48,  2.34it/s]    steps: 15, loss_val:  0.0004, action_spread: tensor([13, 37]):   0%|          | 150/1000000 [01:12<155:26:24,  1.79it/s]    steps: 15, loss_val:  0.0005, action_spread: tensor([45,  5]):   0%|          | 150/1000000 [01:47<155:26:24,  1.79it/s]    steps: 15, loss_val:  0.0005, action_spread: tensor([45,  5]):   0%|          | 200/1000000 [01:48<172:50:51,  1.61it/s]    steps: 17, loss_val:  0.0004, action_spread: tensor([10, 40]):   0%|          | 200/1000000 [02:23<172:50:51,  1.61it/s]
 
 
 
@@ -846,9 +844,9 @@ Further Reading
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (3 minutes 27.108 seconds)
+   **Total running time of the script:** (3 minutes 25.097 seconds)
 
-**Estimated memory usage:**  1925 MB
+**Estimated memory usage:**  1914 MB
 
 
 .. _sphx_glr_download_tutorials_dqn_with_rnn.py:

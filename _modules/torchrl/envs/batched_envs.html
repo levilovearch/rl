@@ -719,7 +719,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">=</span> <span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;full_done_spec&quot;</span><span class="p">]</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_dummy_env_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span> <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">],</span> <span class="mi">0</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_locked</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">batch_locked</span>
@@ -834,7 +834,7 @@
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">tensordict</span> <span class="ow">in</span> <span class="n">shared_tensordict_parent</span>
             <span class="p">]</span>
-            <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
                 <span class="n">shared_tensordict_parent</span><span class="p">,</span>
                 <span class="mi">0</span><span class="p">,</span>
             <span class="p">)</span>
@@ -845,7 +845,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">td</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Multi-task: we share tensordict that *may* have different keys</span>
                 <span class="c1"># LazyStacked already stores this so we don&#39;t need to do anything</span>

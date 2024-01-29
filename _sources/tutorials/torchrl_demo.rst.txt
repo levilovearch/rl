@@ -322,26 +322,20 @@ Here are some other functionalities of TensorDict.
  .. code-block:: none
 
     view(-1):  torch.Size([10]) torch.Size([10, 1])
-    to device:  LazyStackedTensorDict(
+    to device:  TensorDict(
         fields={
             key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),
             key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=False)},
-        exclusive_fields={
-        },
         batch_size=torch.Size([2, 5]),
         device=cpu,
-        is_shared=False,
-        stack_dim=0)
-    share memory:  LazyStackedTensorDict(
+        is_shared=False)
+    share memory:  TensorDict(
         fields={
-            key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-            key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=False)},
-        exclusive_fields={
-        },
+            key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=True),
+            key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=True)},
         batch_size=torch.Size([2, 5]),
         device=None,
-        is_shared=True,
-        stack_dim=0)
+        is_shared=True)
     permute(1, 0):  torch.Size([5, 2]) torch.Size([5, 2, 1])
     expand:  torch.Size([3, 2, 5]) torch.Size([3, 2, 5, 1])
 
@@ -518,15 +512,12 @@ Here are examples of using a replaybuffer with tensordicts.
  .. code-block:: none
 
     3
-    LazyStackedTensorDict(
+    TensorDict(
         fields={
             a: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float32, is_shared=False)},
-        exclusive_fields={
-        },
         batch_size=torch.Size([10]),
         device=None,
-        is_shared=False,
-        stack_dim=0)
+        is_shared=False)
     TensorDict(
         fields={
             a: Tensor(shape=torch.Size([2, 3]), device=cpu, dtype=torch.float32, is_shared=False)},
@@ -1604,32 +1595,26 @@ Using Environments and Modules
  .. code-block:: none
 
     total steps: 99
-    LazyStackedTensorDict(
+    TensorDict(
         fields={
             action: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.float32, is_shared=False),
             done: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            next: LazyStackedTensorDict(
+            next: TensorDict(
                 fields={
                     done: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
                     observation: Tensor(shape=torch.Size([100, 3]), device=cpu, dtype=torch.float32, is_shared=False),
                     reward: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.float32, is_shared=False),
                     terminated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
                     truncated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-                exclusive_fields={
-                },
                 batch_size=torch.Size([100]),
                 device=cpu,
-                is_shared=False,
-                stack_dim=0),
+                is_shared=False),
             observation: Tensor(shape=torch.Size([100, 3]), device=cpu, dtype=torch.float32, is_shared=False),
             terminated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
             truncated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-        exclusive_fields={
-        },
         batch_size=torch.Size([100]),
         device=cpu,
-        is_shared=False,
-        stack_dim=0)
+        is_shared=False)
 
 
 
@@ -2027,7 +2012,7 @@ The library is on PyPI: *pip install torchrl*
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (3 minutes 58.158 seconds)
+   **Total running time of the script:** (3 minutes 55.646 seconds)
 
 **Estimated memory usage:**  16 MB
 

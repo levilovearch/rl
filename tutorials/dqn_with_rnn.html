@@ -725,15 +725,13 @@ initialize them before creating an optimizer and such.</p>
         done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
         embed: Tensor(shape=torch.Size([128]), device=cpu, dtype=torch.float32, is_shared=False),
         is_init: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
-        next: _SqueezedTensorDict(
-            source=TensorDict(
-                fields={
-                    recurrent_state_c: Tensor(shape=torch.Size([1, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-                    recurrent_state_h: Tensor(shape=torch.Size([1, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False)},
-                batch_size=torch.Size([1]),
-                device=cpu,
-                is_shared=False),
-            op=squeeze(dim=0)),
+        next: TensorDict(
+            fields={
+                recurrent_state_c: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
+                recurrent_state_h: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False)},
+            batch_size=torch.Size([]),
+            device=cpu,
+            is_shared=False),
         pixels: Tensor(shape=torch.Size([1, 84, 84]), device=cpu, dtype=torch.float32, is_shared=False),
         recurrent_state_c: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
         recurrent_state_h: Tensor(shape=torch.Size([1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
@@ -866,15 +864,15 @@ Pay attention to the key names which will reflect what can be found in this data
     device=cpu,
     is_shared=False)
 
-  0%|          | 50/1000000 [00:00&lt;2:26:58, 113.39it/s]
-  0%|          | 50/1000000 [00:18&lt;2:26:58, 113.39it/s]
-steps: 10, loss_val:  0.0004, action_spread: tensor([ 3, 47]):   0%|          | 50/1000000 [00:36&lt;2:26:58, 113.39it/s]
-steps: 10, loss_val:  0.0004, action_spread: tensor([ 3, 47]):   0%|          | 100/1000000 [00:36&lt;119:41:12,  2.32it/s]
-steps: 10, loss_val:  0.0003, action_spread: tensor([ 4, 46]):   0%|          | 100/1000000 [01:12&lt;119:41:12,  2.32it/s]
-steps: 10, loss_val:  0.0003, action_spread: tensor([ 4, 46]):   0%|          | 150/1000000 [01:13&lt;157:03:37,  1.77it/s]
-steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 150/1000000 [01:48&lt;157:03:37,  1.77it/s]
-steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 200/1000000 [01:49&lt;174:49:39,  1.59it/s]
-steps: 18, loss_val:  0.0003, action_spread: tensor([37, 13]):   0%|          | 200/1000000 [02:25&lt;174:49:39,  1.59it/s]
+  0%|          | 50/1000000 [00:00&lt;2:16:20, 122.24it/s]
+  0%|          | 50/1000000 [00:18&lt;2:16:20, 122.24it/s]
+steps: 11, loss_val:  0.0004, action_spread: tensor([43,  7]):   0%|          | 50/1000000 [00:35&lt;2:16:20, 122.24it/s]
+steps: 11, loss_val:  0.0004, action_spread: tensor([43,  7]):   0%|          | 100/1000000 [00:36&lt;118:44:48,  2.34it/s]
+steps: 15, loss_val:  0.0004, action_spread: tensor([13, 37]):   0%|          | 100/1000000 [01:11&lt;118:44:48,  2.34it/s]
+steps: 15, loss_val:  0.0004, action_spread: tensor([13, 37]):   0%|          | 150/1000000 [01:12&lt;155:26:24,  1.79it/s]
+steps: 15, loss_val:  0.0005, action_spread: tensor([45,  5]):   0%|          | 150/1000000 [01:47&lt;155:26:24,  1.79it/s]
+steps: 15, loss_val:  0.0005, action_spread: tensor([45,  5]):   0%|          | 200/1000000 [01:48&lt;172:50:51,  1.61it/s]
+steps: 17, loss_val:  0.0004, action_spread: tensor([10, 40]):   0%|          | 200/1000000 [02:23&lt;172:50:51,  1.61it/s]
 </pre></div>
 </div>
 <p>Let’s plot our results:</p>
@@ -906,8 +904,8 @@ the data</p></li>
 <ul class="simple">
 <li><p>The TorchRL documentation can be found <a class="reference external" href="https://pytorch.org/rl/">here</a>.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 27.108 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  1925 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 25.097 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  1914 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-dqn-with-rnn-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/28be785bad9a380ed2a853d865b074b9/dqn_with_rnn.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">dqn_with_rnn.ipynb</span></code></a></p>

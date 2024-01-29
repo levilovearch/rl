@@ -391,6 +391,7 @@
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">is_tensor_collection</span><span class="p">,</span>
     <span class="n">NonTensorData</span><span class="p">,</span>
+    <span class="n">set_lazy_legacy</span><span class="p">,</span>
     <span class="n">unravel_key</span><span class="p">,</span>
     <span class="n">unravel_key_list</span><span class="p">,</span>
 <span class="p">)</span>
@@ -3254,6 +3255,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unfolding</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span></div>
 
+    <span class="nd">@set_lazy_legacy</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">unfolding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
         <span class="c1"># it is assumed that the last dimension of the tensordict is the time dimension</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
@@ -3343,6 +3345,8 @@
                 <span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">out_key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tensordict_orig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">tensordict</span><span class="p">:</span>
+            <span class="n">tensordict_orig</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tensordict_orig</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

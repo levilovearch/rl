@@ -521,26 +521,20 @@ True
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>view(-1):  torch.Size([10]) torch.Size([10, 1])
-to device:  LazyStackedTensorDict(
+to device:  TensorDict(
     fields={
         key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),
         key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=False)},
-    exclusive_fields={
-    },
     batch_size=torch.Size([2, 5]),
     device=cpu,
-    is_shared=False,
-    stack_dim=0)
-share memory:  LazyStackedTensorDict(
+    is_shared=False)
+share memory:  TensorDict(
     fields={
-        key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-        key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=False)},
-    exclusive_fields={
-    },
+        key 1: Tensor(shape=torch.Size([2, 5, 1]), device=cpu, dtype=torch.float32, is_shared=True),
+        key 2: Tensor(shape=torch.Size([2, 5, 5, 6]), device=cpu, dtype=torch.bool, is_shared=True)},
     batch_size=torch.Size([2, 5]),
     device=None,
-    is_shared=True,
-    stack_dim=0)
+    is_shared=True)
 permute(1, 0):  torch.Size([5, 2]) torch.Size([5, 2, 1])
 expand:  torch.Size([3, 2, 5]) torch.Size([3, 2, 5, 1])
 </pre></div>
@@ -617,15 +611,12 @@ expand:  torch.Size([3, 2, 5]) torch.Size([3, 2, 5, 1])
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>3
-LazyStackedTensorDict(
+TensorDict(
     fields={
         a: Tensor(shape=torch.Size([10, 3]), device=cpu, dtype=torch.float32, is_shared=False)},
-    exclusive_fields={
-    },
     batch_size=torch.Size([10]),
     device=None,
-    is_shared=False,
-    stack_dim=0)
+    is_shared=False)
 TensorDict(
     fields={
         a: Tensor(shape=torch.Size([2, 3]), device=cpu, dtype=torch.float32, is_shared=False)},
@@ -1244,41 +1235,35 @@ TensorDict(
     <span class="k">if</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict</span></a><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">break</span>
     <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict</span></a> <span class="o">=</span> <span class="n">step_mdp</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordict</span></a><span class="p">)</span>  <span class="c1"># roughly equivalent to obs = next_obs</span>
-<a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.stack.html#torch.stack" title="torch.stack" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">stack</span></a><span class="p">(</span><span class="n">tensordicts</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.stack.html#torch.stack" title="torch.stack" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">stack</span></a><span class="p">(</span><span class="n">tensordicts</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;total steps:&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a><span class="p">)</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>total steps: 99
-LazyStackedTensorDict(
+TensorDict(
     fields={
         action: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.float32, is_shared=False),
         done: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-        next: LazyStackedTensorDict(
+        next: TensorDict(
             fields={
                 done: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
                 observation: Tensor(shape=torch.Size([100, 3]), device=cpu, dtype=torch.float32, is_shared=False),
                 reward: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.float32, is_shared=False),
                 terminated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
                 truncated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-            exclusive_fields={
-            },
             batch_size=torch.Size([100]),
             device=cpu,
-            is_shared=False,
-            stack_dim=0),
+            is_shared=False),
         observation: Tensor(shape=torch.Size([100, 3]), device=cpu, dtype=torch.float32, is_shared=False),
         terminated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False),
         truncated: Tensor(shape=torch.Size([100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-    exclusive_fields={
-    },
     batch_size=torch.Size([100]),
     device=cpu,
-    is_shared=False,
-    stack_dim=0)
+    is_shared=False)
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a> <span class="o">==</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_prealloc</span></a><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_stack</span></a> <span class="o">==</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tensordicts_prealloc</span></a><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>True
@@ -1516,7 +1501,7 @@ Since the library is nascent, it is a great time for you to shape it the way you
 <section id="installing-the-library">
 <h2>Installing the Library<a class="headerlink" href="#installing-the-library" title="Permalink to this heading">¶</a></h2>
 <p>The library is on PyPI: <em>pip install torchrl</em></p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 58.158 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 55.646 seconds)</p>
 <p><strong>Estimated memory usage:</strong>  16 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-torchrl-demo-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
