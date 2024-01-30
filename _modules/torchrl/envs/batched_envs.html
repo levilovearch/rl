@@ -376,6 +376,7 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
@@ -389,9 +390,8 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">LazyStackedTensorDict</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">tensordict._tensordict</span> <span class="kn">import</span> <span class="n">_unravel_key_to_tuple</span><span class="p">,</span> <span class="n">unravel_key</span>
-<span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">LazyStackedTensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">multiprocessing</span> <span class="k">as</span> <span class="n">mp</span>
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_check_for_faulty_process</span><span class="p">,</span> <span class="n">_ProcessNoWarn</span><span class="p">,</span> <span class="n">VERBOSE</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">CompositeSpec</span>
@@ -641,8 +641,6 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serial_for_single</span> <span class="o">=</span> <span class="n">serial_for_single</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">num_threads</span> <span class="o">=</span> <span class="n">num_workers</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># 1 more thread for this proc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_sub_threads</span> <span class="o">=</span> <span class="n">num_sub_threads</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">num_threads</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_in_keys</span> <span class="o">=</span> <span class="kc">None</span>
@@ -781,6 +779,15 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_dummy_env_str</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">env_str</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span>
+            <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># In other cases, the device will be mapped later</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
+                <span class="n">device_map</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">device_map</span>
+
+                <span class="k">def</span> <span class="nf">map_device</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">device_map</span><span class="o">=</span><span class="n">device_map</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device_map</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">named_apply</span><span class="p">(</span><span class="n">map_device</span><span class="p">,</span> <span class="n">nested_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_locked</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">batch_locked</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="o">*</span><span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">batch_size</span><span class="p">])</span>
@@ -947,11 +954,10 @@
                 <span class="c1"># Multi-task: we share tensordict that *may* have different keys</span>
                 <span class="c1"># LazyStacked already stores this so we don&#39;t need to do anything</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_memory</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memmap</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">memmap_</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_memory</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memmap</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">memmap_</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_share_memory</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
@@ -996,6 +1002,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_workers</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="kn">import</span> <span class="nn">torchrl</span>
+
+        <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL_INIT</span><span class="p">,</span> <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+        <span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_shutdown_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -1047,6 +1059,8 @@
 
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_num_workers</span><span class="p">):</span>
             <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_env_fn</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">create_env_kwargs</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -1137,6 +1151,8 @@
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
@@ -1178,6 +1194,8 @@
             <span class="n">out</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_step_keys</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
@@ -1221,8 +1239,7 @@
             <span class="k">return</span> <span class="bp">self</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span><span class="p">:</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span> <span class="o">=</span> <span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span></div></div>
 
 
@@ -1368,7 +1385,17 @@
     <span class="k">def</span> <span class="nf">_start_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">torchrl.envs.env_creator</span> <span class="kn">import</span> <span class="n">EnvCreator</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">torchrl</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+            <span class="p">)</span>  <span class="c1"># 1 more thread for this proc</span>
+
         <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">torchrl</span>
+
+        <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
 
         <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
 
@@ -1377,7 +1404,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">parent_channels</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">func</span> <span class="o">=</span> <span class="n">_run_worker_pipe_shared_mem</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+        <span class="c1"># We look for cuda tensors through the leaves</span>
+        <span class="c1"># because the shared tensordict could be partially on cuda</span>
+        <span class="c1"># and some leaves may be inaccessible through get (e.g., LazyStacked)</span>
+        <span class="n">has_cuda</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">look_for_cuda</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">has_cuda</span><span class="o">=</span><span class="n">has_cuda</span><span class="p">):</span>
+            <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">tensor</span><span class="o">.</span><span class="n">is_cuda</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">look_for_cuda</span><span class="p">)</span>
+        <span class="n">has_cuda</span> <span class="o">=</span> <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">has_cuda</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1494,9 +1531,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
             <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
             <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
+            <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
         <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">next_td</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_</span></div>
 
@@ -1626,6 +1666,8 @@
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
@@ -1750,7 +1792,18 @@
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">shared_tensordict</span><span class="o">.</span><span class="n">device</span>
-    <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+        <span class="c1"># Check if some tensors are shared on cuda</span>
+        <span class="n">has_cuda</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">look_for_cuda</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">has_cuda</span><span class="o">=</span><span class="n">has_cuda</span><span class="p">):</span>
+            <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">tensor</span><span class="o">.</span><span class="n">is_cuda</span>
+
+        <span class="n">shared_tensordict</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">look_for_cuda</span><span class="p">)</span>
+        <span class="n">has_cuda</span> <span class="o">=</span> <span class="n">has_cuda</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">has_cuda</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span>
+    <span class="k">if</span> <span class="n">has_cuda</span><span class="p">:</span>
         <span class="n">event</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">event</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1774,7 +1827,7 @@
     <span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">child_pipe</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;started&quot;</span><span class="p">)</span>
-
+    <span class="n">next_shared_tensordict</span><span class="p">,</span> <span class="n">root_shared_tensordict</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">2</span>
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">child_pipe</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="n">_timeout</span><span class="p">):</span>
@@ -1823,42 +1876,49 @@
                 <span class="n">event</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
             <span class="n">mp_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">cur_td</span>
 
         <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">initialized</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;called &#39;init&#39; before step&quot;</span><span class="p">)</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">env_input</span> <span class="o">=</span> <span class="n">shared_tensordict</span>
-            <span class="n">next_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">env_input</span><span class="p">)</span>
+            <span class="n">next_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">shared_tensordict</span><span class="p">)</span>
             <span class="n">next_shared_tensordict</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span><span class="n">next_td</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
             <span class="n">mp_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">next_td</span>
 
         <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;step_and_maybe_reset&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">initialized</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;called &#39;init&#39; before step&quot;</span><span class="p">)</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">env_input</span> <span class="o">=</span> <span class="n">shared_tensordict</span>
-            <span class="n">td</span><span class="p">,</span> <span class="n">root_next_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step_and_maybe_reset</span><span class="p">(</span><span class="n">env_input</span><span class="p">)</span>
+            <span class="n">td</span><span class="p">,</span> <span class="n">root_next_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step_and_maybe_reset</span><span class="p">(</span><span class="n">shared_tensordict</span><span class="p">)</span>
             <span class="n">next_shared_tensordict</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">))</span>
             <span class="n">root_shared_tensordict</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span><span class="n">root_next_td</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
             <span class="n">mp_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">td</span><span class="p">,</span> <span class="n">root_next_td</span>
 
         <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">shared_tensordict</span><span class="p">,</span> <span class="n">data</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">initialized</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;call &#39;init&#39; before closing&quot;</span><span class="p">)</span>
             <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">del</span> <span class="n">env</span>
+            <span class="k">del</span> <span class="p">(</span>
+                <span class="n">env</span><span class="p">,</span>
+                <span class="n">shared_tensordict</span><span class="p">,</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="n">next_shared_tensordict</span><span class="p">,</span>
+                <span class="n">root_shared_tensordict</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">mp_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
             <span class="n">child_pipe</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> closed&quot;</span><span class="p">)</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
             <span class="k">break</span>
 
         <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;load_state_dict&quot;</span><span class="p">:</span>
@@ -1869,6 +1929,7 @@
             <span class="n">state_dict</span> <span class="o">=</span> <span class="n">_recursively_strip_locks_from_state_dict</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;state_dict&quot;</span>
             <span class="n">child_pipe</span><span class="o">.</span><span class="n">send</span><span class="p">((</span><span class="n">msg</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">))</span>
+            <span class="k">del</span> <span class="n">state_dict</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> from env&quot;</span>

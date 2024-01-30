@@ -448,7 +448,7 @@ a simple signature.</p>
 <li><p>they are stateful objects: they contain a copy of the trainable parameters
 such that <code class="docutils literal notranslate"><span class="pre">loss_module.parameters()</span></code> gives whatever is needed to train the
 algorithm.</p></li>
-<li><p>They follow the <code class="docutils literal notranslate"><span class="pre">tensordict</span></code> convention: the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.forward" title="(in PyTorch v2.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code></a>
+<li><p>They follow the <code class="docutils literal notranslate"><span class="pre">tensordict</span></code> convention: the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.forward" title="(in PyTorch v2.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code></a>
 method will receive a tensordict as input that contains all the necessary
 information to return a loss value.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">replay_buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
@@ -679,7 +679,7 @@ To do this, we will rely on the value estimator of our class:</p>
 <p>The only missing piece is the forward method, which will glue together the
 value and actor loss, collect the cost values and write them in a tensordict
 delivered to the user.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="tensordict.TensorDictBase" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictBase</span></a>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="tensordict.TensorDictBase" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictBase</span></a>
 
 
 <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tensordict</span><span class="p">:</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="tensordict.TensorDictBase" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictBase</span></a><span class="p">)</span> <span class="o">-&gt;</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDict</span></a><span class="p">:</span>
@@ -1003,7 +1003,7 @@ value network, trained to estimate the value of a state-action pair, and a
 parametric actor that learns how to select actions that maximize this value.</p>
 <p>Recall that building a TorchRL module requires two steps:</p>
 <ul class="simple">
-<li><p>writing the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code></a> that will be used as network,</p></li>
+<li><p>writing the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code></a> that will be used as network,</p></li>
 <li><p>wrapping the network in a <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.TensorDictModule</span></code></a> where the
 data flow is handled by specifying the input and output keys.</p></li>
 </ul>
@@ -1501,8 +1501,8 @@ loss component;</p></li>
 <li><p>How to use (or not) a target network, and how to update its parameters;</p></li>
 <li><p>How to create an optimizer associated with a loss module.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.312 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  536 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.313 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  555 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-coding-ddpg-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/7ef773e36507adbc389133424f663224/coding_ddpg.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">coding_ddpg.ipynb</span></code></a></p>

@@ -447,7 +447,7 @@ parameters for both policy and critic losses.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.actors</span> <span class="kn">import</span> <span class="n">ProbabilisticActor</span><span class="p">,</span> <span class="n">ValueOperator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.common</span> <span class="kn">import</span> <span class="n">SafeModule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.objectives.sac</span> <span class="kn">import</span> <span class="n">SACLoss</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n_act</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">BoundedTensorSpec</span><span class="p">(</span><span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_act</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_act</span><span class="p">),</span> <span class="p">(</span><span class="n">n_act</span><span class="p">,))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">NormalParamWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_act</span><span class="p">))</span>
@@ -585,7 +585,7 @@ backpropagation.</p>
 <dd><p>Copy parameters and buffers from <a class="reference internal" href="#torchrl.objectives.SACLoss.state_dict" title="torchrl.objectives.SACLoss.state_dict"><code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code></a> into this module and its descendants.</p>
 <p>If <code class="xref py py-attr docutils literal notranslate"><span class="pre">strict</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, then
 the keys of <a class="reference internal" href="#torchrl.objectives.SACLoss.state_dict" title="torchrl.objectives.SACLoss.state_dict"><code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code></a> must exactly match the keys returned
-by this module’s <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" title="(in PyTorch v2.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> function.</p>
+by this module’s <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" title="(in PyTorch v2.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> function.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>If <code class="xref py py-attr docutils literal notranslate"><span class="pre">assign</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> the optimizer must be created after
@@ -598,7 +598,7 @@ the call to <a class="reference internal" href="#torchrl.objectives.SACLoss.load
 persistent buffers.</p></li>
 <li><p><strong>strict</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to strictly enforce that the keys
 in <a class="reference internal" href="#torchrl.objectives.SACLoss.state_dict" title="torchrl.objectives.SACLoss.state_dict"><code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code></a> match the keys returned by this module’s
-<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" title="(in PyTorch v2.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> function. Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" title="(in PyTorch v2.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> function. Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 <li><p><strong>assign</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to assign items in the state
 dictionary to their corresponding keys in the module instead
 of copying them inplace into the module’s current parameters and buffers.
@@ -698,7 +698,7 @@ Otherwise, an <code class="docutils literal notranslate"><span class="pre">Order
 Default: <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – a prefix added to parameter and buffer
 names to compose the keys in state_dict. Default: <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p></li>
-<li><p><strong>keep_vars</strong> (<em>bool</em><em>, </em><em>optional</em>) – by default the <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a> s
+<li><p><strong>keep_vars</strong> (<em>bool</em><em>, </em><em>optional</em>) – by default the <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a> s
 returned in the state dict are detached from autograd. If it’s
 set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, detaching will not be performed.
 Default: <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>

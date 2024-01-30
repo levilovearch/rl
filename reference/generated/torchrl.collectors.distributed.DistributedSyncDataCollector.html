@@ -381,7 +381,7 @@
 <h1>DistributedSyncDataCollector<a class="headerlink" href="#distributedsyncdatacollector" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchrl.collectors.distributed.DistributedSyncDataCollector">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.collectors.distributed.</span></span><span class="sig-name descname"><span class="pre">DistributedSyncDataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">create_env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames_per_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_frames_per_traj=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_random_frames=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_at_each_iter=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postproc=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_trajs=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_type=InteractionType.RANDOM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_when_done=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector_class=&lt;class</span> <span class="pre">'torchrl.collectors.collectors.SyncDataCollector'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers_per_collector=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend='gloo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storing_device='cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight_update_interval=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_interval=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launcher='submitit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tcp_port=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/collectors/distributed/sync.html#DistributedSyncDataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.collectors.distributed.DistributedSyncDataCollector" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.collectors.distributed.</span></span><span class="sig-name descname"><span class="pre">DistributedSyncDataCollector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">create_env_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames_per_batch:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_frames:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device:</span> <span class="pre">torch.device</span> <span class="pre">|</span> <span class="pre">List[torch.device]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storing_device:</span> <span class="pre">torch.device</span> <span class="pre">|</span> <span class="pre">List[torch.device]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_device:</span> <span class="pre">torch.device</span> <span class="pre">|</span> <span class="pre">List[torch.device]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_device:</span> <span class="pre">torch.device</span> <span class="pre">|</span> <span class="pre">List[torch.device]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_frames_per_traj:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_random_frames:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_at_each_iter:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postproc:</span> <span class="pre">Callable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_trajs:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_type:</span> <span class="pre">ExporationType</span> <span class="pre">=</span> <span class="pre">InteractionType.RANDOM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_mode:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector_class=&lt;class</span> <span class="pre">'torchrl.collectors.collectors.SyncDataCollector'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collector_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers_per_collector=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend='gloo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight_update_interval=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_interval=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">launcher='submitit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tcp_port=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/collectors/distributed/sync.html#DistributedSyncDataCollector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.collectors.distributed.DistributedSyncDataCollector" title="Permalink to this definition">¶</a></dt>
 <dd><p>A distributed synchronous data collector with torch.distributed backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -393,6 +393,10 @@ Must accept <code class="xref py py-class docutils literal notranslate"><span cl
 If <code class="docutils literal notranslate"><span class="pre">None</span></code> is provided, the policy used will be a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">RandomPolicy</span></code> instance with the environment
 <code class="docutils literal notranslate"><span class="pre">action_spec</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>frames_per_batch</strong> (<em>int</em>) – A keyword-only argument representing the total
 number of elements in a batch.</p></li>
 <li><p><strong>total_frames</strong> (<em>int</em>) – <p>A keyword-only argument representing the total
@@ -400,22 +404,58 @@ number of frames returned by the collector
 during its lifespan. If the <code class="docutils literal notranslate"><span class="pre">total_frames</span></code> is not divisible by
 <code class="docutils literal notranslate"><span class="pre">frames_per_batch</span></code>, an exception is raised.</p>
 <blockquote>
-<div><p>Endless collectors can be created by passing <code class="docutils literal notranslate"><span class="pre">total_frames=-1</span></code>.</p>
+<div><p>Endless collectors can be created by passing <code class="docutils literal notranslate"><span class="pre">total_frames=-1</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (endless collector).</p>
 </div></blockquote>
 </p></li>
+<li><p><strong>device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The generic device of the
+collector. The <code class="docutils literal notranslate"><span class="pre">device</span></code> args fills any non-specified device: if
+<code class="docutils literal notranslate"><span class="pre">device</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code> and any of <code class="docutils literal notranslate"><span class="pre">storing_device</span></code>, <code class="docutils literal notranslate"><span class="pre">policy_device</span></code> or
+<code class="docutils literal notranslate"><span class="pre">env_device</span></code> is not specified, its value will be set to <code class="docutils literal notranslate"><span class="pre">device</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (No default device).
+Lists of devices are supported.</p></li>
+<li><p><strong>storing_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The <em>remote</em> device on which
+the output <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorDict</span></code></a> will be stored.
+If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed and <code class="docutils literal notranslate"><span class="pre">storing_device</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, it will
+default to the value indicated by <code class="docutils literal notranslate"><span class="pre">device</span></code>.
+For long trajectories, it may be necessary to store the data on a different
+device than the one where the policy and env are executed.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (the output tensordict isn’t on a specific device,
+leaf tensors sit on the device where they were created).
+Lists of devices are supported.</p></li>
+<li><p><strong>env_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The <em>remote</em> device on which
+the environment should be cast (or executed if that functionality is
+supported). If not specified and the env has a non-<code class="docutils literal notranslate"><span class="pre">None</span></code> device,
+<code class="docutils literal notranslate"><span class="pre">env_device</span></code> will default to that value. If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed
+and <code class="docutils literal notranslate"><span class="pre">env_device=None</span></code>, it will default to <code class="docutils literal notranslate"><span class="pre">device</span></code>. If the value
+as such specified of <code class="docutils literal notranslate"><span class="pre">env_device</span></code> differs from <code class="docutils literal notranslate"><span class="pre">policy_device</span></code>
+and one of them is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, the data will be cast to <code class="docutils literal notranslate"><span class="pre">env_device</span></code>
+before being passed to the env (i.e., passing different devices to
+policy and env is supported). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Lists of devices are supported.</p></li>
+<li><p><strong>policy_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The <em>remote</em> device on which
+the policy should be cast.
+If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed and <code class="docutils literal notranslate"><span class="pre">policy_device=None</span></code>, it will default
+to <code class="docutils literal notranslate"><span class="pre">device</span></code>. If the value as such specified of <code class="docutils literal notranslate"><span class="pre">policy_device</span></code>
+differs from <code class="docutils literal notranslate"><span class="pre">env_device</span></code> and one of them is not <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the data will be cast to <code class="docutils literal notranslate"><span class="pre">policy_device</span></code> before being passed to
+the policy (i.e., passing different devices to policy and env is
+supported). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Lists of devices are supported.</p></li>
 <li><p><strong>max_frames_per_traj</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum steps per trajectory.
-Note that a trajectory can span over multiple batches (unless
+Note that a trajectory can span across multiple batches (unless
 <code class="docutils literal notranslate"><span class="pre">reset_at_each_iter</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, see below).
 Once a trajectory reaches <code class="docutils literal notranslate"><span class="pre">n_steps</span></code>, the environment is reset.
 If the environment wraps multiple environments together, the number
 of steps is tracked for each environment independently. Negative
 values are allowed, in which case this argument is ignored.
-Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (i.e. no maximum number of steps).</p></li>
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (i.e., no maximum number of steps).</p></li>
 <li><p><strong>init_random_frames</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of frames for which the
 policy is ignored before it is called. This feature is mainly
 intended to be used in offline/model-based settings, where a
 batch of random trajectories can be used to initialize training.
-Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (i.e. no random frames).</p></li>
+If provided, it will be rounded up to the closest multiple of frames_per_batch.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (i.e. no random frames).</p></li>
 <li><p><strong>reset_at_each_iter</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether environments should be reset
 at the beginning of a batch collection.
 Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
@@ -428,14 +468,11 @@ TensorDict should be split according to the trajectories.
 See <a class="reference internal" href="torchrl.collectors.utils.split_trajectories.html#torchrl.collectors.utils.split_trajectories" title="torchrl.collectors.utils.split_trajectories"><code class="xref py py-func docutils literal notranslate"><span class="pre">split_trajectories()</span></code></a> for more
 information.
 Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>exploration_type</strong> (<em>str</em><em>, </em><em>optional</em>) – interaction mode to be used when
-collecting data. Must be one of <code class="docutils literal notranslate"><span class="pre">&quot;random&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mode&quot;</span></code> or
-<code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>.
-Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;random&quot;</span></code></p></li>
-<li><p><strong>reset_when_done</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), an environment
-that return a <code class="docutils literal notranslate"><span class="pre">True</span></code> value in its <code class="docutils literal notranslate"><span class="pre">&quot;done&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code>
-entry will be reset at the corresponding indices.</p></li>
-<li><p><strong>collector_class</strong> (<em>type</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – a collector class for the remote node. Can be
+<li><p><strong>exploration_type</strong> (<em>ExplorationType</em><em>, </em><em>optional</em>) – interaction mode to be used when
+collecting data. Must be one of <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.RANDOM</span></code>,
+<code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.MODE</span></code> or <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.MEAN</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.RANDOM</span></code>.</p></li>
+<li><p><strong>collector_class</strong> (<a class="reference internal" href="torchrl.data.MultiStep.html#torchrl.data.MultiStep.type" title="torchrl.data.MultiStep.type"><em>type</em></a><em> or </em><em>str</em><em>, </em><em>optional</em>) – a collector class for the remote node. Can be
 <code class="xref py py-class docutils literal notranslate"><span class="pre">SyncDataCollector</span></code>,
 <code class="xref py py-class docutils literal notranslate"><span class="pre">MultiSyncDataCollector</span></code>,
 <code class="xref py py-class docutils literal notranslate"><span class="pre">MultiaSyncDataCollector</span></code>
@@ -459,8 +496,14 @@ submitit executor.</p></li>
 &lt;distributed_backed&gt; is one of <code class="docutils literal notranslate"><span class="pre">&quot;gloo&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mpi&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;nccl&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;ucc&quot;</span></code>. See
 the torch.distributed documentation for more information.
 Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;gloo&quot;</span></code>.</p></li>
-<li><p><strong>storing_device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a><em> or </em><em>compatible</em><em>, </em><em>optional</em>) – the device where the
-data will be delivered. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code>.</p></li>
+<li><p><strong>max_weight_update_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – the maximum number of
+batches that can be collected before the policy weights of a worker
+is updated.
+For sync collections, this parameter is overwritten by <code class="docutils literal notranslate"><span class="pre">update_after_each_batch</span></code>.
+For async collections, it may be that one worker has not seen its
+parameters being updated for a certain time even if <code class="docutils literal notranslate"><span class="pre">update_after_each_batch</span></code>
+is turned on.
+Defaults to -1 (no forced update).</p></li>
 <li><p><strong>update_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – the frequency at which the policy is
 updated. Defaults to 1.</p></li>
 <li><p><strong>launcher</strong> (<em>str</em><em>, </em><em>optional</em>) – how jobs should be launched.

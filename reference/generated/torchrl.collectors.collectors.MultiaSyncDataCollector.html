@@ -448,39 +448,66 @@ instance of <a class="reference internal" href="torchrl.envs.EnvBase.html#torchr
 <li><p><strong>policy</strong> (<em>Callable</em><em>, </em><em>optional</em>) – Instance of TensorDictModule class.
 Must accept TensorDictBase object as input.
 If <code class="docutils literal notranslate"><span class="pre">None</span></code> is provided, the policy used will be a
-<a class="reference internal" href="torchrl.collectors.collectors.RandomPolicy.html#torchrl.collectors.collectors.RandomPolicy" title="torchrl.collectors.collectors.RandomPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomPolicy</span></code></a> instance with the environment
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RandomPolicy</span></code> instance with the environment
 <code class="docutils literal notranslate"><span class="pre">action_spec</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>frames_per_batch</strong> (<em>int</em>) – A keyword-only argument representing the
 total number of elements in a batch.</p></li>
-<li><p><strong>total_frames</strong> (<em>int</em>) – <p>A keyword-only argument representing the
+<li><p><strong>total_frames</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>A keyword-only argument representing the
 total number of frames returned by the collector
 during its lifespan. If the <code class="docutils literal notranslate"><span class="pre">total_frames</span></code> is not divisible by
 <code class="docutils literal notranslate"><span class="pre">frames_per_batch</span></code>, an exception is raised.</p>
 <blockquote>
-<div><p>Endless collectors can be created by passing <code class="docutils literal notranslate"><span class="pre">total_frames=-1</span></code>.</p>
+<div><p>Endless collectors can be created by passing <code class="docutils literal notranslate"><span class="pre">total_frames=-1</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (never ending collector).</p>
 </div></blockquote>
 </p></li>
-<li><p><strong>device</strong> (<em>int</em><em>, </em><em>str</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a><em> or </em><em>sequence of such</em><em>, </em><em>optional</em>) – The device on which the policy will be placed.
-If it differs from the input policy device, the
-<a class="reference internal" href="#torchrl.collectors.collectors.MultiaSyncDataCollector.update_policy_weights_" title="torchrl.collectors.collectors.MultiaSyncDataCollector.update_policy_weights_"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_policy_weights_()</span></code></a> method should be queried
-at appropriate times during the training loop to accommodate for
-the lag between parameter configuration at various times.
-If necessary, a list of devices can be passed in which case each
-element will correspond to the designated device of a sub-collector.
-Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (i.e. policy is kept on its original device).</p></li>
-<li><p><strong>storing_device</strong> (<em>int</em><em>, </em><em>str</em><em>, </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.1)"><em>torch.device</em></a><em> or </em><em>sequence of such</em><em>, </em><em>optional</em>) – The device on which the output <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> will
-be stored. For long trajectories, it may be necessary to store the
-data on a different device than the one where the policy and env
-are executed.
-If necessary, a list of devices can be passed in which case each
-element will correspond to the designated storing device of a
-sub-collector.
-Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code>.</p></li>
+<li><p><strong>device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The generic device of the
+collector. The <code class="docutils literal notranslate"><span class="pre">device</span></code> args fills any non-specified device: if
+<code class="docutils literal notranslate"><span class="pre">device</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code> and any of <code class="docutils literal notranslate"><span class="pre">storing_device</span></code>, <code class="docutils literal notranslate"><span class="pre">policy_device</span></code> or
+<code class="docutils literal notranslate"><span class="pre">env_device</span></code> is not specified, its value will be set to <code class="docutils literal notranslate"><span class="pre">device</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (No default device).
+Supports a list of devices if one wishes to indicate a different device
+for each worker. The list must be as long as the number of workers.</p></li>
+<li><p><strong>storing_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The device on which
+the output <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorDict</span></code></a> will be stored.
+If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed and <code class="docutils literal notranslate"><span class="pre">storing_device</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, it will
+default to the value indicated by <code class="docutils literal notranslate"><span class="pre">device</span></code>.
+For long trajectories, it may be necessary to store the data on a different
+device than the one where the policy and env are executed.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> (the output tensordict isn’t on a specific device,
+leaf tensors sit on the device where they were created).
+Supports a list of devices if one wishes to indicate a different device
+for each worker. The list must be as long as the number of workers.</p></li>
+<li><p><strong>env_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The device on which
+the environment should be cast (or executed if that functionality is
+supported). If not specified and the env has a non-<code class="docutils literal notranslate"><span class="pre">None</span></code> device,
+<code class="docutils literal notranslate"><span class="pre">env_device</span></code> will default to that value. If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed
+and <code class="docutils literal notranslate"><span class="pre">env_device=None</span></code>, it will default to <code class="docutils literal notranslate"><span class="pre">device</span></code>. If the value
+as such specified of <code class="docutils literal notranslate"><span class="pre">env_device</span></code> differs from <code class="docutils literal notranslate"><span class="pre">policy_device</span></code>
+and one of them is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, the data will be cast to <code class="docutils literal notranslate"><span class="pre">env_device</span></code>
+before being passed to the env (i.e., passing different devices to
+policy and env is supported). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Supports a list of devices if one wishes to indicate a different device
+for each worker. The list must be as long as the number of workers.</p></li>
+<li><p><strong>policy_device</strong> (<em>int</em><em>, </em><em>str</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – The device on which
+the policy should be cast.
+If <code class="docutils literal notranslate"><span class="pre">device</span></code> is passed and <code class="docutils literal notranslate"><span class="pre">policy_device=None</span></code>, it will default
+to <code class="docutils literal notranslate"><span class="pre">device</span></code>. If the value as such specified of <code class="docutils literal notranslate"><span class="pre">policy_device</span></code>
+differs from <code class="docutils literal notranslate"><span class="pre">env_device</span></code> and one of them is not <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the data will be cast to <code class="docutils literal notranslate"><span class="pre">policy_device</span></code> before being passed to
+the policy (i.e., passing different devices to policy and env is
+supported). Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+Supports a list of devices if one wishes to indicate a different device
+for each worker. The list must be as long as the number of workers.</p></li>
 <li><p><strong>create_env_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – A dictionary with the
 keyword arguments used to create an environment. If a list is
 provided, each of its elements will be assigned to a sub-collector.</p></li>
 <li><p><strong>max_frames_per_traj</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum steps per trajectory.
-Note that a trajectory can span over multiple batches (unless
+Note that a trajectory can span across multiple batches (unless
 <code class="docutils literal notranslate"><span class="pre">reset_at_each_iter</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, see below).
 Once a trajectory reaches <code class="docutils literal notranslate"><span class="pre">n_steps</span></code>, the environment is reset.
 If the environment wraps multiple environments together, the number
@@ -506,22 +533,16 @@ See <a class="reference internal" href="torchrl.collectors.utils.split_trajector
 information.
 Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>exploration_type</strong> (<em>ExplorationType</em><em>, </em><em>optional</em>) – interaction mode to be used when
-collecting data. Must be one of <code class="docutils literal notranslate"><span class="pre">ExplorationType.RANDOM</span></code>, <code class="docutils literal notranslate"><span class="pre">ExplorationType.MODE</span></code> or
-<code class="docutils literal notranslate"><span class="pre">ExplorationType.MEAN</span></code>.
-Defaults to <code class="docutils literal notranslate"><span class="pre">ExplorationType.RANDOM</span></code></p></li>
-<li><p><strong>return_same_td</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the same TensorDict
-will be returned at each iteration, with its values
-updated. This feature should be used cautiously: if the same
-tensordict is added to a replay buffer for instance,
-the whole content of the buffer will be identical.
-Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+collecting data. Must be one of <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.RANDOM</span></code>,
+<code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.MODE</span></code> or <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.MEAN</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">torchrl.envs.utils.ExplorationType.RANDOM</span></code>.</p></li>
 <li><p><strong>reset_when_done</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), an environment
 that return a <code class="docutils literal notranslate"><span class="pre">True</span></code> value in its <code class="docutils literal notranslate"><span class="pre">&quot;done&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code>
 entry will be reset at the corresponding indices.</p></li>
 <li><p><strong>update_at_each_batch</strong> (<em>boolm optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">update_policy_weight_()</span></code>
 will be called before (sync) or after (async) each data collection.
 Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>preemptive_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – a value between 0.0 and 1.0 that specifies the ratio of workers
+<li><p><strong>preemptive_threshold</strong> (<a class="reference internal" href="torchrl.data.MultiStep.html#torchrl.data.MultiStep.float" title="torchrl.data.MultiStep.float"><em>float</em></a><em>, </em><em>optional</em>) – a value between 0.0 and 1.0 that specifies the ratio of workers
 that will be allowed to finished collecting their rollout before the rest are forced to end early.</p></li>
 <li><p><strong>num_threads</strong> (<em>int</em><em>, </em><em>optional</em>) – number of threads for this process.
 Defaults to the number of workers.</p></li>

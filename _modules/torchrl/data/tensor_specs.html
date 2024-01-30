@@ -402,8 +402,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">unravel_key</span>
-<span class="kn">from</span> <span class="nn">tensordict.tensordict</span> <span class="kn">import</span> <span class="n">LazyStackedTensorDict</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">LazyStackedTensorDict</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">unravel_key</span>
 <span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">_getitem_batch_size</span><span class="p">,</span> <span class="n">NestedKey</span>
 
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">get_binary_env_var</span>
@@ -452,12 +451,14 @@
 <span class="k">def</span> <span class="nf">_default_dtype_and_device</span><span class="p">(</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]:</span>
+    <span class="n">allow_none_device</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_default_dtype</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
-    <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">allow_none_device</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(())</span><span class="o">.</span><span class="n">device</span>
     <span class="k">return</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span>
 
 
@@ -725,7 +726,7 @@
 
     <span class="n">_low</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
     <span class="n">_high</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># We store the tensors on CPU to avoid overloading CUDA with tensors that are rarely used.</span>
     <span class="nd">@property</span>
@@ -893,7 +894,7 @@
 
     <span class="n">shape</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span>
     <span class="n">space</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Box</span><span class="p">]</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span>
     <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
@@ -909,6 +910,10 @@
             <span class="k">return</span> <span class="n">func</span>
 
         <span class="k">return</span> <span class="n">decorator</span></div>
+
+<div class="viewcode-block" id="TensorSpec.clear_device_"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.TensorSpec.html#torchrl.data.TensorSpec.clear_device_">[docs]</a>    <span class="k">def</span> <span class="nf">clear_device_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A no-op for all leaf specs (which must have a device).&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="TensorSpec.encode"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.TensorSpec.html#torchrl.data.TensorSpec.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">ignore_device</span><span class="o">=</span><span class="kc">False</span>
@@ -1132,6 +1137,14 @@
     <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;TensorSpec&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
+    <span class="k">def</span> <span class="nf">cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">cuda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cuda:</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TensorSpec&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -1179,6 +1192,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span>
+
+    <span class="k">def</span> <span class="nf">clear_device_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears the device of the CompositeSpec.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="n">is_key</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
@@ -1289,6 +1307,8 @@
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">spec</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">],</span> <span class="n">dim</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">spec</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">unbind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -1531,7 +1551,7 @@
 
     <span class="n">shape</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span>
     <span class="n">space</span><span class="p">:</span> <span class="n">DiscreteBox</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span>
     <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
@@ -1558,7 +1578,9 @@
                     <span class="sa">f</span><span class="s2">&quot;The last value of the shape must match n for transform of type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Got n=</span><span class="si">{</span><span class="n">space</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s2"> and shape=</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;discrete&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;discrete&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1576,6 +1598,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
 
     <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">CompositeSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
@@ -1900,8 +1924,6 @@
         <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span> <span class="o">=</span> <span class="n">_default_dtype_and_device</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_default_dtype</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">_get_default_device</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">low</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
@@ -1963,7 +1985,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">shape</span><span class="p">,</span> <span class="n">ContinuousBox</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">domain</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">space</span><span class="o">=</span><span class="n">ContinuousBox</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -2121,6 +2147,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -2216,6 +2244,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -2230,7 +2260,9 @@
         <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([])</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">shape</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">random_</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="UnboundedContinuousTensorSpec.is_in"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.UnboundedContinuousTensorSpec.html#torchrl.data.UnboundedContinuousTensorSpec.is_in">[docs]</a>    <span class="k">def</span> <span class="nf">is_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>
@@ -2350,6 +2382,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -2538,6 +2572,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -2845,7 +2881,7 @@
 
     <span class="n">shape</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span>
     <span class="n">space</span><span class="p">:</span> <span class="n">DiscreteBox</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float</span>
     <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
@@ -2863,7 +2899,9 @@
             <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([])</span>
         <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span> <span class="o">=</span> <span class="n">_default_dtype_and_device</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
         <span class="n">space</span> <span class="o">=</span> <span class="n">DiscreteBox</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;discrete&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;discrete&quot;</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -3061,6 +3099,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -3167,6 +3207,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -3279,6 +3321,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="n">dest</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">elif</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">dest_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
@@ -3576,6 +3620,15 @@
 <span class="sd">            to be ``True`` for the corresponding tensors, and :obj:`project()` will have no</span>
 <span class="sd">            effect. `spec.encode` cannot be used with missing values.</span>
 
+<span class="sd">    Attributes:</span>
+<span class="sd">        device (torch.device or None): if not specified, the device of the composite</span>
+<span class="sd">            spec is ``None`` (as it is the case for TensorDicts). A non-none device</span>
+<span class="sd">            constraints all leaves to be of the same device. On the other hand,</span>
+<span class="sd">            a ``None`` device allows leaves to have different devices. Defaults</span>
+<span class="sd">            to ``None``.</span>
+<span class="sd">        shape (torch.Size): the leading shape of all the leaves. Equivalent</span>
+<span class="sd">            to the batch-size of the corresponding tensordicts.</span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; pixels_spec = BoundedTensorSpec(</span>
 <span class="sd">        ...    torch.zeros(3,32,32),</span>
@@ -3608,7 +3661,6 @@
 <span class="sd">            device=None,</span>
 <span class="sd">            is_shared=False)</span>
 
-
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; # we can build a nested composite spec using unnamed arguments</span>
 <span class="sd">        &gt;&gt;&gt; print(CompositeSpec({(&quot;a&quot;, &quot;b&quot;): None, (&quot;a&quot;, &quot;c&quot;): None}))</span>
@@ -3635,7 +3687,7 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">_locked</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
 
@@ -3701,19 +3753,13 @@
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">continue</span>
-
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">item_device</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">device</span>
-                <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-                    <span class="n">cond1</span> <span class="o">=</span> <span class="n">DEVICE_ERR_MSG</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">cond1</span><span class="p">:</span>
-                        <span class="n">item_device</span> <span class="o">=</span> <span class="n">_device</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">err</span>
-
-                <span class="k">if</span> <span class="n">_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">_device</span> <span class="o">=</span> <span class="n">item_device</span>
-                <span class="k">elif</span> <span class="n">item_device</span> <span class="o">!=</span> <span class="n">_device</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">):</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">_device</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="n">_device</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Setting a new attribute (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">) on another device &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2"> against </span><span class="si">{</span><span class="n">_device</span><span class="si">}</span><span class="s2">). All devices of &quot;</span>
@@ -3732,39 +3778,26 @@
                 <span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">argdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                    <span class="n">item</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">try</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">device</span>
-                        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="n">DEVICE_ERR_MSG</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">_device</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="n">err</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">_device</span><span class="p">)</span>
                 <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DEVICE_TYPING</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># try to replace device by the true device</span>
-            <span class="n">_device</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">_device</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">device</span>
-            <span class="k">if</span> <span class="n">_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;device of empty CompositeSpec is not defined. &quot;</span>
-                    <span class="s2">&quot;You can set it directly by calling &quot;</span>
-                    <span class="s2">&quot;`spec.device = device`.&quot;</span>
-                <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">_device</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span>
 
     <span class="nd">@device</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">DEVICE_TYPING</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;To erase the device of a composite spec, call &quot;</span> <span class="s2">&quot;spec.clear_device_().&quot;</span>
+            <span class="p">)</span>
         <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CompositeSpec.clear_device_"><a class="viewcode-back" href="../../../reference/generated/torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec.clear_device_">[docs]</a>    <span class="k">def</span> <span class="nf">clear_device_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clears the device of the CompositeSpec.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Indexes the current CompositeSpec based on the provided index.&quot;&quot;&quot;</span>
@@ -3827,7 +3860,7 @@
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
-                <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="k">return</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -3837,34 +3870,25 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got key of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2"> when a string was expected.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;shape&quot;</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">,</span> <span class="s2">&quot;space&quot;</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CompositeSpec[</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] cannot be set&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">CompositeSpec</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Setting a new attribute (</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">) on another device (</span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2"> against </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">). &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;All devices of CompositeSpec must match.&quot;</span>
                 <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">cond1</span> <span class="o">=</span> <span class="n">DEVICE_ERR_MSG</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-            <span class="n">cond2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="ow">is</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">cond1</span> <span class="ow">and</span> <span class="n">cond2</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">device_val</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">device</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device_val</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">suberr</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">DEVICE_ERR_MSG</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">suberr</span><span class="p">):</span>
-                        <span class="k">pass</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">suberr</span>
-            <span class="k">elif</span> <span class="n">cond1</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">err</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">k</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span>
 
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -4039,6 +4063,8 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">CompositeSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Only device casting is allowed with specs of type CompositeSpec.&quot;</span>
@@ -4494,7 +4520,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DEVICE_TYPING</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_device&quot;</span><span class="p">,</span> <span class="n">NO_DEFAULT</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="n">NO_DEFAULT</span><span class="p">:</span>
+            <span class="n">devices</span> <span class="o">=</span> <span class="p">{</span><span class="n">spec</span><span class="o">.</span><span class="n">device</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specs</span><span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">devices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">device0</span><span class="p">,</span> <span class="n">device1</span> <span class="o">=</span> <span class="n">devices</span>
+                <span class="k">if</span> <span class="n">device0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">device</span> <span class="o">=</span> <span class="n">device1</span>
+                <span class="k">elif</span> <span class="n">device1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">device</span> <span class="o">=</span> <span class="n">device0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="k">return</span> <span class="n">device</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -4603,7 +4645,18 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot stack an empty list of specs.&quot;</span><span class="p">)</span>
     <span class="n">spec0</span> <span class="o">=</span> <span class="n">list_of_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec0</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
-        <span class="n">device</span> <span class="o">=</span> <span class="n">spec0</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">devices</span> <span class="o">=</span> <span class="p">{</span><span class="n">spec</span><span class="o">.</span><span class="n">device</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">list_of_spec</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">devices</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">device0</span><span class="p">,</span> <span class="n">device1</span> <span class="o">=</span> <span class="n">devices</span>
+            <span class="k">if</span> <span class="n">device0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">device1</span>
+            <span class="k">elif</span> <span class="n">device1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">device0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="n">all_equal</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">list_of_spec</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">CompositeSpec</span><span class="p">):</span>
@@ -4611,8 +4664,9 @@
                     <span class="s2">&quot;Stacking specs cannot occur: Found more than one type of spec in &quot;</span>
                     <span class="s2">&quot;the list.&quot;</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="n">device</span> <span class="o">!=</span> <span class="n">spec</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Devices differ, got </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">device</span> <span class="o">!=</span> <span class="n">spec</span><span class="o">.</span><span class="n">device</span> <span class="ow">and</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># spec.device must be None</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">spec0</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shapes differ, got </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">spec0</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">all_equal</span> <span class="o">=</span> <span class="n">all_equal</span> <span class="ow">and</span> <span class="n">spec</span> <span class="o">==</span> <span class="n">spec0</span>
