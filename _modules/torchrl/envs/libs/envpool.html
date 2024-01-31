@@ -635,7 +635,7 @@
                 <span class="sa">f</span><span class="s2">&quot;The output of step was had </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements, but only 4 or 5 are supported.&quot;</span>
             <span class="p">)</span>
         <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treevalue_or_numpy_to_tensor_or_dict</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-        <span class="n">reward_and_done</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">reward</span><span class="p">)}</span>
+        <span class="n">reward_and_done</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">reward</span><span class="p">)}</span>
         <span class="n">reward_and_done</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">done</span>
         <span class="n">reward_and_done</span><span class="p">[</span><span class="s2">&quot;terminated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">terminated</span>
         <span class="n">reward_and_done</span><span class="p">[</span><span class="s2">&quot;truncated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">truncated</span>
@@ -661,7 +661,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">treevalue</span><span class="o">.</span><span class="n">TreeValue</span><span class="p">):</span>
             <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treevalue_to_dict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x</span><span class="p">)}</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">x</span><span class="p">)}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ret</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">return</span> <span class="n">ret</span>
@@ -675,7 +675,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">treevalue</span>
 
-        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">treevalue</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">tv</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">treevalue</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">tv</span><span class="p">)}</span>
 
     <span class="k">def</span> <span class="nf">_set_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
