@@ -1154,7 +1154,7 @@
             <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="nf">_reset_proc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">):</span>
@@ -1175,7 +1175,7 @@
             <span class="c1"># There may be unexpected keys, such as &quot;_reset&quot;, that we should comfortably ignore here.</span>
             <span class="n">env_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
             <span class="k">if</span> <span class="n">env_device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
-                <span class="n">data_in</span> <span class="o">=</span> <span class="n">tensordict_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">data_in</span> <span class="o">=</span> <span class="n">tensordict_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">data_in</span> <span class="o">=</span> <span class="n">tensordict_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="n">out_td</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_envs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">data_in</span><span class="p">)</span>
@@ -1197,7 +1197,7 @@
             <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -1527,8 +1527,8 @@
             <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
             <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">next_td</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
@@ -1588,7 +1588,7 @@
             <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="nd">@_check_start</span>
@@ -1664,7 +1664,7 @@
             <span class="k">elif</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="nd">@_check_start</span>
@@ -1955,7 +1955,7 @@
 <span class="k">def</span> <span class="nf">_update_cuda</span><span class="p">(</span><span class="n">t_dest</span><span class="p">,</span> <span class="n">t_source</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">t_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
-    <span class="n">t_dest</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">t_source</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">(),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">t_dest</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">t_source</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">(),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span>
 </pre></div>
 

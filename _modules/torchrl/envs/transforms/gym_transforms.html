@@ -518,7 +518,7 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NO_PARENT_ERR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
 
         <span class="n">lives</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_lives</span><span class="p">()</span>
-        <span class="n">end_of_life</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+        <span class="n">end_of_life</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span>
             <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lives_key</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">lives</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>

@@ -2427,7 +2427,7 @@
         <span class="n">tensordict_reset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1">#        We assume that this is done properly</span>
         <span class="c1">#        if tensordict_reset.device != self.device:</span>
-        <span class="c1">#            tensordict_reset = tensordict_reset.to(self.device, non_blocking=True)</span>
+        <span class="c1">#            tensordict_reset = tensordict_reset.to(self.device, non_blocking=False)</span>
         <span class="k">if</span> <span class="n">tensordict_reset</span> <span class="ow">is</span> <span class="n">tensordict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;EnvBase._reset should return outplace changes to the input &quot;</span>
@@ -2789,13 +2789,13 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">auto_cast_to_device</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">policy_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">policy_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">policy_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">tensordict</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="n">tensordict</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">auto_cast_to_device</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">env_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">tensordict</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="n">tensordict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
@@ -2843,13 +2843,13 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">auto_cast_to_device</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">policy_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">policy_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">policy_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">tensordict_</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">policy</span><span class="p">(</span><span class="n">tensordict_</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">auto_cast_to_device</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">env_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">tensordict_</span> <span class="o">=</span> <span class="n">tensordict_</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">tensordict_</span><span class="o">.</span><span class="n">clear_device_</span><span class="p">()</span>
             <span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_and_maybe_reset</span><span class="p">(</span><span class="n">tensordict_</span><span class="p">)</span>
