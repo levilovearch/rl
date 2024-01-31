@@ -383,7 +383,6 @@
 <span class="kn">import</span> <span class="nn">functools</span>
 
 <span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">queue</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -417,6 +416,7 @@
     <span class="n">_check_for_faulty_process</span><span class="p">,</span>
     <span class="n">_ProcessNoWarn</span><span class="p">,</span>
     <span class="n">accept_remote_rref_udf_invocation</span><span class="p">,</span>
+    <span class="n">logger</span> <span class="k">as</span> <span class="n">torchrl_logger</span><span class="p">,</span>
     <span class="n">prod</span><span class="p">,</span>
     <span class="n">RL_WARNINGS</span><span class="p">,</span>
     <span class="n">VERBOSE</span><span class="p">,</span>
@@ -2935,7 +2935,7 @@
         <span class="n">interruptor</span><span class="o">=</span><span class="n">interruptor</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sync data collector created&quot;</span><span class="p">)</span>
+        <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sync data collector created&quot;</span><span class="p">)</span>
     <span class="n">dc_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">inner_collector</span><span class="p">)</span>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">pipe_child</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;instantiated&quot;</span><span class="p">)</span>
@@ -2948,10 +2948,10 @@
             <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">data_in</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">pipe_child</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> received </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> received </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;poll failed, j=</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, worker=</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;poll failed, j=</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, worker=</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="c1"># default is &quot;continue&quot; (after first iteration)</span>
             <span class="c1"># this is expected to happen if queue_out reached the timeout, but no new msg was waiting in the pipe</span>
             <span class="c1"># in that case, the main process probably expects the worker to continue collect data</span>
@@ -2971,7 +2971,7 @@
 
                 <span class="n">counter</span> <span class="o">+=</span> <span class="n">_timeout</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> has counter </span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> has counter </span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">_MAX_IDLE_COUNT</span> <span class="o">*</span> <span class="n">_TIMEOUT</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;This process waited for </span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2"> seconds &quot;</span>
@@ -3034,13 +3034,13 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">queue_out</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="n">_TIMEOUT</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> successfully sent data&quot;</span><span class="p">)</span>
+                    <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> successfully sent data&quot;</span><span class="p">)</span>
                 <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">has_timed_out</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">continue</span>
             <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Full</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> has timed out&quot;</span><span class="p">)</span>
+                    <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> has timed out&quot;</span><span class="p">)</span>
                 <span class="n">has_timed_out</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">continue</span>
 
@@ -3086,7 +3086,7 @@
             <span class="k">del</span> <span class="n">inner_collector</span><span class="p">,</span> <span class="n">dc_iter</span>
             <span class="n">pipe_child</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;closed&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;collector </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> closed&quot;</span><span class="p">)</span>
+                <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;collector </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> closed&quot;</span><span class="p">)</span>
             <span class="k">break</span>
 
         <span class="k">else</span><span class="p">:</span>

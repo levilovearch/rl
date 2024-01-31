@@ -378,13 +378,13 @@
 
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">torchrl_logger</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CompositeSpec</span><span class="p">,</span>
@@ -825,7 +825,7 @@
                 <span class="nb">isinstance</span><span class="p">(</span><span class="n">info_dict_reader</span><span class="p">,</span> <span class="n">default_info_dict_reader</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="n">info_dict_reader</span><span class="o">.</span><span class="n">info_spec</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="p">):</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;The info_dict_reader does not have specs. The only way to palliate to this issue automatically &quot;</span>
                     <span class="s2">&quot;is to run a dummy rollout and gather the specs automatically. &quot;</span>
                     <span class="s2">&quot;To silence this message, provide the specs directly to your spec reader.&quot;</span>

@@ -376,7 +376,6 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">importlib.util</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
@@ -388,7 +387,11 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">PersistentTensorDict</span><span class="p">,</span> <span class="n">TensorDict</span>
-<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">KeyDependentDefaultDict</span><span class="p">,</span> <span class="n">print_directory_tree</span>
+<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">KeyDependentDefaultDict</span><span class="p">,</span>
+    <span class="n">logger</span> <span class="k">as</span> <span class="n">torchrl_logger</span><span class="p">,</span>
+    <span class="n">print_directory_tree</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.datasets.utils</span> <span class="kn">import</span> <span class="n">_get_root_dir</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.replay_buffers</span> <span class="kn">import</span> <span class="n">TensorDictReplayBuffer</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.samplers</span> <span class="kn">import</span> <span class="n">Sampler</span>
@@ -463,11 +466,11 @@
 <span class="sd">        &gt;&gt;&gt; for batch in d:</span>
 <span class="sd">        ...     break</span>
 <span class="sd">        &gt;&gt;&gt; # data is organised by seed and episode, but stored contiguously</span>
-<span class="sd">        &gt;&gt;&gt; logging.info(batch[&quot;seed&quot;], batch[&quot;episode&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; torchrl_logger.info(f&quot;{batch[&#39;seed&#39;]}, {batch[&#39;episode&#39;]}&quot;)</span>
 <span class="sd">        tensor([2, 1, 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 2, 2, 2, 1, 1, 2, 0, 2, 0, 2, 2, 1,</span>
 <span class="sd">                0, 2, 0, 0, 1, 1, 2, 1]) tensor([17, 20, 18,  9,  6,  1, 12,  6,  2,  6,  8, 15,  8, 21, 17,  3,  9, 20,</span>
 <span class="sd">                23, 12,  3, 16, 19, 16, 16,  4,  4, 12,  1,  2, 15, 24])</span>
-<span class="sd">        &gt;&gt;&gt; logging.info(batch)</span>
+<span class="sd">        &gt;&gt;&gt; torchrl_logger.info(batch)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
 <span class="sd">                action: Tensor(shape=torch.Size([32, 9]), device=cpu, dtype=torch.float64, is_shared=False),</span>
@@ -612,13 +615,13 @@
     <span class="k">def</span> <span class="nf">_preproc_h5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_data_files</span><span class="p">):</span>
         <span class="n">td_data</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({},</span> <span class="p">[])</span>
         <span class="n">total_steps</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;first read through data files </span><span class="si">{</span><span class="n">h5_data_files</span><span class="si">}</span><span class="s2"> to create data structure...&quot;</span>
         <span class="p">)</span>
         <span class="n">episode_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">h5_datas</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">seed</span><span class="p">,</span> <span class="n">h5_data_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">h5_data_files</span><span class="p">):</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reading&quot;</span><span class="p">,</span> <span class="n">h5_data_name</span><span class="p">)</span>
+            <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reading </span><span class="si">{</span><span class="n">h5_data_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">h5_data</span> <span class="o">=</span> <span class="n">PersistentTensorDict</span><span class="o">.</span><span class="n">from_h5</span><span class="p">(</span><span class="n">h5_data_name</span><span class="p">)</span>
             <span class="n">h5_datas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h5_data</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">episode_key</span><span class="p">,</span> <span class="n">episode</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">h5_data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
@@ -627,7 +630,7 @@
                 <span class="n">episode_dict</span><span class="p">[(</span><span class="n">seed</span><span class="p">,</span> <span class="n">episode_num</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">episode_key</span><span class="p">,</span> <span class="n">episode_len</span><span class="p">)</span>
                 <span class="c1"># Get the total number of steps for the dataset</span>
                 <span class="n">total_steps</span> <span class="o">+=</span> <span class="n">episode_len</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;total_steps&quot;</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;total_steps </span><span class="si">{</span><span class="n">total_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">seed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">td_data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;episode&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
                     <span class="n">td_data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -650,14 +653,14 @@
 
         <span class="n">td_data</span> <span class="o">=</span> <span class="n">td_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">total_steps</span><span class="p">)</span>
         <span class="c1"># save to designated location</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;creating tensordict data in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;creating tensordict data in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">)</span>
         <span class="n">td_data</span> <span class="o">=</span> <span class="n">td_data</span><span class="o">.</span><span class="n">memmap_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
-        <span class="c1"># logging.info(&quot;tensordict structure:&quot;, td_data)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Local dataset structure:&quot;</span><span class="p">,</span> <span class="n">print_directory_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
+        <span class="c1"># torchrl_logger.info(f&quot;tensordict structure: {td_data}&quot;)</span>
+        <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Local dataset structure: </span><span class="si">{</span><span class="n">print_directory_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">episode_dict</span><span class="p">)</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">)</span>
+        <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">episode_dict</span><span class="p">)</span><span class="si">}</span><span class="s2"> episodes&quot;</span><span class="p">)</span>
         <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">_has_tqdm</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
