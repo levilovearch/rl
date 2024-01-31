@@ -1004,10 +1004,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_closed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="kn">import</span> <span class="nn">torchrl</span>
 
-        <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-            <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL_INIT</span><span class="p">,</span> <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+        <span class="n">num_threads</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL_INIT</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
         <span class="p">)</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_shutdown_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -1386,16 +1386,11 @@
         <span class="kn">from</span> <span class="nn">torchrl.envs.env_creator</span> <span class="kn">import</span> <span class="n">EnvCreator</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">torchrl</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                <span class="mi">1</span><span class="p">,</span> <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
             <span class="p">)</span>  <span class="c1"># 1 more thread for this proc</span>
 
         <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
-        <span class="kn">import</span> <span class="nn">torchrl</span>
-
-        <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
 
         <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
 

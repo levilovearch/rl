@@ -1978,18 +1978,12 @@
 
     <span class="k">def</span> <span class="nf">_run_processes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">torchrl</span>
-
             <span class="n">total_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_workers_from_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_env_fn</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                <span class="mi">1</span><span class="p">,</span> <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">-</span> <span class="n">total_workers</span>
+                <span class="mi">1</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span> <span class="o">-</span> <span class="n">total_workers</span>
             <span class="p">)</span>  <span class="c1"># 1 more thread for this proc</span>
 
         <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
-        <span class="kn">import</span> <span class="nn">torchrl</span>
-
-        <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span>
         <span class="n">queue_out</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue_len</span><span class="p">)</span>  <span class="c1"># sends data from proc to main</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">procs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2098,11 +2092,12 @@
         <span class="k">finally</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">torchrl</span>
 
-            <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">num_threads</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
                 <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL_INIT</span><span class="p">,</span>
-                <span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_workers_from_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_env_fn</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_workers_from_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_env_fn</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">torchrl</span><span class="o">.</span><span class="n">_THREAD_POOL</span><span class="p">)</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">procs</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
