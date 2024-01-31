@@ -397,10 +397,11 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_tensor_collection</span><span class="p">,</span>
     <span class="n">LazyStackedTensorDict</span><span class="p">,</span>
     <span class="n">TensorDict</span><span class="p">,</span>
     <span class="n">TensorDictBase</span><span class="p">,</span>
@@ -540,16 +541,13 @@
         <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="s2">&quot;in_keys&quot;</span><span class="p">)</span>
         <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="s2">&quot;out_keys&quot;</span><span class="p">)</span>
     <span class="p">):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;Passing a policy that is not a TensorDictModuleBase subclass but has in_keys and out_keys &quot;</span>
-            <span class="s2">&quot;will soon be deprecated. We&#39;d like to motivate our users to inherit from this class (which &quot;</span>
-            <span class="s2">&quot;has very few restrictions) to make the experience smoother.&quot;</span><span class="p">,</span>
-            <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Passing a policy that is not a tensordict.nn.TensorDictModuleBase subclass but has in_keys and out_keys &quot;</span>
+            <span class="s2">&quot;is deprecated. Users should inherit from this class (which &quot;</span>
+            <span class="s2">&quot;has very few restrictions) to make the experience smoother. &quot;</span>
+            <span class="s2">&quot;Simply change your policy from `class Policy(nn.Module)` to `Policy(tensordict.nn.TensorDictModuleBase)` &quot;</span>
+            <span class="s2">&quot;and this error should disappear.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># if the policy is a TensorDictModule or takes a single argument and defines</span>
-        <span class="c1"># in_keys and out_keys then we assume it can already deal with TensorDict input</span>
-        <span class="c1"># to forward and we return True</span>
-        <span class="k">return</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="s2">&quot;in_keys&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="s2">&quot;out_keys&quot;</span><span class="p">):</span>
         <span class="c1"># if it&#39;s not a TensorDictModule, and in_keys and out_keys are not defined then</span>
         <span class="c1"># we assume no TensorDict compatibility and will try to wrap it.</span>
@@ -606,7 +604,15 @@
                 <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">observation_spec</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">}</span>
             <span class="c1"># we check if all the mandatory params are there</span>
-            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;tensordict&quot;</span><span class="p">}</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;td&quot;</span><span class="p">}:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;tensordict&quot;</span><span class="p">}</span>
+                <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;td&quot;</span><span class="p">}</span>
+                <span class="ow">or</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="ow">and</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">pass</span>
             <span class="k">elif</span> <span class="ow">not</span> <span class="n">required_kwargs</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">next_observation</span><span class="p">)):</span>
                 <span class="n">in_keys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">next_observation</span><span class="p">]</span>
@@ -637,6 +643,7 @@
 <span class="s2">then the arguments to policy.forward must correspond one-to-one with entries</span>
 <span class="s2">in env.observation_spec that are prefixed with &#39;next_&#39;. For more complex</span>
 <span class="s2">behaviour and more control you can consider writing your own TensorDictModule.</span>
+<span class="s2">Check the collector documentation to know more about accepted policies.</span>
 <span class="s2">&quot;&quot;&quot;</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">policy</span>
@@ -756,6 +763,18 @@
 <span class="sd">            If ``None`` is provided, the policy used will be a</span>
 <span class="sd">            :class:`~torchrl.collectors.RandomPolicy` instance with the environment</span>
 <span class="sd">            ``action_spec``.</span>
+<span class="sd">            Accepted policies are usually subclasses of :class:`~tensordict.nn.TensorDictModuleBase`.</span>
+<span class="sd">            This is the recommended usage of the collector.</span>
+<span class="sd">            Other callables are accepted too:</span>
+<span class="sd">            If the policy is not a ``TensorDictModuleBase`` (e.g., a regular :class:`~torch.nn.Module`</span>
+<span class="sd">            instances) it will be wrapped in a `nn.Module` first.</span>
+<span class="sd">            Then, the collector will try to assess if these</span>
+<span class="sd">            modules require wrapping in a :class:`~tensordict.nn.TensorDictModule` or not.</span>
+<span class="sd">            - If the policy forward signature matches any of ``forward(self, tensordict)``,</span>
+<span class="sd">              ``forward(self, td)`` or ``forward(self, &lt;anything&gt;: TensorDictBase)`` (or</span>
+<span class="sd">              any typing with a single argument typed as a subclass of ``TensorDictBase``)</span>
+<span class="sd">              then the policy won&#39;t be wrapped in a :class:`~tensordict.nn.TensorDictModule`.</span>
+<span class="sd">            - In all other cases an attempt to wrap it will be undergone as such: ``TensorDictModule(policy, in_keys=env_obs_key, out_keys=env.action_keys)``.</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        frames_per_batch (int): A keyword-only argument representing the total</span>
@@ -1349,10 +1368,10 @@
                     <span class="c1"># &gt;&gt;&gt; assert data0[&quot;done&quot;] is not data1[&quot;done&quot;]</span>
                     <span class="k">yield</span> <span class="n">tensordict_out</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_update_traj_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_update_traj_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># we can&#39;t use the reset keys because they&#39;re gone</span>
         <span class="n">traj_sop</span> <span class="o">=</span> <span class="n">_aggregate_end_of_traj</span><span class="p">(</span>
-            <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">),</span> <span class="n">done_keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">done_keys</span>
+            <span class="n">env_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">),</span> <span class="n">done_keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">done_keys</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">traj_sop</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">traj_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;collector&quot;</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">))</span>
@@ -1601,11 +1620,23 @@
 <span class="sd">    Args:</span>
 <span class="sd">        create_env_fn (List[Callabled]): list of Callables, each returning an</span>
 <span class="sd">            instance of :class:`~torchrl.envs.EnvBase`.</span>
-<span class="sd">        policy (Callable, optional): Instance of TensorDictModule class.</span>
-<span class="sd">            Must accept TensorDictBase object as input.</span>
+<span class="sd">        policy (Callable): Policy to be executed in the environment.</span>
+<span class="sd">            Must accept :class:`tensordict.tensordict.TensorDictBase` object as input.</span>
 <span class="sd">            If ``None`` is provided, the policy used will be a</span>
 <span class="sd">            :class:`~torchrl.collectors.RandomPolicy` instance with the environment</span>
 <span class="sd">            ``action_spec``.</span>
+<span class="sd">            Accepted policies are usually subclasses of :class:`~tensordict.nn.TensorDictModuleBase`.</span>
+<span class="sd">            This is the recommended usage of the collector.</span>
+<span class="sd">            Other callables are accepted too:</span>
+<span class="sd">            If the policy is not a ``TensorDictModuleBase`` (e.g., a regular :class:`~torch.nn.Module`</span>
+<span class="sd">            instances) it will be wrapped in a `nn.Module` first.</span>
+<span class="sd">            Then, the collector will try to assess if these</span>
+<span class="sd">            modules require wrapping in a :class:`~tensordict.nn.TensorDictModule` or not.</span>
+<span class="sd">            - If the policy forward signature matches any of ``forward(self, tensordict)``,</span>
+<span class="sd">              ``forward(self, td)`` or ``forward(self, &lt;anything&gt;: TensorDictBase)`` (or</span>
+<span class="sd">              any typing with a single argument typed as a subclass of ``TensorDictBase``)</span>
+<span class="sd">              then the policy won&#39;t be wrapped in a :class:`~tensordict.nn.TensorDictModule`.</span>
+<span class="sd">            - In all other cases an attempt to wrap it will be undergone as such: ``TensorDictModule(policy, in_keys=env_obs_key, out_keys=env.action_keys)``.</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        frames_per_batch (int): A keyword-only argument representing the</span>
@@ -2670,8 +2701,23 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        create_env_fn (Callabled): Callable returning an instance of EnvBase</span>
-<span class="sd">        policy (Callable, optional): Instance of TensorDictModule class.</span>
-<span class="sd">            Must accept TensorDictBase object as input.</span>
+<span class="sd">        policy (Callable): Policy to be executed in the environment.</span>
+<span class="sd">            Must accept :class:`tensordict.tensordict.TensorDictBase` object as input.</span>
+<span class="sd">            If ``None`` is provided, the policy used will be a</span>
+<span class="sd">            :class:`~torchrl.collectors.RandomPolicy` instance with the environment</span>
+<span class="sd">            ``action_spec``.</span>
+<span class="sd">            Accepted policies are usually subclasses of :class:`~tensordict.nn.TensorDictModuleBase`.</span>
+<span class="sd">            This is the recommended usage of the collector.</span>
+<span class="sd">            Other callables are accepted too:</span>
+<span class="sd">            If the policy is not a ``TensorDictModuleBase`` (e.g., a regular :class:`~torch.nn.Module`</span>
+<span class="sd">            instances) it will be wrapped in a `nn.Module` first.</span>
+<span class="sd">            Then, the collector will try to assess if these</span>
+<span class="sd">            modules require wrapping in a :class:`~tensordict.nn.TensorDictModule` or not.</span>
+<span class="sd">            - If the policy forward signature matches any of ``forward(self, tensordict)``,</span>
+<span class="sd">              ``forward(self, td)`` or ``forward(self, &lt;anything&gt;: TensorDictBase)`` (or</span>
+<span class="sd">              any typing with a single argument typed as a subclass of ``TensorDictBase``)</span>
+<span class="sd">              then the policy won&#39;t be wrapped in a :class:`~tensordict.nn.TensorDictModule`.</span>
+<span class="sd">            - In all other cases an attempt to wrap it will be undergone as such: ``TensorDictModule(policy, in_keys=env_obs_key, out_keys=env.action_keys)``.</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        frames_per_batch (int): A keyword-only argument representing the</span>
@@ -2868,7 +2914,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">pipe_parent</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="c1"># init variables that will be cleared when closing</span>
-    <span class="n">tensordict</span> <span class="o">=</span> <span class="n">data</span> <span class="o">=</span> <span class="n">d</span> <span class="o">=</span> <span class="n">data_in</span> <span class="o">=</span> <span class="n">inner_collector</span> <span class="o">=</span> <span class="n">dc_iter</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">collected_tensordict</span> <span class="o">=</span> <span class="n">data</span> <span class="o">=</span> <span class="n">next_data</span> <span class="o">=</span> <span class="n">data_in</span> <span class="o">=</span> <span class="n">inner_collector</span> <span class="o">=</span> <span class="n">dc_iter</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">inner_collector</span> <span class="o">=</span> <span class="n">SyncDataCollector</span><span class="p">(</span>
         <span class="n">create_env_fn</span><span class="p">,</span>
@@ -2942,42 +2988,45 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">inner_collector</span><span class="o">.</span><span class="n">init_random_frames</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
-            <span class="n">d</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">dc_iter</span><span class="p">)</span>
+            <span class="n">next_data</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">dc_iter</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">pipe_child</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="n">_MIN_TIMEOUT</span><span class="p">):</span>
                 <span class="c1"># in this case, main send a message to the worker while it was busy collecting trajectories.</span>
                 <span class="c1"># In that case, we skip the collected trajectory and get the message from main. This is faster than</span>
                 <span class="c1"># sending the trajectory in the queue until timeout when it&#39;s never going to be received.</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">tensordict</span> <span class="o">=</span> <span class="n">d</span>
-                <span class="k">if</span> <span class="n">storing_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="n">storing_device</span><span class="p">:</span>
+                <span class="n">collected_tensordict</span> <span class="o">=</span> <span class="n">next_data</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">storing_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="n">storing_device</span>
+                <span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;expected device to be </span><span class="si">{</span><span class="n">storing_device</span><span class="si">}</span><span class="s2"> but got </span><span class="si">{</span><span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;expected device to be </span><span class="si">{</span><span class="n">storing_device</span><span class="si">}</span><span class="s2"> but got </span><span class="si">{</span><span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                 <span class="c1"># If policy and env are on cpu, we put in shared mem,</span>
                 <span class="c1"># if policy is on cuda and env on cuda, we are fine with this</span>
                 <span class="c1"># If policy is on cuda and env on cpu (or opposite) we put tensors that</span>
                 <span class="c1"># are on cpu in shared mem.</span>
-                <span class="k">if</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># placehoder in case we need different behaviours</span>
-                    <span class="k">if</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mps&quot;</span><span class="p">):</span>
-                        <span class="n">tensordict</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
-                    <span class="k">elif</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
-                        <span class="n">tensordict</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mps&quot;</span><span class="p">):</span>
+                        <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
+                    <span class="k">elif</span> <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+                        <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;Device </span><span class="si">{</span><span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2"> is not supported in multi-collectors yet.&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Device </span><span class="si">{</span><span class="n">collected_tensordict</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2"> is not supported in multi-collectors yet.&quot;</span>
                         <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># make sure each cpu tensor is shared - assuming non-cpu devices are shared</span>
-                    <span class="n">tensordict</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="n">collected_tensordict</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">share_memory_</span><span class="p">()</span>
                         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;mps&quot;</span><span class="p">)</span>
                         <span class="k">else</span> <span class="n">x</span>
                     <span class="p">)</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">collected_tensordict</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">tensordict</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">next_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">collected_tensordict</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                         <span class="s2">&quot;SyncDataCollector should return the same tensordict modified in-place.&quot;</span>
                     <span class="p">)</span>
@@ -3032,7 +3081,7 @@
             <span class="k">continue</span>
 
         <span class="k">elif</span> <span class="n">msg</span> <span class="o">==</span> <span class="s2">&quot;close&quot;</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">data_in</span>
+            <span class="k">del</span> <span class="n">collected_tensordict</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">next_data</span><span class="p">,</span> <span class="n">data_in</span>
             <span class="n">inner_collector</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
             <span class="k">del</span> <span class="n">inner_collector</span><span class="p">,</span> <span class="n">dc_iter</span>
             <span class="n">pipe_child</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;closed&quot;</span><span class="p">)</span>

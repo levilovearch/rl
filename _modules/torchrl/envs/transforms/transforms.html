@@ -2743,15 +2743,9 @@
         <span class="n">standard_normal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">in_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Not passing in_keys to ObservationNorm will soon be deprecated. &quot;</span>
-                <span class="s2">&quot;Ensure you specify the entries to be normalized&quot;</span><span class="p">,</span>
-                <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Not passing in_keys to ObservationNorm is a deprecated behaviour.&quot;</span>
             <span class="p">)</span>
-            <span class="n">in_keys</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="s2">&quot;observation&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;pixels&quot;</span><span class="p">,</span>
-            <span class="p">]</span>
 
         <span class="k">if</span> <span class="n">out_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out_keys</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">in_keys</span><span class="p">)</span>
@@ -3090,7 +3084,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;padding must be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ACCEPTED_PADDING</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;zeros&quot;</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Padding option &#39;zeros&#39; will be deprecated in the future. &quot;</span>
+                <span class="s2">&quot;Padding option &#39;zeros&#39; will be deprecated in v0.4.0. &quot;</span>
                 <span class="s2">&quot;Please use &#39;constant&#39; padding with padding_value 0 instead.&quot;</span><span class="p">,</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
             <span class="p">)</span>

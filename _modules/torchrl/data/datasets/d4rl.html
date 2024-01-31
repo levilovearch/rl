@@ -517,7 +517,7 @@
         <span class="n">prefetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transform</span><span class="p">:</span> <span class="s2">&quot;torchrl.envs.Transform&quot;</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># noqa-F821</span>
         <span class="n">split_trajs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">from_env</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">from_env</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">use_truncated_as_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">direct_download</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">terminate_on_end</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -536,29 +536,16 @@
             <span class="n">direct_download</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_d4rl</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">direct_download</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">from_env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;from_env will soon default to ``False``, ie the data will be &quot;</span>
-                    <span class="s2">&quot;downloaded without relying on d4rl by default. &quot;</span>
-                    <span class="s2">&quot;For now, ``True`` will still be the default. &quot;</span>
-                    <span class="s2">&quot;To disable this warning, explicitly pass the ``from_env`` argument &quot;</span>
-                    <span class="s2">&quot;during construction of the dataset.&quot;</span><span class="p">,</span>
-                    <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">from_env</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;You are using the D4RL library for collecting data. &quot;</span>
-                    <span class="s2">&quot;We advise against this use, as D4RL formatting can be &quot;</span>
-                    <span class="s2">&quot;inconsistent. &quot;</span>
-                    <span class="s2">&quot;To download the D4RL data without the D4RL library, use &quot;</span>
-                    <span class="s2">&quot;direct_download=True in the dataset constructor. &quot;</span>
-                    <span class="s2">&quot;Recurring to `direct_download=False` will soon be deprecated.&quot;</span>
-                <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;You are using the D4RL library for collecting data. &quot;</span>
+                <span class="s2">&quot;We advise against this use, as D4RL formatting can be &quot;</span>
+                <span class="s2">&quot;inconsistent. &quot;</span>
+                <span class="s2">&quot;To download the D4RL data without the D4RL library, use &quot;</span>
+                <span class="s2">&quot;direct_download=True in the dataset constructor. &quot;</span>
+                <span class="s2">&quot;Recurring to `direct_download=False` will soon be deprecated.&quot;</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_env</span> <span class="o">=</span> <span class="n">from_env</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">from_env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">from_env</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_env</span> <span class="o">=</span> <span class="n">from_env</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">download</span> <span class="o">==</span> <span class="s2">&quot;force&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">download</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_downloaded</span><span class="p">()):</span>

@@ -407,7 +407,7 @@ the exploration wrapper will attempt to recover it from the policy.</p></li>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Once a module has been wrapped in <a class="reference internal" href="#torchrl.modules.tensordict_module.EGreedyWrapper" title="torchrl.modules.tensordict_module.EGreedyWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">EGreedyWrapper</span></code></a>, it is
-crucial to incorporate a call to <a class="reference internal" href="#torchrl.modules.tensordict_module.EGreedyWrapper.step" title="torchrl.modules.tensordict_module.EGreedyWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> in the training loop
+crucial to incorporate a call to <a class="reference internal" href="torchrl.envs.EnvBase.html#id4" title="torchrl.envs.EnvBase.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> in the training loop
 to update the exploration factor.
 Since it is not easy to capture this omission no warning or exception
 will be raised if this is ommitted!</p>
@@ -436,32 +436,6 @@ will be raised if this is ommitted!</p>
 <span class="go">        [ 0.0000,  0.0000,  0.0000,  0.0000]], grad_fn=&lt;AddBackward0&gt;)</span>
 </pre></div>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.EGreedyWrapper.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.3.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/modules/tensordict_module/exploration.html#EGreedyWrapper.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.tensordict_module.EGreedyWrapper.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.EGreedyWrapper.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchrl/modules/tensordict_module/exploration.html#EGreedyWrapper.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.tensordict_module.EGreedyWrapper.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>A step of epsilon decay.</p>
-<p>After self.annealing_num_steps, this function is a no-op.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>frames</strong> (<em>int</em>) – number of frames since last step.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>

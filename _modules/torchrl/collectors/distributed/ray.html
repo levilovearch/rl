@@ -489,8 +489,23 @@
 <span class="sd">    Args:</span>
 <span class="sd">        create_env_fn (Callable or List[Callabled]): list of Callables, each returning an</span>
 <span class="sd">            instance of :class:`~torchrl.envs.EnvBase`.</span>
-<span class="sd">        policy (Callable): Instance of TensorDictModule class.</span>
-<span class="sd">            Must accept TensorDictBase object as input.</span>
+<span class="sd">        policy (Callable): Policy to be executed in the environment.</span>
+<span class="sd">            Must accept :class:`tensordict.tensordict.TensorDictBase` object as input.</span>
+<span class="sd">            If ``None`` is provided, the policy used will be a</span>
+<span class="sd">            :class:`~torchrl.collectors.RandomPolicy` instance with the environment</span>
+<span class="sd">            ``action_spec``.</span>
+<span class="sd">            Accepted policies are usually subclasses of :class:`~tensordict.nn.TensorDictModuleBase`.</span>
+<span class="sd">            This is the recommended usage of the collector.</span>
+<span class="sd">            Other callables are accepted too:</span>
+<span class="sd">            If the policy is not a ``TensorDictModuleBase`` (e.g., a regular :class:`~torch.nn.Module`</span>
+<span class="sd">            instances) it will be wrapped in a `nn.Module` first.</span>
+<span class="sd">            Then, the collector will try to assess if these</span>
+<span class="sd">            modules require wrapping in a :class:`~tensordict.nn.TensorDictModule` or not.</span>
+<span class="sd">            - If the policy forward signature matches any of ``forward(self, tensordict)``,</span>
+<span class="sd">              ``forward(self, td)`` or ``forward(self, &lt;anything&gt;: TensorDictBase)`` (or</span>
+<span class="sd">              any typing with a single argument typed as a subclass of ``TensorDictBase``)</span>
+<span class="sd">              then the policy won&#39;t be wrapped in a :class:`~tensordict.nn.TensorDictModule`.</span>
+<span class="sd">            - In all other cases an attempt to wrap it will be undergone as such: ``TensorDictModule(policy, in_keys=env_obs_key, out_keys=env.action_keys)``.</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        frames_per_batch (int): A keyword-only argument representing the</span>

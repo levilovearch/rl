@@ -388,7 +388,7 @@
 <span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">ProbabilisticActor</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.common</span> <span class="kn">import</span> <span class="n">LossModule</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_GAMMA_LMBDA_DEPREC_WARNING</span><span class="p">,</span>
+    <span class="n">_GAMMA_LMBDA_DEPREC_ERROR</span><span class="p">,</span>
     <span class="n">_vmap_func</span><span class="p">,</span>
     <span class="n">default_value_kwargs</span><span class="p">,</span>
     <span class="n">distance_loss</span><span class="p">,</span>
@@ -656,22 +656,15 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_function</span> <span class="o">=</span> <span class="n">loss_function</span>
         <span class="k">if</span> <span class="n">gamma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">_GAMMA_LMBDA_DEPREC_WARNING</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">_GAMMA_LMBDA_DEPREC_ERROR</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_qvalue_networkN0</span> <span class="o">=</span> <span class="n">_vmap_func</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">qvalue_network</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The device attributes of the looses will be deprecated in v0.3.&quot;</span><span class="p">,</span>
-            <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">device</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;At least one of the networks of SACLoss must have trainable &quot;</span> <span class="s2">&quot;parameters.&quot;</span>
+            <span class="s2">&quot;The device attributes of the losses is deprecated since v0.3.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_in_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -778,7 +771,7 @@
             <span class="p">)</span>  <span class="c1"># assert has no gradient</span>
 
         <span class="n">exp_a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">min_q</span> <span class="o">-</span> <span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
-        <span class="n">exp_a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">exp_a</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([</span><span class="mf">100.0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+        <span class="n">exp_a</span> <span class="o">=</span> <span class="n">exp_a</span><span class="o">.</span><span class="n">clamp_max</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 
         <span class="c1"># write log_prob in tensordict for alpha loss</span>
         <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">log_prob</span><span class="p">,</span> <span class="n">log_prob</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
@@ -1146,7 +1139,7 @@
             <span class="p">)</span>  <span class="c1"># assert has no gradient</span>
 
         <span class="n">exp_a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">min_Q</span> <span class="o">-</span> <span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
-        <span class="n">exp_a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">exp_a</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([</span><span class="mf">100.0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+        <span class="n">exp_a</span> <span class="o">=</span> <span class="n">exp_a</span><span class="o">.</span><span class="n">clamp_max</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 
         <span class="c1"># write log_prob in tensordict for alpha loss</span>
         <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">log_prob</span><span class="p">,</span> <span class="n">log_prob</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
