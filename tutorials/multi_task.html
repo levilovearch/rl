@@ -385,44 +385,38 @@ to download the full example code</p>
 can compute actions in diverse settings using a distinct set of weights.
 You will also be able to execute diverse environments in parallel.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictModule</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictSequential</span></a>
+<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictSequential</span></a>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/multi_task.py&quot;</span>, line <span class="m">25</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="k">assert</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_start_method</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;fork&quot;</span>
-<span class="gr">AssertionError</span>
-</pre></div>
-</div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">CatTensors</span><span class="p">,</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">DoubleToFloat</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">,</span> <span class="n">TransformedEnv</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.libs.dm_control</span> <span class="kn">import</span> <span class="n">DMControlEnv</span>
-<span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">MLP</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">Compose</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DoubleToFloat</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">ParallelEnv</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a>
+<span class="kn">from</span> <span class="nn">torchrl.envs.libs.dm_control</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DMControlEnv</span></a>
+<span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MLP</span></a>
 </pre></div>
 </div>
 <p>We design two environments, one humanoid that must complete the stand task
 and another that must learn to walk.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">env1</span> <span class="o">=</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">env1</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DMControlEnv</span></a><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">)</span>
 <span class="n">env1_obs_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env1</span><span class="o">.</span><span class="n">observation_spec</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">env1</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span>
+<span class="n">env1</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
     <span class="n">env1</span><span class="p">,</span>
-    <span class="n">Compose</span><span class="p">(</span>
-        <span class="n">CatTensors</span><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">CatTensors</span><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
-        <span class="n">DoubleToFloat</span><span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">Compose</span></a><span class="p">(</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DoubleToFloat</span></a><span class="p">(</span>
             <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">],</span>
             <span class="n">in_keys_inv</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
         <span class="p">),</span>
     <span class="p">),</span>
 <span class="p">)</span>
-<span class="n">env2</span> <span class="o">=</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">)</span>
+<span class="n">env2</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DMControlEnv</span></a><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">)</span>
 <span class="n">env2_obs_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env2</span><span class="o">.</span><span class="n">observation_spec</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">env2</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span>
+<span class="n">env2</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
     <span class="n">env2</span><span class="p">,</span>
-    <span class="n">Compose</span><span class="p">(</span>
-        <span class="n">CatTensors</span><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">CatTensors</span><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
-        <span class="n">DoubleToFloat</span><span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">Compose</span></a><span class="p">(</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DoubleToFloat</span></a><span class="p">(</span>
             <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">],</span>
             <span class="n">in_keys_inv</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
         <span class="p">),</span>
@@ -430,16 +424,28 @@ and another that must learn to walk.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">tdreset1</span> <span class="o">=</span> <span class="n">env1</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="n">tdreset2</span> <span class="o">=</span> <span class="n">env2</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset1</span></a> <span class="o">=</span> <span class="n">env1</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset2</span></a> <span class="o">=</span> <span class="n">env2</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
 <span class="c1"># In TorchRL, stacking is done in a lazy manner: the original tensordicts</span>
 <span class="c1"># can still be recovered by indexing the main tensordict</span>
-<span class="n">tdreset</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.stack.html#torch.stack" title="torch.stack" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">stack</span></a><span class="p">([</span><span class="n">tdreset1</span><span class="p">,</span> <span class="n">tdreset2</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">tdreset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">tdreset1</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.stack.html#torch.stack" title="torch.stack" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">stack</span></a><span class="p">([</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset1</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset2</span></a><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+<span class="k">assert</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset1</span></a>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 <section id="policy">
@@ -451,37 +457,84 @@ and pass them through the dedicated sub-network.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">action_dim</span> <span class="o">=</span> <span class="n">env1</span><span class="o">.</span><span class="n">action_spec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">policy_common</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictModule</span></a><span class="p">(</span>
-    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Linear.html#torch.nn.Linear" title="torch.nn.Linear" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span></a><span class="p">(</span><span class="mi">67</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;hidden&quot;</span><span class="p">]</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_common</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Linear.html#torch.nn.Linear" title="torch.nn.Linear" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span></a><span class="p">(</span><span class="mi">67</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;hidden&quot;</span><span class="p">]</span>
 <span class="p">)</span>
-<span class="n">policy_stand</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictModule</span></a><span class="p">(</span>
-    <span class="n">MLP</span><span class="p">(</span><span class="mi">67</span> <span class="o">+</span> <span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_stand</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MLP</span></a><span class="p">(</span><span class="mi">67</span> <span class="o">+</span> <span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
     <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="s2">&quot;hidden&quot;</span><span class="p">],</span>
     <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="n">policy_walk</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictModule</span></a><span class="p">(</span>
-    <span class="n">MLP</span><span class="p">(</span><span class="mi">67</span> <span class="o">+</span> <span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_walk</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a><span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MLP</span></a><span class="p">(</span><span class="mi">67</span> <span class="o">+</span> <span class="mi">64</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
     <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="s2">&quot;hidden&quot;</span><span class="p">],</span>
     <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="n">seq</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TensorDictSequential</span></a><span class="p">(</span>
-    <span class="n">policy_common</span><span class="p">,</span> <span class="n">policy_stand</span><span class="p">,</span> <span class="n">policy_walk</span><span class="p">,</span> <span class="n">partial_tolerant</span><span class="o">=</span><span class="kc">True</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictSequential</span></a><span class="p">(</span>
+    <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_common</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_stand</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">policy_walk</span></a><span class="p">,</span> <span class="n">partial_tolerant</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>Let’s check that our sequence outputs actions for a single env (stand).</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">seq</span><span class="p">(</span><span class="n">env1</span><span class="o">.</span><span class="n">reset</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">(</span><span class="n">env1</span><span class="o">.</span><span class="n">reset</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 <p>Let’s check that our sequence outputs actions for a single env (walk).</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">seq</span><span class="p">(</span><span class="n">env2</span><span class="o">.</span><span class="n">reset</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">(</span><span class="n">env2</span><span class="o">.</span><span class="n">reset</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 <p>This also works with the stack: now the stand and walk keys have
 disappeared, because they’re not shared by all tensordicts. But the
 <code class="docutils literal notranslate"><span class="pre">TensorDictSequential</span></code> still performed the operations. Note that the
 backbone was executed in a vectorized way - not in a loop - which is more efficient.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">seq</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
 </pre></div>
 </div>
 </section>
@@ -495,12 +548,12 @@ same key).</p>
 a single task has to be performed. If a list of functions is provided, then
 it will assume that we are in a multi-task setting.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">env1_maker</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">TransformedEnv</span><span class="p">(</span>
-        <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">),</span>
-        <span class="n">Compose</span><span class="p">(</span>
-            <span class="n">CatTensors</span><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-            <span class="n">CatTensors</span><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
-            <span class="n">DoubleToFloat</span><span class="p">(</span>
+    <span class="k">return</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DMControlEnv</span></a><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">Compose</span></a><span class="p">(</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env1_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DoubleToFloat</span></a><span class="p">(</span>
                 <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_stand&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">],</span>
                 <span class="n">in_keys_inv</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
             <span class="p">),</span>
@@ -509,12 +562,12 @@ it will assume that we are in a multi-task setting.</p>
 
 
 <span class="k">def</span> <span class="nf">env2_maker</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">TransformedEnv</span><span class="p">(</span>
-        <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">),</span>
-        <span class="n">Compose</span><span class="p">(</span>
-            <span class="n">CatTensors</span><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-            <span class="n">CatTensors</span><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
-            <span class="n">DoubleToFloat</span><span class="p">(</span>
+    <span class="k">return</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">TransformedEnv</span></a><span class="p">(</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DMControlEnv</span></a><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">),</span>
+        <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">Compose</span></a><span class="p">(</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="n">del_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">CatTensors</span></a><span class="p">(</span><span class="n">env2_obs_keys</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">),</span>
+            <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">DoubleToFloat</span></a><span class="p">(</span>
                 <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation_walk&quot;</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">],</span>
                 <span class="n">in_keys_inv</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">],</span>
             <span class="p">),</span>
@@ -522,45 +575,239 @@ it will assume that we are in a multi-task setting.</p>
     <span class="p">)</span>
 
 
-<span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="n">env1_maker</span><span class="p">,</span> <span class="n">env2_maker</span><span class="p">])</span>
+<span class="n">env</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">ParallelEnv</span></a><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="n">env1_maker</span><span class="p">,</span> <span class="n">env2_maker</span><span class="p">])</span>
 <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">_single_task</span>
 
-<span class="n">tdreset</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># should be different</span>
+<a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># should be different</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 <p>Let’s pass the output through our network.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">tdreset</span> <span class="o">=</span> <span class="n">seq</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># should be different but all have an &quot;action&quot; key</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># should be different but all have an &quot;action&quot; key</span>
 
 
-<span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>  <span class="c1"># computes actions and execute steps in parallel</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tdreset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># next_observation has now been written</span>
+<span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>  <span class="c1"># computes actions and execute steps in parallel</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># next_observation has now been written</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: LazyStackedTensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            exclusive_fields={
+                0 -&gt;
+                    observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                1 -&gt;
+                    observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+            batch_size=torch.Size([2]),
+            device=cpu,
+            is_shared=False,
+            stack_dim=0),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: TensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            batch_size=torch.Size([]),
+            device=cpu,
+            is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: TensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            batch_size=torch.Size([]),
+            device=cpu,
+            is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 </section>
 <section id="rollout">
 <h2>Rollout<a class="headerlink" href="#rollout" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">seq</span><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first step: only the common keys are shown</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first step: only the common keys are shown</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first env: the stand obs is present</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: LazyStackedTensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            exclusive_fields={
+                0 -&gt;
+                    observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                1 -&gt;
+                    observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+            batch_size=torch.Size([2]),
+            device=cpu,
+            is_shared=False,
+            stack_dim=0),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first env: the stand obs is present</span>
 
 <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="k">del</span> <span class="n">env</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.310 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  456 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 49.211 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  9 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-multi-task-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/9b5fe5a65e76c28e02edf59221b0dc86/multi_task.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">multi_task.ipynb</span></code></a></p>

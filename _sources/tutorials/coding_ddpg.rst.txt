@@ -22,7 +22,10 @@ TorchRL objectives: Coding a DDPG loss
 ======================================
 **Author**: `Vincent Moens <https://github.com/vmoens>`_
 
-.. GENERATED FROM PYTHON SOURCE LINES 10-54
+.. GENERATED FROM PYTHON SOURCE LINES 10-65
+
+Overview
+--------
 
 TorchRL separates the training of RL algorithms in various pieces that will be
 assembled in your training script: the environment, the data collection and
@@ -31,29 +34,33 @@ storage, the model and finally the loss function.
 TorchRL losses (or "objectives") are stateful objects that contain the
 trainable parameters (policy and value models).
 This tutorial will guide you through the steps to code a loss from the ground up
-using torchrl.
+using TorchRL.
 
 To this aim, we will be focusing on DDPG, which is a relatively straightforward
 algorithm to code.
-DDPG (`Deep Deterministic Policy Gradient <https://arxiv.org/abs/1509.02971>`_)
+`Deep Deterministic Policy Gradient <https://arxiv.org/abs/1509.02971>`_ (DDPG)
 is a simple continuous control algorithm. It consists in learning a
 parametric value function for an action-observation pair, and
-then learning a policy that outputs actions that maximise this value
+then learning a policy that outputs actions that maximize this value
 function given a certain observation.
 
-Key learnings:
+What you will learn:
 
 - how to write a loss module and customize its value estimator;
-- how to build an environment in torchrl, including transforms
-  (e.g. data normalization) and parallel execution;
+- how to build an environment in TorchRL, including transforms
+  (for example, data normalization) and parallel execution;
 - how to design a policy and value network;
 - how to collect data from your environment efficiently and store them
   in a replay buffer;
 - how to store trajectories (and not transitions) in your replay buffer);
-- and finally how to evaluate your model.
+- how to evaluate your model.
 
-This tutorial assumes that you have completed the PPO tutorial which gives
-an overview of the torchrl components and dependencies, such as
+Prerequisites
+~~~~~~~~~~~~~
+
+This tutorial assumes that you have completed the
+`PPO tutorial <reinforcement_ppo.html>`_ which gives
+an overview of the TorchRL components and dependencies, such as
 :class:`tensordict.TensorDict` and :class:`tensordict.nn.TensorDictModules`,
 although it should be
 sufficiently transparent to be understood without a deep understanding of
@@ -61,54 +68,62 @@ these classes.
 
 .. note::
   We do not aim at giving a SOTA implementation of the algorithm, but rather
-  to provide a high-level illustration of torchrl's loss implementations
+  to provide a high-level illustration of TorchRL's loss implementations
   and the library features that are to be used in the context of
   this algorithm.
 
 Imports and setup
 -----------------
 
+ .. code-block:: bash
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-60
+     %%bash
+     pip3 install torchrl mujoco glfw
+
+.. GENERATED FROM PYTHON SOURCE LINES 65-72
 
 .. code-block:: Python
 
 
 
-    import torch.cuda
+
+    import torch
     import tqdm
 
 
 
 
-.. rst-class:: sphx-glr-script-out
-
-.. code-block:: pytb
-
-    Traceback (most recent call last):
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 68, in <module>
-        assert multiprocessing.get_start_method() == "fork"
-    AssertionError
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-78
 
-We will execute the policy on cuda if available
+.. GENERATED FROM PYTHON SOURCE LINES 93-94
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-82
+We will execute the policy on CUDA if available
+
+.. GENERATED FROM PYTHON SOURCE LINES 94-102
 
 .. code-block:: Python
 
+    is_fork = multiprocessing.get_start_method() == "fork"
     device = (
-        torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device("cuda:0")
+        torch.device(0)
+        if torch.cuda.is_available() and not is_fork
+        else torch.device("cpu")
     )
+    collector_device = torch.device("cpu")  # Change the device to ``cuda`` to use CUDA
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-168
 
-torchrl :class:`~torchrl.objectives.LossModule`
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 103-189
+
+TorchRL :class:`~torchrl.objectives.LossModule`
 -----------------------------------------------
 
 TorchRL provides a series of losses to use in your training scripts.
@@ -117,11 +132,11 @@ a simple signature.
 
 The main characteristics of TorchRL losses are:
 
-- they are stateful objects: they contain a copy of the trainable parameters
+- They are stateful objects: they contain a copy of the trainable parameters
   such that ``loss_module.parameters()`` gives whatever is needed to train the
   algorithm.
-- They follow the ``tensordict`` convention: the :meth:`torch.nn.Module.forward`
-  method will receive a tensordict as input that contains all the necessary
+- They follow the ``TensorDict`` convention: the :meth:`torch.nn.Module.forward`
+  method will receive a TensorDict as input that contains all the necessary
   information to return a loss value.
 
       >>> data = replay_buffer.sample()
@@ -129,8 +144,9 @@ The main characteristics of TorchRL losses are:
 
 - They output a :class:`tensordict.TensorDict` instance with the loss values
   written under a ``"loss_<smth>"`` where ``smth`` is a string describing the
-  loss. Additional keys in the tensordict may be useful metrics to log during
+  loss. Additional keys in the ``TensorDict`` may be useful metrics to log during
   training time.
+
   .. note::
     The reason we return independent losses is to let the user use a different
     optimizer for different sets of parameters for instance. Summing the losses
@@ -157,14 +173,14 @@ stage.
 
 Let us start with the :meth:`~torchrl.objectives.LossModule.__init__`
 method. DDPG aims at solving a control task with a simple strategy:
-training a policy to output actions that maximise the value predicted by
+training a policy to output actions that maximize the value predicted by
 a value network. Hence, our loss module needs to receive two networks in its
 constructor: an actor and a value networks. We expect both of these to be
-tensordict-compatible objects, such as
+TensorDict-compatible objects, such as
 :class:`tensordict.nn.TensorDictModule`.
 Our loss function will need to compute a target value and fit the value
 network to this, and generate an action and fit the policy such that its
-value estimate is maximised.
+value estimate is maximized.
 
 The crucial step of the :meth:`LossModule.__init__` method is the call to
 :meth:`~torchrl.LossModule.convert_to_functional`. This method will extract
@@ -177,7 +193,7 @@ The reason TorchRL does this is that RL algorithms often execute the same
 model with different sets of parameters, called "trainable" and "target"
 parameters.
 The "trainable" parameters are those that the optimizer needs to fit. The
-"target" parameters are usually a copy of the formers with some time lag
+"target" parameters are usually a copy of the former's with some time lag
 (absolute or diluted through a moving average).
 These target parameters are used to compute the value associated with the
 next observation. One the advantages of using a set of target parameters
@@ -191,10 +207,10 @@ for instance) the ``target_actor_network_params`` attribute will still be
 accessible but this will just return a **detached** version of the
 actor parameters.
 
-Later, we will see how the target parameters should be updated in torchrl.
+Later, we will see how the target parameters should be updated in TorchRL.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 168-200
+.. GENERATED FROM PYTHON SOURCE LINES 189-221
 
 .. code-block:: Python
 
@@ -231,7 +247,13 @@ Later, we will see how the target parameters should be updated in torchrl.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 201-217
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 222-238
 
 The value estimator loss method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,7 +272,7 @@ pointers to all the value estimators implemented. Let us define the default
 value function here. We will take the simplest version (TD(0)), and show later
 on how this can be changed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 217-222
+.. GENERATED FROM PYTHON SOURCE LINES 238-243
 
 .. code-block:: Python
 
@@ -260,13 +282,19 @@ on how this can be changed.
     default_value_estimator = ValueEstimators.TD0
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 223-226
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 244-247
 
 We also need to give some instructions to DDPG on how to build the value
 estimator, depending on the user query. Depending on the estimator provided,
 we will build the corresponding module to be used at train time:
 
-.. GENERATED FROM PYTHON SOURCE LINES 226-257
+.. GENERATED FROM PYTHON SOURCE LINES 247-273
 
 .. code-block:: Python
 
@@ -282,29 +310,30 @@ we will build the corresponding module to be used at train time:
         hp.update(hyperparams)
         value_key = "state_action_value"
         if value_type == ValueEstimators.TD1:
-            self._value_estimator = TD1Estimator(
-                value_network=self.actor_critic, value_key=value_key, **hp
-            )
+            self._value_estimator = TD1Estimator(value_network=self.actor_critic, **hp)
         elif value_type == ValueEstimators.TD0:
-            self._value_estimator = TD0Estimator(
-                value_network=self.actor_critic, value_key=value_key, **hp
-            )
+            self._value_estimator = TD0Estimator(value_network=self.actor_critic, **hp)
         elif value_type == ValueEstimators.GAE:
             raise NotImplementedError(
                 f"Value type {value_type} it not implemented for loss {type(self)}."
             )
         elif value_type == ValueEstimators.TDLambda:
-            self._value_estimator = TDLambdaEstimator(
-                value_network=self.actor_critic, value_key=value_key, **hp
-            )
+            self._value_estimator = TDLambdaEstimator(value_network=self.actor_critic, **hp)
         else:
             raise NotImplementedError(f"Unknown value type {value_type}")
+        self._value_estimator.set_keys(value=value_key)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 258-274
 
-The ``make_value_estimator`` method can but does not need to be called: if
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 274-290
+
+The ``make_value_estimator`` method can but does not need to be called: ifgg
 not, the :class:`~torchrl.objectives.LossModule` will query this method with
 its default estimator.
 
@@ -314,14 +343,14 @@ The actor loss method
 The central piece of an RL algorithm is the training loss for the actor.
 In the case of DDPG, this function is quite simple: we just need to compute
 the value associated with an action computed using the policy and optimize
-the actor weights to maximise this value.
+the actor weights to maximize this value.
 
 When computing this value, we must make sure to take the value parameters out
 of the graph, otherwise the actor and value loss will be mixed up.
 For this, the :func:`~torchrl.objectives.utils.hold_out_params` function
 can be used.
 
-.. GENERATED FROM PYTHON SOURCE LINES 274-291
+.. GENERATED FROM PYTHON SOURCE LINES 290-307
 
 .. code-block:: Python
 
@@ -343,7 +372,13 @@ can be used.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 292-298
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 308-314
 
 The value loss method
 ~~~~~~~~~~~~~~~~~~~~~
@@ -352,7 +387,7 @@ We now need to optimize our value network parameters.
 To do this, we will rely on the value estimator of our class:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 298-335
+.. GENERATED FROM PYTHON SOURCE LINES 314-351
 
 .. code-block:: Python
 
@@ -363,7 +398,7 @@ To do this, we will rely on the value estimator of our class:
     def _loss_value(
         self,
         tensordict,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ):
         td_copy = tensordict.clone()
 
         # V(s, a)
@@ -386,7 +421,7 @@ To do this, we will rely on the value estimator of our class:
             tensordict, target_params=target_params
         ).squeeze(-1)
 
-        # Computes the value loss: L2, L1 or smooth L1 depending on self.loss_funtion
+        # Computes the value loss: L2, L1 or smooth L1 depending on `self.loss_function`
         loss_value = distance_loss(pred_val, target_value, loss_function=self.loss_function)
         td_error = (pred_val - target_value).pow(2)
 
@@ -394,16 +429,22 @@ To do this, we will rely on the value estimator of our class:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 336-342
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 352-358
 
 Putting things together in a forward call
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The only missing piece is the forward method, which will glue together the
-value and actor loss, collect the cost values and write them in a tensordict
+value and actor loss, collect the cost values and write them in a ``TensorDict``
 delivered to the user.
 
-.. GENERATED FROM PYTHON SOURCE LINES 342-386
+.. GENERATED FROM PYTHON SOURCE LINES 358-402
 
 .. code-block:: Python
 
@@ -452,7 +493,13 @@ delivered to the user.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 387-425
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 403-441
 
 Now that we have our loss, we can use it to train a policy to solve a
 control task.
@@ -467,7 +514,7 @@ training script.
 For this example, we will be using the ``"cheetah"`` task. The goal is to make
 a half-cheetah run as fast as possible.
 
-In TorchRL, one can create such a task by relying on dm_control or gym:
+In TorchRL, one can create such a task by relying on ``dm_control`` or ``gym``:
 
 .. code-block:: python
 
@@ -481,7 +528,7 @@ or
 
 By default, these environment disable rendering. Training from states is
 usually easier than training from images. To keep things simple, we focus
-on learning from states only. To pass the pixels to the tensordicts that
+on learning from states only. To pass the pixels to the ``tensordicts`` that
 are collected by :func:`env.step()`, simply pass the ``from_pixels=True``
 argument to the constructor:
 
@@ -490,10 +537,10 @@ argument to the constructor:
    env = GymEnv("HalfCheetah-v4", from_pixels=True, pixels_only=True)
 
 We write a :func:`make_env` helper function that will create an environment
-with either one of the two backends considered above (dm-control or gym).
+with either one of the two backends considered above (``dm-control`` or ``gym``).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 425-460
+.. GENERATED FROM PYTHON SOURCE LINES 441-476
 
 .. code-block:: Python
 
@@ -506,7 +553,7 @@ with either one of the two backends considered above (dm-control or gym).
 
 
     def make_env(from_pixels=False):
-        """Create a base env."""
+        """Create a base ``env``."""
         global env_library
         global env_name
 
@@ -533,7 +580,13 @@ with either one of the two backends considered above (dm-control or gym).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 461-488
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 477-504
 
 Transforms
 ~~~~~~~~~~
@@ -563,7 +616,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
   take care of computing the normalizing constants later on.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 488-554
+.. GENERATED FROM PYTHON SOURCE LINES 504-556
 
 .. code-block:: Python
 
@@ -584,7 +637,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
     def make_transformed_env(
         env,
     ):
-        """Apply transforms to the env (such as reward scaling and state normalization)."""
+        """Apply transforms to the ``env`` (such as reward scaling and state normalization)."""
 
         env = TransformedEnv(env)
 
@@ -592,16 +645,6 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
         # transformed environment using the `env = TransformedEnv(base_env, transforms)`
         # syntax.
         env.append_transform(RewardScaling(loc=0.0, scale=reward_scaling))
-
-        double_to_float_list = []
-        double_to_float_inv_list = []
-        if env_library is DMControlEnv:
-            # DMControl requires double-precision
-            double_to_float_list += [
-                "reward",
-                "action",
-            ]
-            double_to_float_inv_list += ["action"]
 
         # We concatenate all states into a single "observation_vector"
         # even if there is a single tensor, it'll be renamed in "observation_vector".
@@ -618,23 +661,25 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
         # version of the transform
         env.append_transform(ObservationNorm(in_keys=[out_key], standard_normal=True))
 
-        double_to_float_list.append(out_key)
-        env.append_transform(
-            DoubleToFloat(
-                in_keys=double_to_float_list, in_keys_inv=double_to_float_inv_list
-            )
-        )
+        env.append_transform(DoubleToFloat())
 
         env.append_transform(StepCounter(max_frames_per_traj))
 
-        # We need a marker for the start of trajectories for our OU exploration:
+        # We need a marker for the start of trajectories for our Ornstein-Uhlenbeck (OU)
+        # exploration:
         env.append_transform(InitTracker())
 
         return env
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 555-579
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 557-581
 
 Parallel execution
 ~~~~~~~~~~~~~~~~~~
@@ -661,7 +706,7 @@ To leverage the vectorization capabilities of PyTorch, we adopt
 the first method:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 579-614
+.. GENERATED FROM PYTHON SOURCE LINES 581-616
 
 .. code-block:: Python
 
@@ -697,17 +742,24 @@ the first method:
         return env
 
 
-    # The backend can be gym or dm_control
+    # The backend can be ``gym`` or ``dm_control``
     backend = "gym"
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 615-629
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 617-632
 
 .. note::
+
   ``frame_skip`` batches multiple step together with a single action
-  If > 1, the other frame counts (e.g. frames_per_batch, total_frames) need to
-  be adjusted to have a consistent total number of frames collected across
-  experiments. This is important as raising the frame-skip but keeping the
+  If > 1, the other frame counts (for example, frames_per_batch, total_frames)
+  need to be adjusted to have a consistent total number of frames collected
+  across experiments. This is important as raising the frame-skip but keeping the
   total number of frames unchanged may seem like cheating: all things compared,
   a dataset of 10M elements collected with a frame-skip of 2 and another with
   a frame-skip of 1 actually have a ratio of interactions with the environment
@@ -718,19 +770,25 @@ the first method:
 Scaling the reward helps us control the signal magnitude for a more
 efficient learning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 629-631
+.. GENERATED FROM PYTHON SOURCE LINES 632-634
 
 .. code-block:: Python
 
     reward_scaling = 5.0
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 632-634
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 635-637
 
 We also define when a trajectory will be truncated. A thousand steps (500 if
-frame-skip = 2) is a good number to use for cheetah:
+frame-skip = 2) is a good number to use for the cheetah task:
 
-.. GENERATED FROM PYTHON SOURCE LINES 634-637
+.. GENERATED FROM PYTHON SOURCE LINES 637-640
 
 .. code-block:: Python
 
@@ -738,7 +796,13 @@ frame-skip = 2) is a good number to use for cheetah:
     max_frames_per_traj = 500
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 638-648
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 641-651
 
 Normalization of the observations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -751,7 +815,7 @@ environment and run it for a given number of steps, collect data over a given
 number of steps and compute its summary statistics.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 648-660
+.. GENERATED FROM PYTHON SOURCE LINES 651-663
 
 .. code-block:: Python
 
@@ -768,13 +832,19 @@ number of steps and compute its summary statistics.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 661-664
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 664-667
 
 Normalization stats
 ~~~~~~~~~~~~~~~~~~~
-Number of random steps used as for stats computation using ObservationNorm
+Number of random steps used as for stats computation using ``ObservationNorm``
 
-.. GENERATED FROM PYTHON SOURCE LINES 664-669
+.. GENERATED FROM PYTHON SOURCE LINES 667-672
 
 .. code-block:: Python
 
@@ -784,23 +854,35 @@ Number of random steps used as for stats computation using ObservationNorm
     transform_state_dict = get_env_stats()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 670-671
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 673-674
 
 Number of environments in each data collector
 
-.. GENERATED FROM PYTHON SOURCE LINES 671-673
+.. GENERATED FROM PYTHON SOURCE LINES 674-676
 
 .. code-block:: Python
 
     env_per_collector = 4
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 674-676
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 677-679
 
 We pass the stats computed earlier to normalize the output of our
 environment:
 
-.. GENERATED FROM PYTHON SOURCE LINES 676-685
+.. GENERATED FROM PYTHON SOURCE LINES 679-688
 
 .. code-block:: Python
 
@@ -814,7 +896,13 @@ environment:
     from torchrl.data import CompositeSpec
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 686-717
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 689-720
 
 Building the model
 ------------------
@@ -848,7 +936,7 @@ sample of data. For this purpose, we generate fake data from the
 environment specs.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 717-777
+.. GENERATED FROM PYTHON SOURCE LINES 720-780
 
 .. code-block:: Python
 
@@ -902,8 +990,8 @@ environment specs.
             module=q_net,
         ).to(device)
 
-        # init lazy moduless
-        qnet(actor(proof_environment.reset()))
+        # initialize lazy modules
+        qnet(actor(proof_environment.reset().to(device)))
         return actor, qnet
 
 
@@ -913,16 +1001,22 @@ environment specs.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 778-784
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 781-787
 
 Exploration
 ~~~~~~~~~~~
 
 The policy is wrapped in a :class:`~torchrl.modules.OrnsteinUhlenbeckProcessWrapper`
-exploration module, as suggesed in the original paper.
+exploration module, as suggested in the original paper.
 Let's define the number of frames before OU noise reaches its minimum value
 
-.. GENERATED FROM PYTHON SOURCE LINES 784-794
+.. GENERATED FROM PYTHON SOURCE LINES 787-797
 
 .. code-block:: Python
 
@@ -937,7 +1031,13 @@ Let's define the number of frames before OU noise reaches its minimum value
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 795-836
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 798-842
 
 Data collector
 --------------
@@ -948,24 +1048,27 @@ the action to be executed at a given time, then execute a step in the
 environment and reset it when required.
 Data collectors are designed to help developers have a tight control
 on the number of frames per batch of data, on the (a)sync nature of this
-collection and on the resources allocated to the data collection (e.g. GPU,
-number of workers etc).
+collection and on the resources allocated to the data collection (for example
+GPU, number of workers, and so on).
 
 Here we will use
-:class:`~torchrl.collectors.MultiaSyncDataCollector`, a data collector that
-will be executed in an async manner (i.e. data will be collected while
-the policy is being optimized). With the :class:`MultiaSyncDataCollector`,
-multiple workers are running rollouts separately. When a batch is asked, it
-is gathered from the first worker that can provide it.
+:class:`~torchrl.collectors.SyncDataCollector`, a simple, single-process
+data collector. TorchRL offers other collectors, such as
+:class:`~torchrl.collectors.MultiaSyncDataCollector`, which executed the
+rollouts in an asynchronous manner (for example, data will be collected while
+the policy is being optimized, thereby decoupling the training and
+data collection).
 
 The parameters to specify are:
 
-- the list of environment creation functions,
+- an environment factory or an environment,
 - the policy,
 - the total number of frames before the collector is considered empty,
 - the maximum number of frames per trajectory (useful for non-terminating
-  environments, like dm_control ones).
+  environments, like ``dm_control`` ones).
+
   .. note::
+
     The ``max_frames_per_traj`` passed to the collector will have the effect
     of registering a new :class:`~torchrl.envs.StepCounter` transform
     with the environment used for inference. We can achieve the same result
@@ -981,25 +1084,31 @@ One should also pass:
 
 The total frames we will use during training should be around 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 836-838
+.. GENERATED FROM PYTHON SOURCE LINES 842-844
 
 .. code-block:: Python
 
     total_frames = 10_000  # 1_000_000
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 839-847
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 845-853
 
 The number of frames returned by the collector at each iteration of the outer
-loop is equal to the length of each sub-trajectories times the number of envs
-run in parallel in each collector.
+loop is equal to the length of each sub-trajectories times the number of
+environments run in parallel in each collector.
 
 In other words, we expect batches from the collector to have a shape
 ``[env_per_collector, traj_len]`` where
 ``traj_len=frames_per_batch/env_per_collector``:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 847-875
+.. GENERATED FROM PYTHON SOURCE LINES 853-873
 
 .. code-block:: Python
 
@@ -1008,31 +1117,29 @@ In other words, we expect batches from the collector to have a shape
     init_random_frames = 5000
     num_collectors = 2
 
-    from torchrl.collectors import MultiaSyncDataCollector
+    from torchrl.collectors import SyncDataCollector
     from torchrl.envs import ExplorationType
 
-    collector = MultiaSyncDataCollector(
-        create_env_fn=[
-            parallel_env,
-        ]
-        * num_collectors,
+    collector = SyncDataCollector(
+        parallel_env,
         policy=actor_model_explore,
         total_frames=total_frames,
-        # max_frames_per_traj=max_frames_per_traj,  # this is achieved by the env constructor
         frames_per_batch=frames_per_batch,
         init_random_frames=init_random_frames,
         reset_at_each_iter=False,
         split_trajs=False,
-        device=device,
-        # device for execution
-        storing_device=device,
-        # device where data will be stored and passed
-        update_at_each_batch=False,
+        device=collector_device,
         exploration_type=ExplorationType.RANDOM,
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 876-886
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 874-884
 
 Evaluator: building your recorder object
 ----------------------------------------
@@ -1045,7 +1152,7 @@ from these simulations.
 
 The following helper function builds this object:
 
-.. GENERATED FROM PYTHON SOURCE LINES 886-907
+.. GENERATED FROM PYTHON SOURCE LINES 884-905
 
 .. code-block:: Python
 
@@ -1071,11 +1178,17 @@ The following helper function builds this object:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 908-909
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 906-907
 
 We will be recording the performance every 10 batch collected
 
-.. GENERATED FROM PYTHON SOURCE LINES 909-922
+.. GENERATED FROM PYTHON SOURCE LINES 907-920
 
 .. code-block:: Python
 
@@ -1093,7 +1206,13 @@ We will be recording the performance every 10 batch collected
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 923-936
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 921-934
 
 Replay buffer
 -------------
@@ -1109,7 +1228,7 @@ function takes care of creating the replay buffer with the desired
 hyperparameters:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 936-963
+.. GENERATED FROM PYTHON SOURCE LINES 934-961
 
 .. code-block:: Python
 
@@ -1141,11 +1260,17 @@ hyperparameters:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 964-965
 
-We'll store the replay buffer in a temporary dirrectory on disk
 
-.. GENERATED FROM PYTHON SOURCE LINES 965-971
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 962-963
+
+We'll store the replay buffer in a temporary directory on disk
+
+.. GENERATED FROM PYTHON SOURCE LINES 963-969
 
 .. code-block:: Python
 
@@ -1156,7 +1281,13 @@ We'll store the replay buffer in a temporary dirrectory on disk
     buffer_scratch_dir = tmpdir.name
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 972-993
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 970-991
 
 Replay buffer storage and batch size
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1166,21 +1297,21 @@ Since we'll be feeding trajectories to our buffer, we need to adapt the buffer
 size by dividing it by the length of the sub-trajectories yielded by our
 data collector.
 Regarding the batch-size, our sampling strategy will consist in sampling
-trajectories of length ``traj_len=200`` before selecting sub-trajecotries
+trajectories of length ``traj_len=200`` before selecting sub-trajectories
 or length ``random_crop_len=25`` on which the loss will be computed.
 This strategy balances the choice of storing whole trajectories of a certain
-length with the need for providing sampels with a sufficient heterogeneity
+length with the need for providing samples with a sufficient heterogeneity
 to our loss. The following figure shows the dataflow from a collector
 that gets 8 frames in each batch with 2 environments run in parallel,
 feeds them to a replay buffer that contains 1000 trajectories and
 samples sub-trajectories of 2 time steps each.
 
 .. figure:: /_static/img/replaybuffer_traj.png
-   :alt: Storign trajectories in the replay buffer
+   :alt: Storing trajectories in the replay buffer
 
 Let's start with the number of frames stored in the buffer
 
-.. GENERATED FROM PYTHON SOURCE LINES 993-1002
+.. GENERATED FROM PYTHON SOURCE LINES 991-1000
 
 .. code-block:: Python
 
@@ -1194,48 +1325,72 @@ Let's start with the number of frames stored in the buffer
     buffer_size = ceil_div(buffer_size, traj_len)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1003-1004
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1001-1002
 
 Prioritized replay buffer is disabled by default
 
-.. GENERATED FROM PYTHON SOURCE LINES 1004-1006
+.. GENERATED FROM PYTHON SOURCE LINES 1002-1004
 
 .. code-block:: Python
 
     prb = False
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1007-1009
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1005-1007
 
 We also need to define how many updates we'll be doing per batch of data
-collected. This is known as the update-to-data or UTD ratio:
+collected. This is known as the update-to-data or ``UTD`` ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1009-1011
+.. GENERATED FROM PYTHON SOURCE LINES 1007-1009
 
 .. code-block:: Python
 
     update_to_data = 64
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1012-1013
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1010-1011
 
 We'll be feeding the loss with trajectories of length 25:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1013-1015
+.. GENERATED FROM PYTHON SOURCE LINES 1011-1013
 
 .. code-block:: Python
 
     random_crop_len = 25
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1016-1020
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1014-1018
 
 In the original paper, the authors perform one update with a batch of 64
 elements for each frame collected. Here, we reproduce the same ratio
 but while realizing several updates at each batch collection. We
 adapt our batch-size to achieve the same number of update-per-frame ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1020-1031
+.. GENERATED FROM PYTHON SOURCE LINES 1018-1029
 
 .. code-block:: Python
 
@@ -1251,17 +1406,23 @@ adapt our batch-size to achieve the same number of update-per-frame ratio:
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1032-1039
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1030-1037
 
 Loss module construction
 ------------------------
 
-We build our loss module with the actor and qnet we've just created.
+We build our loss module with the actor and ``qnet`` we've just created.
 Because we have target parameters to update, we _must_ create a target network
 updater.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1039-1046
+.. GENERATED FROM PYTHON SOURCE LINES 1037-1044
 
 .. code-block:: Python
 
@@ -1273,18 +1434,30 @@ updater.
     loss_module = DDPGLoss(actor, qnet)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1047-1048
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1045-1046
 
 let's use the TD(lambda) estimator!
 
-.. GENERATED FROM PYTHON SOURCE LINES 1048-1050
+.. GENERATED FROM PYTHON SOURCE LINES 1046-1048
 
 .. code-block:: Python
 
     loss_module.make_value_estimator(ValueEstimators.TDLambda, gamma=gamma, lmbda=lmbda)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1051-1069
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1049-1067
 
 .. note::
   Off-policy usually dictates a TD(0) estimator. Here, we use a TD(:math:`\lambda`)
@@ -1305,7 +1478,7 @@ classes. They're built with the loss module as argument, and the update is
 achieved via a call to `updater.step()` at the appropriate location in the
 training loop.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1069-1074
+.. GENERATED FROM PYTHON SOURCE LINES 1067-1072
 
 .. code-block:: Python
 
@@ -1315,14 +1488,20 @@ training loop.
     target_net_updater = SoftUpdate(loss_module, eps=1 - tau)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1075-1079
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1073-1077
 
 Optimizer
 ~~~~~~~~~
 
 Finally, we will use the Adam optimizer for the policy and value network:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1079-1090
+.. GENERATED FROM PYTHON SOURCE LINES 1077-1088
 
 .. code-block:: Python
 
@@ -1338,7 +1517,13 @@ Finally, we will use the Adam optimizer for the policy and value network:
     total_collection_steps = total_frames // frames_per_batch
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1091-1097
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1089-1095
 
 Time to train the policy
 ------------------------
@@ -1347,7 +1532,7 @@ The training loop is pretty straightforward now that we have built all the
 modules we need.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1097-1183
+.. GENERATED FROM PYTHON SOURCE LINES 1095-1181
 
 .. code-block:: Python
 
@@ -1438,7 +1623,18 @@ modules we need.
     del collector
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1184-1193
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      0%|          | 0/10000 [00:00<?, ?it/s]      8%|▊         | 800/10000 [00:00<00:02, 3230.42it/s]     16%|█▌        | 1600/10000 [00:01<00:09, 914.32it/s]     24%|██▍       | 2400/10000 [00:01<00:05, 1341.52it/s]     32%|███▏      | 3200/10000 [00:02<00:03, 1724.56it/s]     40%|████      | 4000/10000 [00:02<00:02, 2060.69it/s]     48%|████▊     | 4800/10000 [00:02<00:02, 2379.73it/s]     56%|█████▌    | 5600/10000 [00:02<00:01, 2662.23it/s]    reward: -2.45 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.76/6.11, grad norm= 136.70, loss_value= 343.32, loss_actor= 13.82, target value: -16.59:  56%|█████▌    | 5600/10000 [00:04<00:01, 2662.23it/s]    reward: -2.45 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.76/6.11, grad norm= 136.70, loss_value= 343.32, loss_actor= 13.82, target value: -16.59:  64%|██████▍   | 6400/10000 [00:05<00:04, 796.96it/s]     reward: -2.27 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.14/5.71, grad norm= 58.81, loss_value= 306.99, loss_actor= 12.76, target value: -13.40:  64%|██████▍   | 6400/10000 [00:07<00:04, 796.96it/s]     reward: -2.27 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.14/5.71, grad norm= 58.81, loss_value= 306.99, loss_actor= 12.76, target value: -13.40:  72%|███████▏  | 7200/10000 [00:08<00:05, 514.10it/s]    reward: -4.65 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.23/5.09, grad norm= 204.45, loss_value= 221.02, loss_actor= 17.62, target value: -14.04:  72%|███████▏  | 7200/10000 [00:09<00:05, 514.10it/s]    reward: -4.65 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.23/5.09, grad norm= 204.45, loss_value= 221.02, loss_actor= 17.62, target value: -14.04:  80%|████████  | 8000/10000 [00:10<00:04, 412.86it/s]    reward: -4.36 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.90/4.94, grad norm= 110.68, loss_value= 203.73, loss_actor= 18.83, target value: -18.82:  80%|████████  | 8000/10000 [00:12<00:04, 412.86it/s]    reward: -4.36 (r0 = -2.69), reward eval: reward: -0.00, reward normalized=-2.90/4.94, grad norm= 110.68, loss_value= 203.73, loss_actor= 18.83, target value: -18.82:  88%|████████▊ | 8800/10000 [00:13<00:03, 372.06it/s]    reward: -3.42 (r0 = -2.69), reward eval: reward: -3.56, reward normalized=-2.64/4.79, grad norm= 250.35, loss_value= 197.29, loss_actor= 17.71, target value: -17.52:  88%|████████▊ | 8800/10000 [00:16<00:03, 372.06it/s]    reward: -3.42 (r0 = -2.69), reward eval: reward: -3.56, reward normalized=-2.64/4.79, grad norm= 250.35, loss_value= 197.29, loss_actor= 17.71, target value: -17.52:  96%|█████████▌| 9600/10000 [00:17<00:01, 300.72it/s]    reward: -3.42 (r0 = -2.69), reward eval: reward: -3.56, reward normalized=-3.05/5.07, grad norm= 192.85, loss_value= 244.42, loss_actor= 17.85, target value: -21.27:  96%|█████████▌| 9600/10000 [00:19<00:01, 300.72it/s]    reward: -3.42 (r0 = -2.69), reward eval: reward: -3.56, reward normalized=-3.05/5.07, grad norm= 192.85, loss_value= 244.42, loss_actor= 17.85, target value: -21.27: : 10400it [00:20, 280.23it/s]                            reward: -5.12 (r0 = -2.69), reward eval: reward: -3.56, reward normalized=-3.50/4.62, grad norm= 164.74, loss_value= 250.30, loss_actor= 22.43, target value: -25.17: : 10400it [00:22, 280.23it/s]
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1182-1191
 
 Experiment results
 ------------------
@@ -1448,9 +1644,9 @@ that our policy learned quite well to solve the task.
 
 .. note::
   As already mentioned above, to get a more reasonable performance,
-  use a greater value for ``total_frames`` e.g. 1M.
+  use a greater value for ``total_frames`` for example, 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1193-1204
+.. GENERATED FROM PYTHON SOURCE LINES 1191-1202
 
 .. code-block:: Python
 
@@ -1466,12 +1662,23 @@ that our policy learned quite well to solve the task.
     plt.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1205-1218
+
+
+.. image-sg:: /tutorials/images/sphx_glr_coding_ddpg_001.png
+   :alt: coding ddpg
+   :srcset: /tutorials/images/sphx_glr_coding_ddpg_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 1203-1224
 
 Conclusion
 ----------
 
-In this tutorial, we have learnt how to code a loss module in TorchRL given
+In this tutorial, we have learned how to code a loss module in TorchRL given
 the concrete example of DDPG.
 
 The key takeaways are:
@@ -1481,13 +1688,21 @@ The key takeaways are:
 - How to use (or not) a target network, and how to update its parameters;
 - How to create an optimizer associated with a loss module.
 
+Next Steps
+----------
+
+To iterate further on this loss module we might consider:
+
+- Using `@dispatch` (see `[Feature] Distpatch IQL loss module <https://github.com/pytorch/rl/pull/1230>`_.)
+- Allowing flexible TensorDict keys.
+
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.308 seconds)
+   **Total running time of the script:** (1 minutes 56.693 seconds)
 
-**Estimated memory usage:**  549 MB
+**Estimated memory usage:**  16 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ddpg.py:

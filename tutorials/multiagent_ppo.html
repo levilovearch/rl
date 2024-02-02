@@ -415,7 +415,7 @@ using  <a class="reference external" href="https://en.wikipedia.org/wiki/Lidar">
 <li><p>How to create a multi-agent environment in TorchRL, how its specs work, and how it integrates with the library;</p></li>
 <li><p>How you use GPU vectorized environments in TorchRL;</p></li>
 <li><p>How to create different multi-agent network architectures in TorchRL (e.g., using parameter sharing, centralised critic)</p></li>
-<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
+<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.4.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
 <li><p>How we can tie all the library components (collectors, modules, replay buffers, and losses) in a multi-agent MAPPO/IPPO training loop.</p></li>
 </ul>
 <p>If you are running this in Google Colab, make sure you install the following dependencies:</p>
@@ -479,9 +479,11 @@ to render and visualise your own trained policy prior and after training.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Torch</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="c1"># Tensordict modules</span>
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule" title="tensordict.nn.TensorDictModule" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">TensorDictModule</span></a>
 <span class="kn">from</span> <span class="nn">tensordict.nn.distributions</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="torch.nn.Module" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">NormalParamExtractor</span></a>
+
+<span class="c1"># Tensordict modules</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">multiprocessing</span>
 
 <span class="c1"># Data collection</span>
 <span class="kn">from</span> <span class="nn">torchrl.collectors</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset" title="torch.utils.data.IterableDataset" class="sphx-glr-backref-module-torch-utils-data sphx-glr-backref-type-py-class"><span class="n">SyncDataCollector</span></a>
@@ -514,8 +516,13 @@ available, one may choose to execute the policy and the simulator on GPU or on a
 device.
 You can tune some of these values to adjust the computational requirements.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Devices</span>
-<span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">has_cuda</span> <span class="k">else</span> <span class="s2">&quot;cuda:0&quot;</span>  <span class="c1"># The divice where learning is run</span>
-<span class="n">vmas_device</span> <span class="o">=</span> <span class="n">device</span>  <span class="c1"># The device where the simulator is run (VMAS can run on GPU)</span>
+<span class="n">is_fork</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_start_method</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;fork&quot;</span>
+<a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a> <span class="o">=</span> <span class="p">(</span>
+    <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">device</span></a><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <a href="https://pytorch.org/docs/stable/generated/torch.cuda.is_available.html#torch.cuda.is_available" title="torch.cuda.is_available" class="sphx-glr-backref-module-torch-cuda sphx-glr-backref-type-py-function"><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span></a><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_fork</span>
+    <span class="k">else</span> <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">device</span></a><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">vmas_device</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a>  <span class="c1"># The device where the simulator is run (VMAS can run on GPU)</span>
 
 <span class="c1"># Sampling</span>
 <span class="n">frames_per_batch</span> <span class="o">=</span> <span class="mi">6_000</span>  <span class="c1"># Number of team frames collected per training iteration</span>
@@ -583,7 +590,7 @@ We will also use <code class="docutils literal notranslate"><span class="pre">nu
     <span class="n">num_envs</span><span class="o">=</span><span class="n">num_vmas_envs</span><span class="p">,</span>
     <span class="n">continuous_actions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># VMAS supports both continuous and discrete actions</span>
     <span class="n">max_steps</span><span class="o">=</span><span class="n">max_steps</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">vmas_device</span><span class="p">,</span>
+    <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">vmas_device</span></a><span class="p">,</span>
     <span class="c1"># Scenario kwargs</span>
     <span class="n">n_agents</span><span class="o">=</span><span class="n">n_agents</span><span class="p">,</span>  <span class="c1"># These are custom kwargs that change for each VMAS scenario, see the VMAS repo to know more.</span>
 <span class="p">)</span>
@@ -839,7 +846,7 @@ multiple agents, with much customisation available.</p>
         <span class="n">n_agents</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">n_agents</span><span class="p">,</span>
         <span class="n">centralised</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># the policies are decentralised (ie each agent will act from its observation)</span>
         <span class="n">share_params</span><span class="o">=</span><span class="n">share_parameters_policy</span><span class="p">,</span>
-        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="p">,</span>
         <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">num_cells</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
         <span class="n">activation_class</span><span class="o">=</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html#torch.nn.Tanh" title="torch.nn.Tanh" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span></a><span class="p">,</span>
@@ -924,7 +931,7 @@ all the values along the <code class="docutils literal notranslate"><span class=
     <span class="n">n_agents</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">n_agents</span><span class="p">,</span>
     <span class="n">centralised</span><span class="o">=</span><span class="n">mappo</span><span class="p">,</span>
     <span class="n">share_params</span><span class="o">=</span><span class="n">share_parameters_critic</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+    <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="p">,</span>
     <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
     <span class="n">num_cells</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
     <span class="n">activation_class</span><span class="o">=</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html#torch.nn.Tanh" title="torch.nn.Tanh" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span></a><span class="p">,</span>
@@ -1011,8 +1018,8 @@ with the only difference that it will auto reset done states until the desired f
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">collector</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset" title="torch.utils.data.IterableDataset" class="sphx-glr-backref-module-torch-utils-data sphx-glr-backref-type-py-class"><span class="n">SyncDataCollector</span></a><span class="p">(</span>
     <span class="n">env</span><span class="p">,</span>
     <span class="n">policy</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">vmas_device</span><span class="p">,</span>
-    <span class="n">storing_device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+    <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">vmas_device</span></a><span class="p">,</span>
+    <span class="n">storing_device</span><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="p">,</span>
     <span class="n">frames_per_batch</span><span class="o">=</span><span class="n">frames_per_batch</span><span class="p">,</span>
     <span class="n">total_frames</span><span class="o">=</span><span class="n">total_frames</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1030,7 +1037,7 @@ use the collected data online, but using these classes
 makes it easy for us to build the inner training loop in a reproducible way.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">replay_buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span>
     <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span>
-        <span class="n">frames_per_batch</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
+        <span class="n">frames_per_batch</span><span class="p">,</span> <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a>
     <span class="p">),</span>  <span class="c1"># We store the frames_per_batch collected at each iteration</span>
     <span class="n">sampler</span><span class="o">=</span><span class="n">SamplerWithoutReplacement</span><span class="p">(),</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="n">minibatch_size</span><span class="p">,</span>  <span class="c1"># We will sample minibatches of this size</span>
@@ -1180,16 +1187,16 @@ The steps include:</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>episode_reward_mean = 0:   0%|          | 0/10 [00:00&lt;?, ?it/s]
-episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:11&lt;01:43, 11.50s/it]
-episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:22&lt;01:31, 11.47s/it]
-episode_reward_mean = 1.0384122133255005:  30%|███       | 3/10 [00:34&lt;01:20, 11.45s/it]
-episode_reward_mean = 1.4766207933425903:  40%|████      | 4/10 [00:45&lt;01:08, 11.46s/it]
-episode_reward_mean = 2.1231958866119385:  50%|█████     | 5/10 [00:57&lt;00:57, 11.46s/it]
-episode_reward_mean = 2.2764601707458496:  60%|██████    | 6/10 [01:08&lt;00:45, 11.46s/it]
-episode_reward_mean = 2.6702916622161865:  70%|███████   | 7/10 [01:20&lt;00:34, 11.48s/it]
-episode_reward_mean = 2.791975259780884:  80%|████████  | 8/10 [01:32&lt;00:23, 11.56s/it]
-episode_reward_mean = 2.7550878524780273:  90%|█████████ | 9/10 [01:44&lt;00:11, 11.72s/it]
-episode_reward_mean = 2.8176751136779785: 100%|██████████| 10/10 [01:56&lt;00:00, 11.92s/it]
+episode_reward_mean = -0.3641679584980011:  10%|█         | 1/10 [00:10&lt;01:37, 10.83s/it]
+episode_reward_mean = 0.4940122067928314:  20%|██        | 2/10 [00:21&lt;01:26, 10.82s/it]
+episode_reward_mean = 1.0384122133255005:  30%|███       | 3/10 [00:32&lt;01:15, 10.82s/it]
+episode_reward_mean = 1.4766207933425903:  40%|████      | 4/10 [00:43&lt;01:05, 10.84s/it]
+episode_reward_mean = 2.1231958866119385:  50%|█████     | 5/10 [00:54&lt;00:54, 10.85s/it]
+episode_reward_mean = 2.2764601707458496:  60%|██████    | 6/10 [01:05&lt;00:43, 10.86s/it]
+episode_reward_mean = 2.6702916622161865:  70%|███████   | 7/10 [01:16&lt;00:32, 10.89s/it]
+episode_reward_mean = 2.791975259780884:  80%|████████  | 8/10 [01:27&lt;00:21, 10.96s/it]
+episode_reward_mean = 2.7550878524780273:  90%|█████████ | 9/10 [01:38&lt;00:11, 11.11s/it]
+episode_reward_mean = 2.8176751136779785: 100%|██████████| 10/10 [01:50&lt;00:00, 11.31s/it]
 </pre></div>
 </div>
 </section>
@@ -1261,7 +1268,7 @@ episode_reward_mean = 2.8176751136779785: 100%|██████████| 1
 <li><p>How to create a multi-agent environment in TorchRL, how its specs work, and how it integrates with the library;</p></li>
 <li><p>How you use GPU vectorized environments in TorchRL;</p></li>
 <li><p>How to create different multi-agent network architectures in TorchRL (e.g., using parameter sharing, centralised critic)</p></li>
-<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.3.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
+<li><p>How we can use <a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="(in tensordict vmain (0.4.0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.TensorDict</span></code></a> to carry multi-agent data;</p></li>
 <li><p>How we can tie all the library components (collectors, modules, replay buffers, and losses) in a multi-agent MAPPO/IPPO training loop.</p></li>
 </ul>
 <p>Now that you are proficient with multi-agent PPO, you can check out all
@@ -1280,8 +1287,8 @@ Here are a few videos of some possible scenarios you can try in VMAS.</p>
 <p><span class="caption-text">Scenarios available in <a class="reference external" href="https://github.com/proroklab/VectorizedMultiAgentSimulator">VMAS</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 49.334 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  133 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 48.340 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  15 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-multiagent-ppo-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/a977047786179278d12b52546e1c0da8/multiagent_ppo.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">multiagent_ppo.ipynb</span></code></a></p>
