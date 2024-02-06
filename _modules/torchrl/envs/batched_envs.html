@@ -1655,7 +1655,22 @@
                         <span class="n">tensordict_</span><span class="p">,</span> <span class="n">keys_to_update</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_reset_keys</span><span class="p">)</span>
                     <span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="n">tensordict_</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tensordict_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tdkeys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tensordict_</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+                <span class="c1"># This way we can avoid calling select over all the keys in the shared tensordict</span>
+                <span class="k">def</span> <span class="nf">tentative_update</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">val</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">val</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">apply_</span><span class="p">(</span>
+                    <span class="n">tentative_update</span><span class="p">,</span> <span class="n">tensordict_</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+                <span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="n">tdkeys</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
             <span class="n">channel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
             <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
@@ -1880,7 +1895,13 @@
                 <span class="n">torchrl_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;resetting worker </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">initialized</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;call &#39;init&#39; before resetting&quot;</span><span class="p">)</span>
-            <span class="n">cur_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">tensordict</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+            <span class="c1"># we use &#39;data&#39; to pass the keys that we need to pass to reset,</span>
+            <span class="c1"># because passing the entire buffer may have unwanted consequences</span>
+            <span class="n">cur_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span>
+                <span class="n">tensordict</span><span class="o">=</span><span class="n">root_shared_tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
             <span class="n">shared_tensordict</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span>
                 <span class="n">cur_td</span><span class="p">,</span>
                 <span class="n">keys_to_update</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">_selected_reset_keys</span><span class="p">),</span>
