@@ -1172,22 +1172,30 @@
                             <span class="s2">&quot;Consider using a placeholder for missing keys.&quot;</span>
                         <span class="p">)</span>
 
-                <span class="n">policy_output</span><span class="o">.</span><span class="n">_fast_apply</span><span class="p">(</span><span class="n">check_exclusive</span><span class="p">,</span> <span class="n">call_on_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">policy_output</span><span class="o">.</span><span class="n">_fast_apply</span><span class="p">(</span>
+                    <span class="n">check_exclusive</span><span class="p">,</span> <span class="n">call_on_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_empty</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
                 <span class="c1"># Use apply, because it works well with lazy stacks</span>
                 <span class="c1"># Edge-case of this approach: the policy may change the values in-place and only by a tiny bit</span>
                 <span class="c1"># or occasionally. In these cases, the keys will be missed (we can&#39;t detect if the policy has</span>
                 <span class="c1"># changed them here).</span>
                 <span class="c1"># This will cause a failure to update entries when policy and env device mismatch and</span>
                 <span class="c1"># casting is necessary.</span>
+                <span class="k">def</span> <span class="nf">filter_policy</span><span class="p">(</span><span class="n">value_output</span><span class="p">,</span> <span class="n">value_input</span><span class="p">,</span> <span class="n">value_input_clone</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="p">(</span><span class="n">value_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="p">(</span><span class="n">value_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">value_input</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="o">~</span><span class="n">torch</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value_output</span><span class="p">,</span> <span class="n">value_input_clone</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+                    <span class="p">):</span>
+                        <span class="k">return</span> <span class="n">value_output</span>
+
                 <span class="n">filtered_policy_output</span> <span class="o">=</span> <span class="n">policy_output</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">value_output</span><span class="p">,</span> <span class="n">value_input</span><span class="p">,</span> <span class="n">value_input_clone</span><span class="p">:</span> <span class="n">value_output</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="n">value_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="p">(</span><span class="n">value_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">value_input</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="o">~</span><span class="n">torch</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value_output</span><span class="p">,</span> <span class="n">value_input_clone</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
-                    <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">filter_policy</span><span class="p">,</span>
                     <span class="n">policy_input_copy</span><span class="p">,</span>
                     <span class="n">policy_input_clone</span><span class="p">,</span>
                     <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">filter_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_policy_output_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_policy_output_keys</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
@@ -1304,7 +1312,7 @@
                 <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">is_cuda</span><span class="p">:</span>
                     <span class="n">cuda_devices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_final_rollout</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">cuda_check</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_final_rollout</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">cuda_check</span><span class="p">,</span> <span class="n">filter_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">cuda_devices</span><span class="p">:</span>
                 <span class="n">streams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">priority</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
                 <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">streams</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">record_event</span><span class="p">())</span>
