@@ -483,7 +483,9 @@
 
         <span class="c1"># check that the model has parameters</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="o">.</span><span class="n">from_module</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_stateless_param</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">actor</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="n">_stateless_param</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;meta&quot;</span><span class="p">,</span> <span class="n">filter_empty</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">actor</span><span class="p">):</span>
             <span class="c1"># copy a stateless actor</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;functional_actor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span>
         <span class="c1"># we need to register these params as buffer to have `to` and similar</span>
@@ -500,7 +502,7 @@
                 <span class="p">)</span>
             <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">frozen_params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_make_detached_param</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frozen_params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_make_detached_param</span><span class="p">,</span> <span class="n">filter_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">requires_grad</span><span class="p">:</span>
             <span class="c1"># includes the frozen params/buffers in the module parameters/buffers</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">frozen_params</span> <span class="o">=</span> <span class="n">TensorDictParams</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frozen_params</span><span class="p">,</span> <span class="n">no_convert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
