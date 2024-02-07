@@ -909,7 +909,7 @@ variable.</p></li>
     <span class="n">total_frames</span><span class="o">=</span><span class="n">total_frames</span><span class="p">,</span>
     <a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="torch.device" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">device</span></a><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">optimizer</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span></a><span class="p">(</span>
+<a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">optimizer</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span></a><span class="p">(</span>
     <a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.parameters" title="torch.nn.Module.parameters" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-method"><span class="n">loss_module</span><span class="o">.</span><span class="n">parameters</span></a><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">wd</span><span class="p">,</span> <span class="n">betas</span><span class="o">=</span><span class="n">betas</span>
 <span class="p">)</span>
 <span class="n">exp_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dqn_exp_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -918,37 +918,19 @@ variable.</p></li>
 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;log dir: </span><span class="si">{</span><span class="n">logger</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">log_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/coding_dqn.py&quot;</span>, line <span class="m">599</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="n">collector</span> <span class="o">=</span> <span class="n">get_collector</span><span class="p">(</span>
-  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/coding_dqn.py&quot;</span>, line <span class="m">429</span>, in <span class="n">get_collector</span>
-<span class="w">    </span><span class="n">data_collector</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/collectors/collectors.py&quot;</span>, line <span class="m">2209</span>, in <span class="n">__init__</span>
-<span class="w">    </span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/collectors/collectors.py&quot;</span>, line <span class="m">1561</span>, in <span class="n">__init__</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_run_processes</span><span class="p">()</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/collectors/collectors.py&quot;</span>, line <span class="m">1716</span>, in <span class="n">_run_processes</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipe_parent</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/base.py&quot;</span>, line <span class="m">4287</span>, in <span class="n">__exit__</span>
-<span class="w">    </span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">swap_dest</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/utils.py&quot;</span>, line <span class="m">1140</span>, in <span class="n">new_func</span>
-<span class="w">    </span><span class="n">out</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">_self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/base.py&quot;</span>, line <span class="m">451</span>, in <span class="n">to_module</span>
-<span class="w">    </span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_module</span><span class="p">(</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;</span>, line <span class="m">429</span>, in <span class="n">_to_module</span>
-<span class="w">    </span><span class="n">_quick_set</span><span class="p">(</span><span class="n">_swap</span><span class="p">,</span> <span class="n">swap_dest</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;</span>, line <span class="m">425</span>, in <span class="n">_quick_set</span>
-<span class="w">    </span><span class="n">_quick_set</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">swap_td</span><span class="o">.</span><span class="n">_get_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">NO_DEFAULT</span><span class="p">))</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;</span>, line <span class="m">425</span>, in <span class="n">_quick_set</span>
-<span class="w">    </span><span class="n">_quick_set</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">swap_td</span><span class="o">.</span><span class="n">_get_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">NO_DEFAULT</span><span class="p">))</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;</span>, line <span class="m">425</span>, in <span class="n">_quick_set</span>
-<span class="w">    </span><span class="n">_quick_set</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">swap_td</span><span class="o">.</span><span class="n">_get_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">NO_DEFAULT</span><span class="p">))</span>
-<span class="gr">  [Previous line repeated 4 more times]</span>
-<span class="gr">  File &quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;, line 427, in _quick_set</span>
-<span class="gr">    swap_td._set_str(key, val, inplace=False, validated=True)</span>
-<span class="gr">  File &quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;, line 1470, in _set_str</span>
-<span class="gr">    raise RuntimeError(_LOCK_ERROR)</span>
-<span class="gr">RuntimeError</span>: <span class="n">Cannot modify locked TensorDict. For in-place modification, consider using the `set_()` method and make sure the key is present.</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>state dict of the observation norm: OrderedDict([(&#39;standard_normal&#39;, tensor(True)), (&#39;loc&#39;, tensor([[[0.9895]],
+
+        [[0.9895]],
+
+        [[0.9895]],
+
+        [[0.9895]]])), (&#39;scale&#39;, tensor([[[0.0737]],
+
+        [[0.0737]],
+
+        [[0.0737]],
+
+        [[0.0737]]]))])
 </pre></div>
 </div>
 <p>We can control how often the scalars should be logged. Here we set this
@@ -960,7 +942,7 @@ to a low value as our training loop is short:</p>
     <span class="n">total_frames</span><span class="o">=</span><span class="n">total_frames</span><span class="p">,</span>
     <span class="n">frame_skip</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">loss_module</span><span class="o">=</span><span class="n">loss_module</span><span class="p">,</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">optimizer</span></a><span class="o">=</span><a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">optimizer</span></a><span class="p">,</span>
     <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
     <span class="n">optim_steps_per_batch</span><span class="o">=</span><span class="n">n_optim</span><span class="p">,</span>
     <span class="n">log_interval</span><span class="o">=</span><span class="n">log_interval</span><span class="p">,</span>
@@ -1037,6 +1019,323 @@ Check the <a class="reference internal" href="../reference/generated/torchrl.tra
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/5000 [00:00&lt;?, ?it/s]
+  1%|          | 32/5000 [00:07&lt;20:36,  4.02it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:   1%|          | 32/5000 [00:07&lt;20:36,  4.02it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:   1%|▏         | 64/5000 [00:08&lt;08:59,  9.15it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   1%|▏         | 64/5000 [00:08&lt;08:59,  9.15it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   2%|▏         | 96/5000 [00:08&lt;05:15, 15.53it/s]
+r_training: 0.3802, rewards: 0.1000, total_rewards: 0.9434:   2%|▏         | 96/5000 [00:08&lt;05:15, 15.53it/s]
+r_training: 0.3802, rewards: 0.1000, total_rewards: 0.9434:   3%|▎         | 128/5000 [00:09&lt;03:30, 23.11it/s]
+r_training: 0.3650, rewards: 0.1000, total_rewards: 0.9434:   3%|▎         | 128/5000 [00:09&lt;03:30, 23.11it/s]
+r_training: 0.3650, rewards: 0.1000, total_rewards: 0.9434:   3%|▎         | 160/5000 [00:09&lt;02:34, 31.25it/s]
+r_training: 0.3682, rewards: 0.1000, total_rewards: 0.9434:   3%|▎         | 160/5000 [00:09&lt;02:34, 31.25it/s]
+r_training: 0.3682, rewards: 0.1000, total_rewards: 0.9434:   4%|▍         | 192/5000 [00:09&lt;02:00, 39.96it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   4%|▍         | 192/5000 [00:09&lt;02:00, 39.96it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   4%|▍         | 224/5000 [00:10&lt;01:38, 48.51it/s]
+r_training: 0.4434, rewards: 0.1000, total_rewards: 0.9434:   4%|▍         | 224/5000 [00:10&lt;01:38, 48.51it/s]
+r_training: 0.4434, rewards: 0.1000, total_rewards: 0.9434:   5%|▌         | 256/5000 [00:10&lt;01:22, 57.17it/s]
+r_training: 0.3712, rewards: 0.1000, total_rewards: 0.9434:   5%|▌         | 256/5000 [00:10&lt;01:22, 57.17it/s]
+r_training: 0.3712, rewards: 0.1000, total_rewards: 0.9434:   6%|▌         | 288/5000 [00:10&lt;01:12, 65.16it/s]
+r_training: 0.3802, rewards: 0.1000, total_rewards: 0.9434:   6%|▌         | 288/5000 [00:10&lt;01:12, 65.16it/s]
+r_training: 0.3802, rewards: 0.1000, total_rewards: 0.9434:   6%|▋         | 320/5000 [00:11&lt;01:05, 70.91it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   6%|▋         | 320/5000 [00:11&lt;01:05, 70.91it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:   7%|▋         | 352/5000 [00:11&lt;01:00, 76.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:   7%|▋         | 352/5000 [00:11&lt;01:00, 76.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:   8%|▊         | 384/5000 [00:11&lt;00:57, 80.96it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:   8%|▊         | 384/5000 [00:11&lt;00:57, 80.96it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:   8%|▊         | 416/5000 [00:12&lt;00:54, 83.70it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:   8%|▊         | 416/5000 [00:12&lt;00:54, 83.70it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:   9%|▉         | 448/5000 [00:12&lt;00:52, 87.24it/s]
+r_training: 0.4314, rewards: 0.1000, total_rewards: 0.9434:   9%|▉         | 448/5000 [00:12&lt;00:52, 87.24it/s]
+r_training: 0.4314, rewards: 0.1000, total_rewards: 0.9434:  10%|▉         | 480/5000 [00:12&lt;00:51, 87.05it/s]
+r_training: 0.4254, rewards: 0.1000, total_rewards: 0.9434:  10%|▉         | 480/5000 [00:12&lt;00:51, 87.05it/s]
+r_training: 0.4254, rewards: 0.1000, total_rewards: 0.9434:  10%|█         | 512/5000 [00:13&lt;00:51, 87.41it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  10%|█         | 512/5000 [00:13&lt;00:51, 87.41it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  11%|█         | 544/5000 [00:13&lt;00:49, 89.60it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  11%|█         | 544/5000 [00:13&lt;00:49, 89.60it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  12%|█▏        | 576/5000 [00:14&lt;00:49, 88.58it/s]
+r_training: 0.3712, rewards: 0.1000, total_rewards: 0.9434:  12%|█▏        | 576/5000 [00:14&lt;00:49, 88.58it/s]
+r_training: 0.3712, rewards: 0.1000, total_rewards: 0.9434:  12%|█▏        | 608/5000 [00:14&lt;00:50, 87.66it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  12%|█▏        | 608/5000 [00:14&lt;00:50, 87.66it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  13%|█▎        | 640/5000 [00:14&lt;00:50, 86.80it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  13%|█▎        | 640/5000 [00:14&lt;00:50, 86.80it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  13%|█▎        | 672/5000 [00:15&lt;00:49, 87.50it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  13%|█▎        | 672/5000 [00:15&lt;00:49, 87.50it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  14%|█▍        | 704/5000 [00:15&lt;00:47, 89.85it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  14%|█▍        | 704/5000 [00:15&lt;00:47, 89.85it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  15%|█▍        | 736/5000 [00:15&lt;00:47, 90.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  15%|█▍        | 736/5000 [00:15&lt;00:47, 90.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  15%|█▌        | 768/5000 [00:16&lt;00:47, 89.19it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  15%|█▌        | 768/5000 [00:16&lt;00:47, 89.19it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  16%|█▌        | 800/5000 [00:16&lt;00:46, 89.76it/s]
+r_training: 0.4224, rewards: 0.1000, total_rewards: 0.9434:  16%|█▌        | 800/5000 [00:16&lt;00:46, 89.76it/s]
+r_training: 0.4224, rewards: 0.1000, total_rewards: 0.9434:  17%|█▋        | 832/5000 [00:16&lt;00:46, 90.23it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  17%|█▋        | 832/5000 [00:16&lt;00:46, 90.23it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  17%|█▋        | 864/5000 [00:17&lt;00:44, 91.97it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  17%|█▋        | 864/5000 [00:17&lt;00:44, 91.97it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  18%|█▊        | 896/5000 [00:17&lt;00:44, 92.88it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  18%|█▊        | 896/5000 [00:17&lt;00:44, 92.88it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  19%|█▊        | 928/5000 [00:17&lt;00:43, 92.69it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  19%|█▊        | 928/5000 [00:17&lt;00:43, 92.69it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  19%|█▉        | 960/5000 [00:18&lt;00:44, 90.15it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  19%|█▉        | 960/5000 [00:18&lt;00:44, 90.15it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  20%|█▉        | 992/5000 [00:18&lt;00:45, 88.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  20%|█▉        | 992/5000 [00:18&lt;00:45, 88.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  20%|██        | 1024/5000 [00:19&lt;00:44, 88.51it/s]
+r_training: 0.4134, rewards: 0.1000, total_rewards: 0.9434:  20%|██        | 1024/5000 [00:19&lt;00:44, 88.51it/s]
+r_training: 0.4134, rewards: 0.1000, total_rewards: 0.9434:  21%|██        | 1056/5000 [00:19&lt;00:44, 89.43it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  21%|██        | 1056/5000 [00:19&lt;00:44, 89.43it/s]
+r_training: 0.4797, rewards: 0.1000, total_rewards: 0.9434:  22%|██▏       | 1088/5000 [00:19&lt;00:42, 92.44it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:  22%|██▏       | 1088/5000 [00:19&lt;00:42, 92.44it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:  22%|██▏       | 1120/5000 [00:19&lt;00:40, 94.64it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  22%|██▏       | 1120/5000 [00:19&lt;00:40, 94.64it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  23%|██▎       | 1152/5000 [00:20&lt;00:40, 94.24it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  23%|██▎       | 1152/5000 [00:20&lt;00:40, 94.24it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  24%|██▎       | 1184/5000 [00:20&lt;00:40, 94.35it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  24%|██▎       | 1184/5000 [00:20&lt;00:40, 94.35it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  24%|██▍       | 1216/5000 [00:21&lt;00:40, 93.38it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  24%|██▍       | 1216/5000 [00:21&lt;00:40, 93.38it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  25%|██▍       | 1248/5000 [00:21&lt;00:40, 92.66it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  25%|██▍       | 1248/5000 [00:21&lt;00:40, 92.66it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  26%|██▌       | 1280/5000 [00:21&lt;00:40, 92.01it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  26%|██▌       | 1280/5000 [00:21&lt;00:40, 92.01it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  26%|██▌       | 1312/5000 [00:22&lt;00:40, 92.18it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  26%|██▌       | 1312/5000 [00:22&lt;00:40, 92.18it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  27%|██▋       | 1344/5000 [00:22&lt;00:39, 91.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  27%|██▋       | 1344/5000 [00:22&lt;00:39, 91.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  28%|██▊       | 1376/5000 [00:22&lt;00:40, 89.61it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  28%|██▊       | 1376/5000 [00:22&lt;00:40, 89.61it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  28%|██▊       | 1408/5000 [00:23&lt;00:38, 92.97it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  28%|██▊       | 1408/5000 [00:23&lt;00:38, 92.97it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  29%|██▉       | 1440/5000 [00:23&lt;00:38, 92.78it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  29%|██▉       | 1440/5000 [00:23&lt;00:38, 92.78it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  29%|██▉       | 1472/5000 [00:23&lt;00:38, 91.96it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  29%|██▉       | 1472/5000 [00:23&lt;00:38, 91.96it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  30%|███       | 1504/5000 [00:24&lt;00:37, 93.71it/s]
+r_training: 0.4102, rewards: 0.1000, total_rewards: 0.9434:  30%|███       | 1504/5000 [00:24&lt;00:37, 93.71it/s]
+r_training: 0.4102, rewards: 0.1000, total_rewards: 0.9434:  31%|███       | 1536/5000 [00:24&lt;00:37, 93.42it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  31%|███       | 1536/5000 [00:24&lt;00:37, 93.42it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  31%|███▏      | 1568/5000 [00:24&lt;00:37, 92.69it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  31%|███▏      | 1568/5000 [00:24&lt;00:37, 92.69it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  32%|███▏      | 1600/5000 [00:25&lt;00:36, 93.56it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  32%|███▏      | 1600/5000 [00:25&lt;00:36, 93.56it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  33%|███▎      | 1632/5000 [00:25&lt;00:35, 94.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  33%|███▎      | 1632/5000 [00:25&lt;00:35, 94.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  33%|███▎      | 1664/5000 [00:25&lt;00:34, 96.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  33%|███▎      | 1664/5000 [00:25&lt;00:34, 96.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  34%|███▍      | 1696/5000 [00:26&lt;00:34, 94.99it/s]
+r_training: 0.4224, rewards: 0.1000, total_rewards: 0.9434:  34%|███▍      | 1696/5000 [00:26&lt;00:34, 94.99it/s]
+r_training: 0.4224, rewards: 0.1000, total_rewards: 0.9434:  35%|███▍      | 1728/5000 [00:26&lt;00:34, 95.58it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  35%|███▍      | 1728/5000 [00:26&lt;00:34, 95.58it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  35%|███▌      | 1760/5000 [00:26&lt;00:35, 92.38it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  35%|███▌      | 1760/5000 [00:26&lt;00:35, 92.38it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  36%|███▌      | 1792/5000 [00:27&lt;00:34, 93.18it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  36%|███▌      | 1792/5000 [00:27&lt;00:34, 93.18it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  36%|███▋      | 1824/5000 [00:27&lt;00:33, 93.43it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  36%|███▋      | 1824/5000 [00:27&lt;00:33, 93.43it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  37%|███▋      | 1856/5000 [00:27&lt;00:33, 95.22it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  37%|███▋      | 1856/5000 [00:27&lt;00:33, 95.22it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  38%|███▊      | 1888/5000 [00:28&lt;00:31, 97.89it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  38%|███▊      | 1888/5000 [00:28&lt;00:31, 97.89it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  38%|███▊      | 1920/5000 [00:28&lt;00:31, 98.64it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  38%|███▊      | 1920/5000 [00:28&lt;00:31, 98.64it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  39%|███▉      | 1952/5000 [00:28&lt;00:31, 97.82it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  39%|███▉      | 1952/5000 [00:28&lt;00:31, 97.82it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  40%|███▉      | 1984/5000 [00:29&lt;00:31, 95.99it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  40%|███▉      | 1984/5000 [00:29&lt;00:31, 95.99it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  40%|████      | 2016/5000 [00:29&lt;00:31, 95.23it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  40%|████      | 2016/5000 [00:29&lt;00:31, 95.23it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  41%|████      | 2048/5000 [00:29&lt;00:31, 94.12it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  41%|████      | 2048/5000 [00:29&lt;00:31, 94.12it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  42%|████▏     | 2080/5000 [00:30&lt;00:31, 93.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  42%|████▏     | 2080/5000 [00:30&lt;00:31, 93.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  42%|████▏     | 2112/5000 [00:30&lt;00:30, 93.61it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  42%|████▏     | 2112/5000 [00:30&lt;00:30, 93.61it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  43%|████▎     | 2144/5000 [00:30&lt;00:30, 93.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  43%|████▎     | 2144/5000 [00:30&lt;00:30, 93.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  44%|████▎     | 2176/5000 [00:31&lt;00:30, 91.96it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  44%|████▎     | 2176/5000 [00:31&lt;00:30, 91.96it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  44%|████▍     | 2208/5000 [00:31&lt;00:30, 91.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  44%|████▍     | 2208/5000 [00:31&lt;00:30, 91.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  45%|████▍     | 2240/5000 [00:31&lt;00:29, 94.30it/s]
+r_training: 0.4134, rewards: 0.1000, total_rewards: 0.9434:  45%|████▍     | 2240/5000 [00:31&lt;00:29, 94.30it/s]
+r_training: 0.4134, rewards: 0.1000, total_rewards: 0.9434:  45%|████▌     | 2272/5000 [00:32&lt;00:29, 92.71it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  45%|████▌     | 2272/5000 [00:32&lt;00:29, 92.71it/s]
+r_training: 0.4045, rewards: 0.1000, total_rewards: 0.9434:  46%|████▌     | 2304/5000 [00:32&lt;00:28, 93.83it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  46%|████▌     | 2304/5000 [00:32&lt;00:28, 93.83it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  47%|████▋     | 2336/5000 [00:32&lt;00:28, 93.52it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  47%|████▋     | 2336/5000 [00:32&lt;00:28, 93.52it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  47%|████▋     | 2368/5000 [00:33&lt;00:28, 92.56it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  47%|████▋     | 2368/5000 [00:33&lt;00:28, 92.56it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  48%|████▊     | 2400/5000 [00:33&lt;00:27, 92.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  48%|████▊     | 2400/5000 [00:33&lt;00:27, 92.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  49%|████▊     | 2432/5000 [00:33&lt;00:26, 95.80it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  49%|████▊     | 2432/5000 [00:33&lt;00:26, 95.80it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  49%|████▉     | 2464/5000 [00:34&lt;00:26, 96.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  49%|████▉     | 2464/5000 [00:34&lt;00:26, 96.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  50%|████▉     | 2496/5000 [00:34&lt;00:26, 95.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  50%|████▉     | 2496/5000 [00:34&lt;00:26, 95.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  51%|█████     | 2528/5000 [00:35&lt;00:26, 93.22it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  51%|█████     | 2528/5000 [00:35&lt;00:26, 93.22it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  51%|█████     | 2560/5000 [00:35&lt;00:25, 94.35it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  51%|█████     | 2560/5000 [00:35&lt;00:25, 94.35it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  52%|█████▏    | 2592/5000 [00:35&lt;00:25, 92.87it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  52%|█████▏    | 2592/5000 [00:35&lt;00:25, 92.87it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  52%|█████▏    | 2624/5000 [00:36&lt;00:25, 93.09it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  52%|█████▏    | 2624/5000 [00:36&lt;00:25, 93.09it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  53%|█████▎    | 2656/5000 [00:36&lt;00:25, 92.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  53%|█████▎    | 2656/5000 [00:36&lt;00:25, 92.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  54%|█████▍    | 2688/5000 [00:36&lt;00:25, 91.52it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  54%|█████▍    | 2688/5000 [00:36&lt;00:25, 91.52it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  54%|█████▍    | 2720/5000 [00:37&lt;00:24, 91.96it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  54%|█████▍    | 2720/5000 [00:37&lt;00:24, 91.96it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  55%|█████▌    | 2752/5000 [00:37&lt;00:24, 91.72it/s]
+r_training: 0.4345, rewards: 0.1000, total_rewards: 0.9434:  55%|█████▌    | 2752/5000 [00:37&lt;00:24, 91.72it/s]
+r_training: 0.4345, rewards: 0.1000, total_rewards: 0.9434:  56%|█████▌    | 2784/5000 [00:37&lt;00:24, 90.74it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  56%|█████▌    | 2784/5000 [00:37&lt;00:24, 90.74it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 0.9434:  56%|█████▋    | 2816/5000 [00:38&lt;00:23, 94.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  56%|█████▋    | 2816/5000 [00:38&lt;00:23, 94.57it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  57%|█████▋    | 2848/5000 [00:38&lt;00:23, 92.08it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  57%|█████▋    | 2848/5000 [00:38&lt;00:23, 92.08it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  58%|█████▊    | 2880/5000 [00:38&lt;00:22, 92.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  58%|█████▊    | 2880/5000 [00:38&lt;00:22, 92.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  58%|█████▊    | 2912/5000 [00:39&lt;00:22, 92.08it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  58%|█████▊    | 2912/5000 [00:39&lt;00:22, 92.08it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  59%|█████▉    | 2944/5000 [00:39&lt;00:21, 93.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  59%|█████▉    | 2944/5000 [00:39&lt;00:21, 93.79it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 0.9434:  60%|█████▉    | 2976/5000 [00:39&lt;00:21, 94.27it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  60%|█████▉    | 2976/5000 [00:39&lt;00:21, 94.27it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  60%|██████    | 3008/5000 [00:40&lt;00:20, 95.21it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:  60%|██████    | 3008/5000 [00:40&lt;00:20, 95.21it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 0.9434:  61%|██████    | 3040/5000 [00:40&lt;00:20, 93.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  61%|██████    | 3040/5000 [00:40&lt;00:20, 93.95it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  61%|██████▏   | 3072/5000 [00:40&lt;00:20, 94.07it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  61%|██████▏   | 3072/5000 [00:40&lt;00:20, 94.07it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  62%|██████▏   | 3104/5000 [00:41&lt;00:20, 91.35it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  62%|██████▏   | 3104/5000 [00:41&lt;00:20, 91.35it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  63%|██████▎   | 3136/5000 [00:41&lt;00:20, 92.33it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  63%|██████▎   | 3136/5000 [00:41&lt;00:20, 92.33it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  63%|██████▎   | 3168/5000 [00:41&lt;00:19, 93.51it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  63%|██████▎   | 3168/5000 [00:41&lt;00:19, 93.51it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 0.9434:  64%|██████▍   | 3200/5000 [00:42&lt;00:19, 93.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  64%|██████▍   | 3200/5000 [00:42&lt;00:19, 93.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 0.9434:  65%|██████▍   | 3232/5000 [00:49&lt;02:11, 13.46it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  65%|██████▍   | 3232/5000 [00:49&lt;02:11, 13.46it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  65%|██████▌   | 3264/5000 [00:49&lt;01:35, 18.09it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  65%|██████▌   | 3264/5000 [00:49&lt;01:35, 18.09it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  66%|██████▌   | 3296/5000 [00:50&lt;01:11, 23.72it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  66%|██████▌   | 3296/5000 [00:50&lt;01:11, 23.72it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  67%|██████▋   | 3328/5000 [00:50&lt;00:54, 30.85it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  67%|██████▋   | 3328/5000 [00:50&lt;00:54, 30.85it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  67%|██████▋   | 3360/5000 [00:50&lt;00:42, 38.95it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  67%|██████▋   | 3360/5000 [00:50&lt;00:42, 38.95it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  68%|██████▊   | 3392/5000 [00:51&lt;00:33, 47.94it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  68%|██████▊   | 3392/5000 [00:51&lt;00:33, 47.94it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  68%|██████▊   | 3424/5000 [00:51&lt;00:28, 55.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  68%|██████▊   | 3424/5000 [00:51&lt;00:28, 55.73it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  69%|██████▉   | 3456/5000 [00:51&lt;00:24, 64.33it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  69%|██████▉   | 3456/5000 [00:51&lt;00:24, 64.33it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  70%|██████▉   | 3488/5000 [00:52&lt;00:21, 71.19it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  70%|██████▉   | 3488/5000 [00:52&lt;00:21, 71.19it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  70%|███████   | 3520/5000 [00:52&lt;00:18, 78.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  70%|███████   | 3520/5000 [00:52&lt;00:18, 78.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  71%|███████   | 3552/5000 [00:52&lt;00:17, 82.36it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  71%|███████   | 3552/5000 [00:52&lt;00:17, 82.36it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  72%|███████▏  | 3584/5000 [00:53&lt;00:17, 83.13it/s]
+r_training: 0.4074, rewards: 0.1000, total_rewards: 10.0000:  72%|███████▏  | 3584/5000 [00:53&lt;00:17, 83.13it/s]
+r_training: 0.4074, rewards: 0.1000, total_rewards: 10.0000:  72%|███████▏  | 3616/5000 [00:53&lt;00:16, 85.04it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  72%|███████▏  | 3616/5000 [00:53&lt;00:16, 85.04it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  73%|███████▎  | 3648/5000 [00:53&lt;00:15, 88.59it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  73%|███████▎  | 3648/5000 [00:53&lt;00:15, 88.59it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  74%|███████▎  | 3680/5000 [00:54&lt;00:14, 90.00it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  74%|███████▎  | 3680/5000 [00:54&lt;00:14, 90.00it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  74%|███████▍  | 3712/5000 [00:54&lt;00:13, 92.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  74%|███████▍  | 3712/5000 [00:54&lt;00:13, 92.20it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  75%|███████▍  | 3744/5000 [00:54&lt;00:13, 94.22it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  75%|███████▍  | 3744/5000 [00:54&lt;00:13, 94.22it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  76%|███████▌  | 3776/5000 [00:55&lt;00:13, 93.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  76%|███████▌  | 3776/5000 [00:55&lt;00:13, 93.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  76%|███████▌  | 3808/5000 [00:55&lt;00:12, 94.78it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  76%|███████▌  | 3808/5000 [00:55&lt;00:12, 94.78it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  77%|███████▋  | 3840/5000 [00:55&lt;00:12, 96.43it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  77%|███████▋  | 3840/5000 [00:55&lt;00:12, 96.43it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  77%|███████▋  | 3872/5000 [00:56&lt;00:12, 92.60it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  77%|███████▋  | 3872/5000 [00:56&lt;00:12, 92.60it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  78%|███████▊  | 3904/5000 [00:56&lt;00:11, 92.32it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  78%|███████▊  | 3904/5000 [00:56&lt;00:11, 92.32it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  79%|███████▊  | 3936/5000 [00:56&lt;00:11, 90.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  79%|███████▊  | 3936/5000 [00:56&lt;00:11, 90.11it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  79%|███████▉  | 3968/5000 [00:57&lt;00:11, 92.51it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  79%|███████▉  | 3968/5000 [00:57&lt;00:11, 92.51it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  80%|████████  | 4000/5000 [00:57&lt;00:10, 91.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  80%|████████  | 4000/5000 [00:57&lt;00:10, 91.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  81%|████████  | 4032/5000 [00:57&lt;00:10, 90.67it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  81%|████████  | 4032/5000 [00:57&lt;00:10, 90.67it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  81%|████████▏ | 4064/5000 [00:58&lt;00:10, 90.66it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  81%|████████▏ | 4064/5000 [00:58&lt;00:10, 90.66it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  82%|████████▏ | 4096/5000 [00:58&lt;00:09, 91.03it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  82%|████████▏ | 4096/5000 [00:58&lt;00:09, 91.03it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  83%|████████▎ | 4128/5000 [00:58&lt;00:09, 93.91it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  83%|████████▎ | 4128/5000 [00:58&lt;00:09, 93.91it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  83%|████████▎ | 4160/5000 [00:59&lt;00:08, 95.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  83%|████████▎ | 4160/5000 [00:59&lt;00:08, 95.01it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  84%|████████▍ | 4192/5000 [00:59&lt;00:08, 96.83it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  84%|████████▍ | 4192/5000 [00:59&lt;00:08, 96.83it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  84%|████████▍ | 4224/5000 [00:59&lt;00:08, 96.54it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  84%|████████▍ | 4224/5000 [00:59&lt;00:08, 96.54it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  85%|████████▌ | 4256/5000 [01:00&lt;00:07, 98.83it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  85%|████████▌ | 4256/5000 [01:00&lt;00:07, 98.83it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  86%|████████▌ | 4288/5000 [01:00&lt;00:07, 99.76it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  86%|████████▌ | 4288/5000 [01:00&lt;00:07, 99.76it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  86%|████████▋ | 4320/5000 [01:00&lt;00:06, 99.65it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  86%|████████▋ | 4320/5000 [01:00&lt;00:06, 99.65it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  87%|████████▋ | 4352/5000 [01:01&lt;00:06, 100.20it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  87%|████████▋ | 4352/5000 [01:01&lt;00:06, 100.20it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  88%|████████▊ | 4384/5000 [01:01&lt;00:06, 100.04it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  88%|████████▊ | 4384/5000 [01:01&lt;00:06, 100.04it/s]
+r_training: 0.4676, rewards: 0.1000, total_rewards: 10.0000:  88%|████████▊ | 4416/5000 [01:01&lt;00:06, 96.51it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  88%|████████▊ | 4416/5000 [01:01&lt;00:06, 96.51it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  89%|████████▉ | 4448/5000 [01:02&lt;00:05, 95.53it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  89%|████████▉ | 4448/5000 [01:02&lt;00:05, 95.53it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  90%|████████▉ | 4480/5000 [01:02&lt;00:05, 93.40it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  90%|████████▉ | 4480/5000 [01:02&lt;00:05, 93.40it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  90%|█████████ | 4512/5000 [01:02&lt;00:05, 94.94it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  90%|█████████ | 4512/5000 [01:02&lt;00:05, 94.94it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  91%|█████████ | 4544/5000 [01:03&lt;00:04, 96.31it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  91%|█████████ | 4544/5000 [01:03&lt;00:04, 96.31it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  92%|█████████▏| 4576/5000 [01:03&lt;00:04, 94.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  92%|█████████▏| 4576/5000 [01:03&lt;00:04, 94.90it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  92%|█████████▏| 4608/5000 [01:03&lt;00:04, 94.86it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  92%|█████████▏| 4608/5000 [01:03&lt;00:04, 94.86it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  93%|█████████▎| 4640/5000 [01:04&lt;00:03, 95.22it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  93%|█████████▎| 4640/5000 [01:04&lt;00:03, 95.22it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  93%|█████████▎| 4672/5000 [01:04&lt;00:03, 95.65it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  93%|█████████▎| 4672/5000 [01:04&lt;00:03, 95.65it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  94%|█████████▍| 4704/5000 [01:04&lt;00:03, 94.45it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  94%|█████████▍| 4704/5000 [01:04&lt;00:03, 94.45it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  95%|█████████▍| 4736/5000 [01:05&lt;00:02, 93.42it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  95%|█████████▍| 4736/5000 [01:05&lt;00:02, 93.42it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  95%|█████████▌| 4768/5000 [01:05&lt;00:02, 92.00it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  95%|█████████▌| 4768/5000 [01:05&lt;00:02, 92.00it/s]
+r_training: 0.4526, rewards: 0.1000, total_rewards: 10.0000:  96%|█████████▌| 4800/5000 [01:05&lt;00:02, 90.50it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  96%|█████████▌| 4800/5000 [01:05&lt;00:02, 90.50it/s]
+r_training: 0.4586, rewards: 0.1000, total_rewards: 10.0000:  97%|█████████▋| 4832/5000 [01:06&lt;00:01, 89.76it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  97%|█████████▋| 4832/5000 [01:06&lt;00:01, 89.76it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  97%|█████████▋| 4864/5000 [01:06&lt;00:01, 92.07it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  97%|█████████▋| 4864/5000 [01:06&lt;00:01, 92.07it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  98%|█████████▊| 4896/5000 [01:06&lt;00:01, 89.77it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  98%|█████████▊| 4896/5000 [01:06&lt;00:01, 89.77it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  99%|█████████▊| 4928/5000 [01:07&lt;00:00, 88.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  99%|█████████▊| 4928/5000 [01:07&lt;00:00, 88.98it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000:  99%|█████████▉| 4960/5000 [01:07&lt;00:00, 88.94it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000:  99%|█████████▉| 4960/5000 [01:07&lt;00:00, 88.94it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000: 100%|█████████▉| 4992/5000 [01:08&lt;00:00, 89.24it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000: 100%|█████████▉| 4992/5000 [01:08&lt;00:00, 89.24it/s]
+r_training: 0.4948, rewards: 0.1000, total_rewards: 10.0000: : 5024it [01:08, 90.20it/s]
+r_training: 0.4497, rewards: 0.1000, total_rewards: 10.0000: : 5024it [01:08, 90.20it/s]
+</pre></div>
+</div>
 <p>We can now quickly check the CSVs with the results.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">print_csv_files_in_folder</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1066,6 +1365,57 @@ Check the <a class="reference internal" href="../reference/generated/torchrl.tra
 <span class="n">print_csv_files_in_folder</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">log_dir</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/r_training.csv
+512,0.4044681489467621
+1024,0.4134137034416199
+1536,0.4948333501815796
+2048,0.4948333501815796
+2560,0.4948333501815796
+3072,0.4948333501815796
+3584,0.4074399769306183
+4096,0.4948333501815796
+4608,0.4948333501815796
+
+File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/optim_steps.csv
+512,128.0
+1024,256.0
+1536,384.0
+2048,512.0
+2560,640.0
+3072,768.0
+3584,896.0
+4096,1024.0
+4608,1152.0
+
+File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/loss.csv
+512,0.2356531322002411
+1024,0.25836804509162903
+1536,0.38199493288993835
+2048,0.39603209495544434
+2560,0.3822322487831116
+3072,0.29792842268943787
+3584,0.48815295100212097
+4096,0.36428776383399963
+4608,0.45010751485824585
+
+File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/grad_norm_0.csv
+512,2.237006902694702
+1024,2.274329662322998
+1536,3.1974761486053467
+2048,4.131011009216309
+2560,3.2784488201141357
+3072,2.833012580871582
+3584,3.919684410095215
+4096,3.3105602264404297
+4608,4.04936408996582
+
+File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/rewards.csv
+3232,0.10000000894069672
+
+File: /tmp/tmpirt_limo/dqn_exp_52576006-c5f8-11ee-b5ab-0242ac110002/scalars/total_rewards.csv
+3232,10.0
+</pre></div>
+</div>
 </section>
 </section>
 <section id="conclusion-and-possible-improvements">
@@ -1090,8 +1440,8 @@ of the documentation.</p></li>
 for more information).</p></li>
 <li><p>More fancy exploration techniques, such as <a class="reference internal" href="../reference/generated/torchrl.modules.NoisyLinear.html#torchrl.modules.NoisyLinear" title="torchrl.modules.NoisyLinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoisyLinear</span></code></a> layers and such.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 51.552 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  3884 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 35.903 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  856 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-coding-dqn-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/25730743bad2ad4374b1a37c2e8d077a/coding_dqn.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">coding_dqn.ipynb</span></code></a></p>
