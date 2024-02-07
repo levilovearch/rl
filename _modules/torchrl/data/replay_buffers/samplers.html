@@ -395,7 +395,6 @@
 
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_replace_last</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.storages</span> <span class="kn">import</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">StorageEnsemble</span><span class="p">,</span> <span class="n">TensorStorage</span>
-<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="n">_to_numpy</span><span class="p">,</span> <span class="n">INT_CLASSES</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">torchrl._torchrl</span> <span class="kn">import</span> <span class="p">(</span>
@@ -621,11 +620,10 @@
 <div class="viewcode-block" id="PrioritizedSampler"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.PrioritizedSampler.html#torchrl.data.replay_buffers.PrioritizedSampler">[docs]</a><span class="k">class</span> <span class="nc">PrioritizedSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Prioritized sampler for replay buffer.</span>
 
-<span class="sd">    Presented in &quot;Schaul, T.; Quan, J.; Antonoglou, I.; and Silver, D. 2015.</span>
-<span class="sd">        Prioritized experience replay.&quot;</span>
-<span class="sd">        (https://arxiv.org/abs/1511.05952)</span>
+<span class="sd">    Presented in &quot;Schaul, T.; Quan, J.; Antonoglou, I.; and Silver, D. 2015. Prioritized experience replay.&quot; (https://arxiv.org/abs/1511.05952)</span>
 
 <span class="sd">    Args:</span>
+<span class="sd">        max_capacity (int): maximum capacity of the buffer.</span>
 <span class="sd">        alpha (float): exponent α determines how much prioritization is used,</span>
 <span class="sd">            with α = 0 corresponding to the uniform case.</span>
 <span class="sd">        beta (float): importance sampling negative exponent.</span>
@@ -634,6 +632,51 @@
 <span class="sd">        reduction (str, optional): the reduction method for multidimensional</span>
 <span class="sd">            tensordicts (ie stored trajectory). Can be one of &quot;max&quot;, &quot;min&quot;,</span>
 <span class="sd">            &quot;median&quot; or &quot;mean&quot;.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.data.replay_buffers import ReplayBuffer, LazyTensorStorage, PrioritizedSampler</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; rb = ReplayBuffer(storage=LazyTensorStorage(10), sampler=PrioritizedSampler(max_capacity=10, alpha=1.0, beta=1.0))</span>
+<span class="sd">        &gt;&gt;&gt; priority = torch.tensor([0, 1000])</span>
+<span class="sd">        &gt;&gt;&gt; data_0 = TensorDict({&quot;reward&quot;: 0, &quot;obs&quot;: [0], &quot;action&quot;: [0], &quot;priority&quot;: priority[0]}, [])</span>
+<span class="sd">        &gt;&gt;&gt; data_1 = TensorDict({&quot;reward&quot;: 1, &quot;obs&quot;: [1], &quot;action&quot;: [2], &quot;priority&quot;: priority[1]}, [])</span>
+<span class="sd">        &gt;&gt;&gt; rb.add(data_0)</span>
+<span class="sd">        &gt;&gt;&gt; rb.add(data_1)</span>
+<span class="sd">        &gt;&gt;&gt; rb.update_priority(torch.tensor([0, 1]), priority=priority)</span>
+<span class="sd">        &gt;&gt;&gt; sample, info = rb.sample(10, return_info=True)</span>
+<span class="sd">        &gt;&gt;&gt; print(sample)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">                fields={</span>
+<span class="sd">                    action: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                    obs: Tensor(shape=torch.Size([10, 1]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                    priority: Tensor(shape=torch.Size([10]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                    reward: Tensor(shape=torch.Size([10]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                batch_size=torch.Size([10]),</span>
+<span class="sd">                device=cpu,</span>
+<span class="sd">                is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; print(info)</span>
+<span class="sd">        {&#39;_weight&#39;: array([1.e-11, 1.e-11, 1.e-11, 1.e-11, 1.e-11, 1.e-11, 1.e-11, 1.e-11,</span>
+<span class="sd">               1.e-11, 1.e-11], dtype=float32), &#39;index&#39;: array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])}</span>
+
+<span class="sd">    .. note:: Using a :class:`~torchrl.data.replay_buffers.TensorDictReplayBuffer` can smoothen the</span>
+<span class="sd">        process of updating the priorities:</span>
+
+<span class="sd">            &gt;&gt;&gt; from torchrl.data.replay_buffers import TensorDictReplayBuffer as TDRB, LazyTensorStorage, PrioritizedSampler</span>
+<span class="sd">            &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">            &gt;&gt;&gt; rb = TDRB(</span>
+<span class="sd">            ...     storage=LazyTensorStorage(10),</span>
+<span class="sd">            ...     sampler=PrioritizedSampler(max_capacity=10, alpha=1.0, beta=1.0),</span>
+<span class="sd">            ...     priority_key=&quot;priority&quot;,  # This kwarg isn&#39;t present in regular RBs</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; priority = torch.tensor([0, 1000])</span>
+<span class="sd">            &gt;&gt;&gt; data_0 = TensorDict({&quot;reward&quot;: 0, &quot;obs&quot;: [0], &quot;action&quot;: [0], &quot;priority&quot;: priority[0]}, [])</span>
+<span class="sd">            &gt;&gt;&gt; data_1 = TensorDict({&quot;reward&quot;: 1, &quot;obs&quot;: [1], &quot;action&quot;: [2], &quot;priority&quot;: priority[1]}, [])</span>
+<span class="sd">            &gt;&gt;&gt; data = torch.stack([data_0, data_1])</span>
+<span class="sd">            &gt;&gt;&gt; rb.extend(data)</span>
+<span class="sd">            &gt;&gt;&gt; rb.update_priority(data)  # Reads the &quot;priority&quot; key as indicated in the constructor</span>
+<span class="sd">            &gt;&gt;&gt; sample, info = rb.sample(10, return_info=True)</span>
+<span class="sd">            &gt;&gt;&gt; print(sample[&#39;index&#39;])  # The index is packed with the tensordict</span>
+<span class="sd">            tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -698,15 +741,17 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;negative p_sum&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">p_min</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;negative p_min&quot;</span><span class="p">)</span>
+        <span class="c1"># For some undefined reason, only np.random works here.</span>
+        <span class="c1"># All PT attempts fail, even when subsequently transformed into numpy</span>
         <span class="n">mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p_sum</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="c1"># mass = torch.zeros(batch_size, dtype=torch.double).uniform_(0.0, p_sum)</span>
+        <span class="c1"># mass = torch.rand(batch_size).mul_(p_sum)</span>
         <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum_tree</span><span class="o">.</span><span class="n">scan_lower_bound</span><span class="p">(</span><span class="n">mass</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">index</span><span class="p">])</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-            <span class="n">index</span><span class="o">.</span><span class="n">clamp_max_</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sum_tree</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">index</span><span class="o">.</span><span class="n">clamp_max_</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sum_tree</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
 
         <span class="c1"># Importance sampling weight formula:</span>
         <span class="c1">#   w_i = (p_i / sum(p) * N) ^ (-beta)</span>
@@ -716,9 +761,10 @@
         <span class="c1">#   weight_i = ((p_i / sum(p) * N) / (min(p) / sum(p) * N)) ^ (-beta)</span>
         <span class="c1">#   weight_i = (p_i / min(p)) ^ (-beta)</span>
         <span class="c1"># weight = np.power(weight / (p_min + self._eps), -self._beta)</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">weight</span> <span class="o">/</span> <span class="n">p_min</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">weight</span> <span class="o">/</span> <span class="n">p_min</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;_weight&quot;</span><span class="p">:</span> <span class="n">weight</span><span class="p">}</span>
 
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">_add_or_extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">priority</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_priority</span>
 
@@ -731,6 +777,11 @@
                 <span class="s2">&quot;priority should be a scalar or an iterable of the same &quot;</span>
                 <span class="s2">&quot;length as index&quot;</span>
             <span class="p">)</span>
+        <span class="c1"># make sure everything is cast to cpu</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">is_cpu</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">priority</span><span class="o">.</span><span class="n">is_cpu</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_sum_tree</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_tree</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
@@ -748,7 +799,8 @@
             <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_or_extend</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PrioritizedSampler.update_priority"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.PrioritizedSampler.html#torchrl.data.replay_buffers.PrioritizedSampler.update_priority">[docs]</a>    <span class="k">def</span> <span class="nf">update_priority</span><span class="p">(</span>
+<div class="viewcode-block" id="PrioritizedSampler.update_priority"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.PrioritizedSampler.html#torchrl.data.replay_buffers.PrioritizedSampler.update_priority">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">update_priority</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">priority</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the priority of the data pointed by the index.</span>
@@ -760,28 +812,26 @@
 <span class="sd">                indexed elements.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">priority</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;priority length should be 1, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">priority</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-                <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">priority</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">priority</span><span class="p">)</span>
-            <span class="p">):</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span>
+            <span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="c1"># we need to reshape priority if it has more than one elements or if it has</span>
+        <span class="c1"># a different shape than index</span>
+        <span class="k">if</span> <span class="n">priority</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">priority</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;priority should be a number or an iterable of the same &quot;</span>
-                    <span class="s2">&quot;length as index&quot;</span>
-                <span class="p">)</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">_to_numpy</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-            <span class="n">priority</span> <span class="o">=</span> <span class="n">_to_numpy</span><span class="p">(</span><span class="n">priority</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;length as index. Got priority of shape </span><span class="si">{</span><span class="n">priority</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and index &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
+        <span class="k">elif</span> <span class="n">priority</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_max_priority</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_priority</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">priority</span><span class="p">))</span>
-        <span class="n">priority</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">priority</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_priority</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">priority</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sum_tree</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_tree</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">priority</span></div>
 
@@ -1604,7 +1654,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">==</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>

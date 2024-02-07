@@ -204,7 +204,7 @@ change the ``collate_fn`` since the default expects numerical data):
 
  .. code-block:: none
 
-    ['a', 0, 'b']
+    ['b', 'b', 'a']
 
 
 
@@ -324,11 +324,11 @@ Let us sample from the buffer, and print the data:
  .. code-block:: none
 
     samples tensor([[ 0,  1,  2,  3],
-            [ 8,  9, 10, 11],
+            [ 0,  1,  2,  3],
             [ 4,  5,  6,  7],
             [ 0,  1,  2,  3],
             [ 8,  9, 10, 11]]) tensor([[ 0,  1,  2,  3,  4],
-            [10, 11, 12, 13, 14],
+            [ 0,  1,  2,  3,  4],
             [ 5,  6,  7,  8,  9],
             [ 0,  1,  2,  3,  4],
             [10, 11, 12, 13, 14]])
@@ -361,15 +361,15 @@ A :class:`torchrl.data.LazyMemmapStorage` is created in the same manner:
  .. code-block:: none
 
     The buffer has 3 elements
-    samples: a= tensor([[ 0,  1,  2,  3],
-            [ 4,  5,  6,  7],
-            [ 4,  5,  6,  7],
-            [ 8,  9, 10, 11],
+    samples: a= tensor([[ 8,  9, 10, 11],
+            [ 0,  1,  2,  3],
+            [ 0,  1,  2,  3],
+            [ 0,  1,  2,  3],
             [ 0,  1,  2,  3]]) 
-    ('b', 'c'): tensor([[ 0,  1,  2,  3,  4],
-            [ 5,  6,  7,  8,  9],
-            [ 5,  6,  7,  8,  9],
-            [10, 11, 12, 13, 14],
+    ('b', 'c'): tensor([[10, 11, 12, 13, 14],
+            [ 0,  1,  2,  3,  4],
+            [ 0,  1,  2,  3,  4],
+            [ 0,  1,  2,  3,  4],
             [ 0,  1,  2,  3,  4]])
 
 
@@ -404,8 +404,8 @@ We can also customize the storage location on disk:
  .. code-block:: none
 
     The buffer has 3 elements
-    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpn1p507yk'>/a.memmap
-    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpn1p507yk'>/b/c.memmap
+    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpfcg8zflp'>/a.memmap
+    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpfcg8zflp'>/b/c.memmap
 
 
 
@@ -492,7 +492,7 @@ Let us have a look at these indices:
 
  .. code-block:: none
 
-    tensor([0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 2, 1])
+    tensor([1, 1, 0, 1, 2, 0, 0, 2, 2, 1, 0, 2])
 
 
 
@@ -991,9 +991,8 @@ The info contains the relative weights of the items as well as the indices.
 
  .. code-block:: none
 
-    {'_weight': array([2.0892946e-10, 2.0892946e-10, 2.0892946e-10, 2.0892946e-10,
-           2.0892946e-10, 2.0892946e-10, 2.0892946e-10, 2.0892946e-10,
-           2.0892946e-10, 2.0892946e-10], dtype=float32), 'index': array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])}
+    {'_weight': tensor([2.0893e-10, 2.0893e-10, 2.0893e-10, 2.0893e-10, 2.0893e-10, 2.0893e-10,
+            2.0893e-10, 2.0893e-10, 2.0893e-10, 2.0893e-10]), 'index': tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])}
 
 
 
@@ -1107,7 +1106,7 @@ higher indices should occur more frequently:
  .. code-block:: none
 
 
-    (array([ 36.,  32.,  82.,  50.,  69., 130., 100., 192., 101., 232.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([ 25.,  28.,  90.,  54.,  63., 150.,  85., 195.,  96., 238.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1163,7 +1162,7 @@ Now, higher indices should occur less frequently:
  .. code-block:: none
 
 
-    (array([231.,  96., 194.,  87.,  69., 148.,  51.,  90.,  23.,  35.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([221.,  99., 202.,  80.,  74., 128.,  68.,  78.,  30.,  44.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1661,7 +1660,7 @@ You should now be able to:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 39.704 seconds)
+   **Total running time of the script:** (2 minutes 37.503 seconds)
 
 **Estimated memory usage:**  1203 MB
 
