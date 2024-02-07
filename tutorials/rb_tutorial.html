@@ -487,7 +487,7 @@ change the <code class="docutils literal notranslate"><span class="pre">collate_
 <span class="nb">print</span><span class="p">(</span><span class="n">buffer_list</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;b&#39;, &#39;b&#39;, &#39;a&#39;]
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[0, &#39;b&#39;, 0]
 </pre></div>
 </div>
 <p>Because it is the one with the lowest amount of assumption, the
@@ -541,11 +541,11 @@ separate datapoints:</p>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>samples tensor([[ 0,  1,  2,  3],
         [ 0,  1,  2,  3],
-        [ 4,  5,  6,  7],
+        [ 8,  9, 10, 11],
         [ 0,  1,  2,  3],
         [ 8,  9, 10, 11]]) tensor([[ 0,  1,  2,  3,  4],
         [ 0,  1,  2,  3,  4],
-        [ 5,  6,  7,  8,  9],
+        [10, 11, 12, 13, 14],
         [ 0,  1,  2,  3,  4],
         [10, 11, 12, 13, 14]])
 </pre></div>
@@ -559,16 +559,16 @@ separate datapoints:</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-samples: a= tensor([[ 8,  9, 10, 11],
-        [ 0,  1,  2,  3],
-        [ 0,  1,  2,  3],
-        [ 0,  1,  2,  3],
-        [ 0,  1,  2,  3]])
-(&#39;b&#39;, &#39;c&#39;): tensor([[10, 11, 12, 13, 14],
-        [ 0,  1,  2,  3,  4],
-        [ 0,  1,  2,  3,  4],
-        [ 0,  1,  2,  3,  4],
-        [ 0,  1,  2,  3,  4]])
+samples: a= tensor([[ 4,  5,  6,  7],
+        [ 4,  5,  6,  7],
+        [ 8,  9, 10, 11],
+        [ 8,  9, 10, 11],
+        [ 8,  9, 10, 11]])
+(&#39;b&#39;, &#39;c&#39;): tensor([[ 5,  6,  7,  8,  9],
+        [ 5,  6,  7,  8,  9],
+        [10, 11, 12, 13, 14],
+        [10, 11, 12, 13, 14],
+        [10, 11, 12, 13, 14]])
 </pre></div>
 </div>
 <p>We can also customize the storage location on disk:</p>
@@ -584,8 +584,8 @@ samples: a= tensor([[ 8,  9, 10, 11],
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The buffer has 3 elements
-the &#39;a&#39; tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmpfcg8zflp&#39;&gt;/a.memmap
-the (&#39;b&#39;, &#39;c&#39;) tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmpfcg8zflp&#39;&gt;/b/c.memmap
+the &#39;a&#39; tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmp2amcz9oo&#39;&gt;/a.memmap
+the (&#39;b&#39;, &#39;c&#39;) tensor is stored in &lt;TemporaryDirectory &#39;/tmp/tmp2amcz9oo&#39;&gt;/b/c.memmap
 </pre></div>
 </div>
 </section>
@@ -636,7 +636,7 @@ Let us have a look at these indices:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>tensor([1, 1, 0, 1, 2, 0, 0, 2, 2, 1, 0, 2])
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>tensor([0, 2, 0, 0, 1, 1, 0, 1, 0, 2, 2, 0])
 </pre></div>
 </div>
 <section id="integration-with-tensorclass">
@@ -996,7 +996,7 @@ the priority signal should be fetched:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_rb_tutorial_001.png" srcset="../_images/sphx_glr_rb_tutorial_001.png" alt="rb tutorial" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(array([ 25.,  28.,  90.,  54.,  63., 150.,  85., 195.,  96., 238.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), &lt;BarContainer object of 10 artists&gt;)
+<img src="../_images/sphx_glr_rb_tutorial_001.png" srcset="../_images/sphx_glr_rb_tutorial_001.png" alt="rb tutorial" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(array([ 38.,  21.,  94.,  45.,  58., 156.,  89., 184., 109., 230.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), &lt;BarContainer object of 10 artists&gt;)
 </pre></div>
 </div>
 <p>Once we have worked with our sample, we update the priority key using
@@ -1016,7 +1016,7 @@ sampled items:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_rb_tutorial_002.png" srcset="../_images/sphx_glr_rb_tutorial_002.png" alt="rb tutorial" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(array([221.,  99., 202.,  80.,  74., 128.,  68.,  78.,  30.,  44.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), &lt;BarContainer object of 10 artists&gt;)
+<img src="../_images/sphx_glr_rb_tutorial_002.png" srcset="../_images/sphx_glr_rb_tutorial_002.png" alt="rb tutorial" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>(array([213.,  95., 205.,  90.,  66., 125.,  59.,  95.,  36.,  40.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), &lt;BarContainer object of 10 artists&gt;)
 </pre></div>
 </div>
 </section>
@@ -1321,8 +1321,8 @@ You should now be able to:</p>
 <li><p>Choose the best storage type for your problem (list, memory or disk-based);</p></li>
 <li><p>Minimize the memory footprint of your buffer.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 37.503 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  1203 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 41.289 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  1204 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-rb-tutorial-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/c64b1e484ba3e0219549719cc3c37479/rb_tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">rb_tutorial.ipynb</span></code></a></p>
