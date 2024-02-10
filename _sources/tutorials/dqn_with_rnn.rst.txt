@@ -23,6 +23,8 @@ Recurrent DQN: Training recurrent policies
 
 **Author**: `Vincent Moens <https://github.com/vmoens>`_
 
+.. _RNN_tuto:
+
 .. grid:: 2
 
     .. grid-item-card:: :octicon:`mortar-board;1em;` What you will learn
@@ -36,7 +38,7 @@ Recurrent DQN: Training recurrent policies
       * gym[mujoco]
       * tqdm
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-57
+.. GENERATED FROM PYTHON SOURCE LINES 26-59
 
 Overview
 --------
@@ -72,7 +74,7 @@ When the :func:`~torchrl.envs.utils.step_mdp` function is called, the recurrent 
 from the next state are brought to the current TensorDict. Let's see how this
 is implemented in practice.
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-70
+.. GENERATED FROM PYTHON SOURCE LINES 61-72
 
 If you are running this in Google Colab, make sure you install the following dependencies:
 
@@ -86,7 +88,7 @@ Setup
 -----
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-106
+.. GENERATED FROM PYTHON SOURCE LINES 72-108
 
 .. code-block:: Python
 
@@ -133,7 +135,7 @@ Setup
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 127-164
+.. GENERATED FROM PYTHON SOURCE LINES 129-166
 
 Environment
 -----------
@@ -173,7 +175,7 @@ Two transforms are important for the purpose of this tutorial:
   we can wait until we build it!
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-178
+.. GENERATED FROM PYTHON SOURCE LINES 166-180
 
 .. code-block:: Python
 
@@ -198,12 +200,12 @@ Two transforms are important for the purpose of this tutorial:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-181
+.. GENERATED FROM PYTHON SOURCE LINES 181-183
 
 As always, we need to initialize manually our normalization constants:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 181-184
+.. GENERATED FROM PYTHON SOURCE LINES 183-186
 
 .. code-block:: Python
 
@@ -217,7 +219,7 @@ As always, we need to initialize manually our normalization constants:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-200
+.. GENERATED FROM PYTHON SOURCE LINES 187-202
 
 Policy
 ------
@@ -235,7 +237,7 @@ that will squash the output in a vector of size 64. The :class:`~torchrl.modules
 can assist us with this:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 200-212
+.. GENERATED FROM PYTHON SOURCE LINES 202-214
 
 .. code-block:: Python
 
@@ -258,13 +260,13 @@ can assist us with this:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 213-216
+.. GENERATED FROM PYTHON SOURCE LINES 215-218
 
 we execute the first module on a batch of data to gather the size of the
 output vector:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 216-218
+.. GENERATED FROM PYTHON SOURCE LINES 218-220
 
 .. code-block:: Python
 
@@ -277,7 +279,7 @@ output vector:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 219-241
+.. GENERATED FROM PYTHON SOURCE LINES 221-243
 
 LSTM Module
 ~~~~~~~~~~~
@@ -302,7 +304,7 @@ values for these attributes to facilitate its construction.
   is the correct one.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 241-250
+.. GENERATED FROM PYTHON SOURCE LINES 243-252
 
 .. code-block:: Python
 
@@ -322,11 +324,11 @@ values for these attributes to facilitate its construction.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 251-252
+.. GENERATED FROM PYTHON SOURCE LINES 253-254
 
 Let us look at the LSTM Module class, specifically its in and out_keys:
 
-.. GENERATED FROM PYTHON SOURCE LINES 252-255
+.. GENERATED FROM PYTHON SOURCE LINES 254-257
 
 .. code-block:: Python
 
@@ -347,7 +349,7 @@ Let us look at the LSTM Module class, specifically its in and out_keys:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 256-269
+.. GENERATED FROM PYTHON SOURCE LINES 258-271
 
 We can see that these values contain the key we indicated as the in_key (and out_key)
 as well as recurrent key names. The out_keys are preceded by a "next" prefix
@@ -363,7 +365,7 @@ The :meth:`~torchrl.modules.LSTMModule.make_tensordict_primer` method does
 exactly that:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 269-271
+.. GENERATED FROM PYTHON SOURCE LINES 271-273
 
 .. code-block:: Python
 
@@ -376,12 +378,12 @@ exactly that:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 272-274
+.. GENERATED FROM PYTHON SOURCE LINES 274-276
 
 and that's it! We can print the environment to check that everything looks good now
 that we have added the primer:
 
-.. GENERATED FROM PYTHON SOURCE LINES 274-276
+.. GENERATED FROM PYTHON SOURCE LINES 276-278
 
 .. code-block:: Python
 
@@ -422,7 +424,7 @@ that we have added the primer:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 277-283
+.. GENERATED FROM PYTHON SOURCE LINES 279-285
 
 MLP
 ~~~
@@ -431,7 +433,7 @@ We use a single-layer MLP to represent the action values we'll be using for
 our policy.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 283-290
+.. GENERATED FROM PYTHON SOURCE LINES 285-292
 
 .. code-block:: Python
 
@@ -449,11 +451,11 @@ our policy.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 291-292
+.. GENERATED FROM PYTHON SOURCE LINES 293-294
 
 and fill the bias with zeros:
 
-.. GENERATED FROM PYTHON SOURCE LINES 292-296
+.. GENERATED FROM PYTHON SOURCE LINES 294-298
 
 .. code-block:: Python
 
@@ -468,7 +470,7 @@ and fill the bias with zeros:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 297-308
+.. GENERATED FROM PYTHON SOURCE LINES 299-310
 
 Using the Q-Values to select an action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -482,7 +484,7 @@ either by passing a string or an action-spec. This allows us to use
 Categorical (sometimes called "sparse") encoding or the one-hot version of it.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 308-310
+.. GENERATED FROM PYTHON SOURCE LINES 310-312
 
 .. code-block:: Python
 
@@ -495,7 +497,7 @@ Categorical (sometimes called "sparse") encoding or the one-hot version of it.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 311-320
+.. GENERATED FROM PYTHON SOURCE LINES 313-322
 
 .. note::
   TorchRL also provides a wrapper class :class:`torchrl.modules.QValueActor` that
@@ -507,7 +509,7 @@ Categorical (sometimes called "sparse") encoding or the one-hot version of it.
 We can now put things together in a :class:`~tensordict.nn.TensorDictSequential`
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 320-322
+.. GENERATED FROM PYTHON SOURCE LINES 322-324
 
 .. code-block:: Python
 
@@ -520,7 +522,7 @@ We can now put things together in a :class:`~tensordict.nn.TensorDictSequential`
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 323-329
+.. GENERATED FROM PYTHON SOURCE LINES 325-331
 
 DQN being a deterministic algorithm, exploration is a crucial part of it.
 We'll be using an :math:`\epsilon`-greedy policy with an epsilon of 0.2 decaying
@@ -529,7 +531,7 @@ This decay is achieved via a call to :meth:`~torchrl.modules.EGreedyModule.step`
 (see training loop below).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 329-337
+.. GENERATED FROM PYTHON SOURCE LINES 331-339
 
 .. code-block:: Python
 
@@ -548,7 +550,7 @@ This decay is achieved via a call to :meth:`~torchrl.modules.EGreedyModule.step`
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 338-352
+.. GENERATED FROM PYTHON SOURCE LINES 340-354
 
 Using the model for the loss
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -565,7 +567,7 @@ will return a new instance of the LSTM (with shared weights) that will
 assume that the input data is sequential in nature.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 352-354
+.. GENERATED FROM PYTHON SOURCE LINES 354-356
 
 .. code-block:: Python
 
@@ -578,13 +580,13 @@ assume that the input data is sequential in nature.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 355-358
+.. GENERATED FROM PYTHON SOURCE LINES 357-360
 
 Because we still have a couple of uninitialized parameters we should
 initialize them before creating an optimizer and such.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 358-360
+.. GENERATED FROM PYTHON SOURCE LINES 360-362
 
 .. code-block:: Python
 
@@ -626,7 +628,7 @@ initialize them before creating an optimizer and such.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 361-372
+.. GENERATED FROM PYTHON SOURCE LINES 363-374
 
 DQN Loss
 --------
@@ -640,7 +642,7 @@ To use the Double-DQN, we ask for a ``delay_value`` argument that will
 create a non-differentiable copy of the network parameters to be used
 as a target network.
 
-.. GENERATED FROM PYTHON SOURCE LINES 372-374
+.. GENERATED FROM PYTHON SOURCE LINES 374-376
 
 .. code-block:: Python
 
@@ -653,14 +655,14 @@ as a target network.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 375-379
+.. GENERATED FROM PYTHON SOURCE LINES 377-381
 
 Since we are using a double DQN, we need to update the target parameters.
 We'll use a  :class:`~torchrl.objectives.SoftUpdate` instance to carry out
 this work.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 379-383
+.. GENERATED FROM PYTHON SOURCE LINES 381-385
 
 .. code-block:: Python
 
@@ -675,7 +677,7 @@ this work.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 384-399
+.. GENERATED FROM PYTHON SOURCE LINES 386-401
 
 Collector and replay buffer
 ---------------------------
@@ -693,7 +695,7 @@ on disk.
   here. In a real setting, the total number of frames should be set to 1M.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 399-404
+.. GENERATED FROM PYTHON SOURCE LINES 401-406
 
 .. code-block:: Python
 
@@ -709,7 +711,7 @@ on disk.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-411
+.. GENERATED FROM PYTHON SOURCE LINES 407-413
 
 Training loop
 -------------
@@ -718,7 +720,7 @@ To keep track of the progress, we will run the policy in the environment once
 every 50 data collection, and plot the results after training.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 411-447
+.. GENERATED FROM PYTHON SOURCE LINES 413-449
 
 .. code-block:: Python
 
@@ -805,16 +807,16 @@ every 50 data collection, and plot the results after training.
         batch_size=torch.Size([50]),
         device=None,
         is_shared=False)
-      0%|          | 50/1000000 [00:00<2:04:34, 133.79it/s]      0%|          | 50/1000000 [00:15<2:04:34, 133.79it/s]    steps: 12, loss_val:  0.0010, action_spread: tensor([ 4, 46]):   0%|          | 50/1000000 [00:19<2:04:34, 133.79it/s]    steps: 12, loss_val:  0.0010, action_spread: tensor([ 4, 46]):   0%|          | 100/1000000 [00:20<66:41:39,  4.16it/s]    steps: 12, loss_val:  0.0009, action_spread: tensor([ 7, 43]):   0%|          | 100/1000000 [00:39<66:41:39,  4.16it/s]    steps: 12, loss_val:  0.0009, action_spread: tensor([ 7, 43]):   0%|          | 150/1000000 [00:40<86:47:19,  3.20it/s]    steps: 17, loss_val:  0.0009, action_spread: tensor([41,  9]):   0%|          | 150/1000000 [00:59<86:47:19,  3.20it/s]    steps: 17, loss_val:  0.0009, action_spread: tensor([41,  9]):   0%|          | 200/1000000 [01:00<96:05:36,  2.89it/s]    steps: 17, loss_val:  0.0007, action_spread: tensor([ 4, 46]):   0%|          | 200/1000000 [01:19<96:05:36,  2.89it/s]
+      0%|          | 50/1000000 [00:00<2:04:58, 133.36it/s]      0%|          | 50/1000000 [00:17<2:04:58, 133.36it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 50/1000000 [00:18<2:04:58, 133.36it/s]    steps: 11, loss_val:  0.0004, action_spread: tensor([ 5, 45]):   0%|          | 100/1000000 [00:19<63:25:34,  4.38it/s]    steps: 17, loss_val:  0.0004, action_spread: tensor([ 7, 43]):   0%|          | 100/1000000 [00:38<63:25:34,  4.38it/s]    steps: 17, loss_val:  0.0004, action_spread: tensor([ 7, 43]):   0%|          | 150/1000000 [00:38<82:52:07,  3.35it/s]    steps: 17, loss_val:  0.0004, action_spread: tensor([38, 12]):   0%|          | 150/1000000 [00:57<82:52:07,  3.35it/s]    steps: 17, loss_val:  0.0004, action_spread: tensor([38, 12]):   0%|          | 200/1000000 [00:57<91:59:13,  3.02it/s]    steps: 22, loss_val:  0.0004, action_spread: tensor([30, 20]):   0%|          | 200/1000000 [01:16<91:59:13,  3.02it/s]
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 448-450
+.. GENERATED FROM PYTHON SOURCE LINES 450-452
 
 Let's plot our results:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 450-457
+.. GENERATED FROM PYTHON SOURCE LINES 452-459
 
 .. code-block:: Python
 
@@ -837,7 +839,7 @@ Let's plot our results:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 458-476
+.. GENERATED FROM PYTHON SOURCE LINES 460-478
 
 Conclusion
 ----------
@@ -861,9 +863,9 @@ Further Reading
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 18.297 seconds)
+   **Total running time of the script:** (2 minutes 17.699 seconds)
 
-**Estimated memory usage:**  1962 MB
+**Estimated memory usage:**  1747 MB
 
 
 .. _sphx_glr_download_tutorials_dqn_with_rnn.py:

@@ -259,6 +259,14 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-0.html">Get started with Environments, TED and transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-1.html">Get started with TorchRL’s modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-2.html">Getting started with model optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-3.html">Get started with data collection and storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-4.html">Get started with logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-5.html">Get started with your onw first training loop</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/coding_ppo.html">Reinforcement Learning (PPO) with TorchRL Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/pendulum.html">Pendulum: Writing your environment and transforms with TorchRL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/torchrl_demo.html">Introduction to TorchRL</a></li>
@@ -401,7 +409,8 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;
 The length of out_keys must match the
 number of tensors returned by the embedded module. Using “_” as a
 key avoid writing tensor to output.
-Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;]</span></code>.</p></li>
+Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;state_value&quot;]</span></code> or
+<code class="docutils literal notranslate"><span class="pre">[&quot;state_action_value&quot;]</span></code> if <code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code> is part of the <code class="docutils literal notranslate"><span class="pre">in_keys</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -422,9 +431,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;
 <span class="gp">&gt;&gt;&gt; </span><span class="n">td_module</span> <span class="o">=</span> <span class="n">ValueOperator</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">],</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="o">.</span><span class="n">from_module</span><span class="p">(</span><span class="n">td_module</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">td_module</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">td</span> <span class="o">=</span> <span class="n">td_module</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">td_module</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>

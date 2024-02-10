@@ -256,6 +256,14 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-0.html">Get started with Environments, TED and transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-1.html">Get started with TorchRL’s modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-2.html">Getting started with model optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-3.html">Get started with data collection and storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-4.html">Get started with logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/getting-started-5.html">Get started with your onw first training loop</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/coding_ppo.html">Reinforcement Learning (PPO) with TorchRL Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/pendulum.html">Pendulum: Writing your environment and transforms with TorchRL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/torchrl_demo.html">Introduction to TorchRL</a></li>
@@ -404,12 +412,13 @@
 <div class="viewcode-block" id="Actor"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.Actor.html#torchrl.modules.Actor">[docs]</a><span class="k">class</span> <span class="nc">Actor</span><span class="p">(</span><span class="n">SafeModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;General class for deterministic actors in RL.</span>
 
-<span class="sd">    The Actor class comes with default values for the out_keys ([&quot;action&quot;])</span>
-<span class="sd">    and if the spec is provided but not as a CompositeSpec object, it will be</span>
-<span class="sd">    automatically translated into :obj:`spec = CompositeSpec(action=spec)`</span>
+<span class="sd">    The Actor class comes with default values for the out_keys (``[&quot;action&quot;]``)</span>
+<span class="sd">    and if the spec is provided but not as a</span>
+<span class="sd">    :class:`~torchrl.data.CompositeSpec` object, it will be</span>
+<span class="sd">    automatically translated into ``spec = CompositeSpec(action=spec)``.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        module (nn.Module): a :class:`torch.nn.Module` used to map the input to</span>
+<span class="sd">        module (nn.Module): a :class:`~torch.nn.Module` used to map the input to</span>
 <span class="sd">            the output parameter space.</span>
 <span class="sd">        in_keys (iterable of str, optional): keys to be read from input</span>
 <span class="sd">            tensordict and passed to the module. If it</span>
@@ -418,9 +427,11 @@
 <span class="sd">            Defaults to ``[&quot;observation&quot;]``.</span>
 <span class="sd">        out_keys (iterable of str): keys to be written to the input tensordict.</span>
 <span class="sd">            The length of out_keys must match the</span>
-<span class="sd">            number of tensors returned by the embedded module. Using &quot;_&quot; as a</span>
+<span class="sd">            number of tensors returned by the embedded module. Using ``&quot;_&quot;`` as a</span>
 <span class="sd">            key avoid writing tensor to output.</span>
 <span class="sd">            Defaults to ``[&quot;action&quot;]``.</span>
+
+<span class="sd">    Keyword Args:</span>
 <span class="sd">        spec (TensorSpec, optional): Keyword-only argument.</span>
 <span class="sd">            Specs of the output tensor. If the module</span>
 <span class="sd">            outputs multiple output tensors,</span>
@@ -430,7 +441,7 @@
 <span class="sd">            input spec. Out-of-domain sampling can</span>
 <span class="sd">            occur because of exploration policies or numerical under/overflow</span>
 <span class="sd">            issues. If this value is out of bounds, it is projected back onto the</span>
-<span class="sd">            desired space using the :obj:`TensorSpec.project`</span>
+<span class="sd">            desired space using the :meth:`~torchrl.data.TensorSpec.project`</span>
 <span class="sd">            method. Default is ``False``.</span>
 
 <span class="sd">    Examples:</span>
@@ -519,17 +530,23 @@
 <span class="sd">            issues. If this value is out of bounds, it is projected back onto the</span>
 <span class="sd">            desired space using the :obj:`TensorSpec.project`</span>
 <span class="sd">            method. Default is ``False``.</span>
-<span class="sd">        default_interaction_type=InteractionType.RANDOM (str, optional): keyword-only argument.</span>
+<span class="sd">        default_interaction_type (str, optional): keyword-only argument.</span>
 <span class="sd">            Default method to be used to retrieve</span>
-<span class="sd">            the output value. Should be one of: &#39;mode&#39;, &#39;median&#39;, &#39;mean&#39; or &#39;random&#39;</span>
-<span class="sd">            (in which case the value is sampled randomly from the distribution). Default</span>
-<span class="sd">            is &#39;mode&#39;.</span>
-<span class="sd">            Note: When a sample is drawn, the :obj:`ProbabilisticTDModule` instance will</span>
-<span class="sd">            first look for the interaction mode dictated by the `interaction_typ()`</span>
-<span class="sd">            global function. If this returns `None` (its default value), then the</span>
-<span class="sd">            `default_interaction_type` of the `ProbabilisticTDModule` instance will be</span>
-<span class="sd">            used. Note that DataCollector instances will use `set_interaction_type` to</span>
-<span class="sd">            :class:`tensordict.nn.InteractionType.RANDOM` by default.</span>
+<span class="sd">            the output value. Should be one of: &#39;InteractionType.MODE&#39;,</span>
+<span class="sd">            &#39;InteractionType.MEDIAN&#39;, &#39;InteractionType.MEAN&#39; or</span>
+<span class="sd">            &#39;InteractionType.RANDOM&#39; (in which case the value is sampled</span>
+<span class="sd">            randomly from the distribution). Defaults to is &#39;InteractionType.RANDOM&#39;.</span>
+
+<span class="sd">            .. note:: When a sample is drawn, the :class:`ProbabilisticActor` instance will</span>
+<span class="sd">              first look for the interaction mode dictated by the</span>
+<span class="sd">              :func:`~tensordict.nn.probabilistic.interaction_type`</span>
+<span class="sd">              global function. If this returns `None` (its default value), then the</span>
+<span class="sd">              `default_interaction_type` of the `ProbabilisticTDModule`</span>
+<span class="sd">              instance will be used. Note that</span>
+<span class="sd">              :class:`~torchrl.collectors.collectors.DataCollectorBase`</span>
+<span class="sd">              instances will use `set_interaction_type` to</span>
+<span class="sd">              :class:`tensordict.nn.InteractionType.RANDOM` by default.</span>
+
 <span class="sd">        distribution_class (Type, optional): keyword-only argument.</span>
 <span class="sd">            A :class:`torch.distributions.Distribution` class to</span>
 <span class="sd">            be used for sampling.</span>
@@ -568,9 +585,7 @@
 <span class="sd">        ...    in_keys=[&quot;loc&quot;, &quot;scale&quot;],</span>
 <span class="sd">        ...    distribution_class=TanhNormal,</span>
 <span class="sd">        ...    )</span>
-<span class="sd">        &gt;&gt;&gt; params = TensorDict.from_module(td_module)</span>
-<span class="sd">        &gt;&gt;&gt; with params.to_module(td_module):</span>
-<span class="sd">        ...     td = td_module(td)</span>
+<span class="sd">        &gt;&gt;&gt; td = td_module(td)</span>
 <span class="sd">        &gt;&gt;&gt; td</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>
@@ -686,7 +701,8 @@
 <span class="sd">            The length of out_keys must match the</span>
 <span class="sd">            number of tensors returned by the embedded module. Using &quot;_&quot; as a</span>
 <span class="sd">            key avoid writing tensor to output.</span>
-<span class="sd">            Defaults to ``[&quot;action&quot;]``.</span>
+<span class="sd">            Defaults to ``[&quot;state_value&quot;]`` or</span>
+<span class="sd">            ``[&quot;state_action_value&quot;]`` if ``&quot;action&quot;`` is part of the ``in_keys``.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -705,9 +721,7 @@
 <span class="sd">        &gt;&gt;&gt; td_module = ValueOperator(</span>
 <span class="sd">        ...    in_keys=[&quot;observation&quot;, &quot;action&quot;], module=module</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; params = TensorDict.from_module(td_module)</span>
-<span class="sd">        &gt;&gt;&gt; with params.to_module(td_module):</span>
-<span class="sd">        ...     td = td_module(td)</span>
+<span class="sd">        &gt;&gt;&gt; td = td_module(td)</span>
 <span class="sd">        &gt;&gt;&gt; print(td)</span>
 <span class="sd">        TensorDict(</span>
 <span class="sd">            fields={</span>

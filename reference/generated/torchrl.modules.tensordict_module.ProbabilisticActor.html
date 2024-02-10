@@ -259,6 +259,14 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-0.html">Get started with Environments, TED and transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-1.html">Get started with TorchRL’s modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-2.html">Getting started with model optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-3.html">Get started with data collection and storage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-4.html">Get started with logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/getting-started-5.html">Get started with your onw first training loop</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/coding_ppo.html">Reinforcement Learning (PPO) with TorchRL Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/pendulum.html">Pendulum: Writing your environment and transforms with TorchRL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/torchrl_demo.html">Introduction to TorchRL</a></li>
@@ -410,17 +418,25 @@ occur because of exploration policies or numerical under/overflow
 issues. If this value is out of bounds, it is projected back onto the
 desired space using the <code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorSpec.project</span></code>
 method. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>default_interaction_type=InteractionType.RANDOM</strong> (<em>str</em><em>, </em><em>optional</em>) – keyword-only argument.
+<li><p><strong>default_interaction_type</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>keyword-only argument.
 Default method to be used to retrieve
-the output value. Should be one of: ‘mode’, ‘median’, ‘mean’ or ‘random’
-(in which case the value is sampled randomly from the distribution). Default
-is ‘mode’.
-Note: When a sample is drawn, the <code class="xref py py-obj docutils literal notranslate"><span class="pre">ProbabilisticTDModule</span></code> instance will
-first look for the interaction mode dictated by the <cite>interaction_typ()</cite>
+the output value. Should be one of: ‘InteractionType.MODE’,
+‘InteractionType.MEDIAN’, ‘InteractionType.MEAN’ or
+‘InteractionType.RANDOM’ (in which case the value is sampled
+randomly from the distribution). Defaults to is ‘InteractionType.RANDOM’.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When a sample is drawn, the <a class="reference internal" href="#torchrl.modules.tensordict_module.ProbabilisticActor" title="torchrl.modules.tensordict_module.ProbabilisticActor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbabilisticActor</span></code></a> instance will
+first look for the interaction mode dictated by the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">interaction_type()</span></code>
 global function. If this returns <cite>None</cite> (its default value), then the
-<cite>default_interaction_type</cite> of the <cite>ProbabilisticTDModule</cite> instance will be
-used. Note that DataCollector instances will use <cite>set_interaction_type</cite> to
-<code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.InteractionType.RANDOM</span></code> by default.</p></li>
+<cite>default_interaction_type</cite> of the <cite>ProbabilisticTDModule</cite>
+instance will be used. Note that
+<a class="reference internal" href="torchrl.collectors.collectors.DataCollectorBase.html#torchrl.collectors.collectors.DataCollectorBase" title="torchrl.collectors.collectors.DataCollectorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataCollectorBase</span></code></a>
+instances will use <cite>set_interaction_type</cite> to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">tensordict.nn.InteractionType.RANDOM</span></code> by default.</p>
+</div>
+</p></li>
 <li><p><strong>distribution_class</strong> (<em>Type</em><em>, </em><em>optional</em>) – keyword-only argument.
 A <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.Distribution</span></code> class to
 be used for sampling.
@@ -461,9 +477,7 @@ mean when it is not available. Defaults to 1000.</p></li>
 <span class="gp">... </span>   <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;loc&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">],</span>
 <span class="gp">... </span>   <span class="n">distribution_class</span><span class="o">=</span><span class="n">TanhNormal</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="o">.</span><span class="n">from_module</span><span class="p">(</span><span class="n">td_module</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">td_module</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">td</span> <span class="o">=</span> <span class="n">td_module</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">td_module</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">td</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
