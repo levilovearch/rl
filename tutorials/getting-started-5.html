@@ -389,7 +389,18 @@ to download the full example code</p>
 <section class="sphx-glr-example-title" id="get-started-with-your-onw-first-training-loop">
 <span id="sphx-glr-tutorials-getting-started-5-py"></span><h1>Get started with your onw first training loop<a class="headerlink" href="#get-started-with-your-onw-first-training-loop" title="Permalink to this heading">¶</a></h1>
 <p><strong>Author</strong>: <a class="reference external" href="https://github.com/vmoens">Vincent Moens</a></p>
-<span class="target" id="gs-first-training"></span><p>Time to wrap up everything we’ve learned so far in this Getting Started
+<div class="admonition note" id="gs-first-training">
+<p class="admonition-title">Note</p>
+<p>To run this tutorial in a notebook, add an installation cell
+at the beginning containing:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!pip install tensordict
+!pip install torchrl
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<p>Time to wrap up everything we’ve learned so far in this Getting Started
 series!</p>
 <p>In this tutorial, we will be writing the most basic training loop there is
 using only components we have presented in the previous lessons.</p>
@@ -418,9 +429,12 @@ transform. If you need a refresher, check our these features are presented in
 </section>
 <section id="designing-a-policy">
 <h2>Designing a policy<a class="headerlink" href="#designing-a-policy" title="Permalink to this heading">¶</a></h2>
-<p>The next step is to build our policy. We’ll be making a regular, deterministic
-version to be used within the <a class="reference internal" href="getting-started-2.html#gs-optim"><span class="std std-ref">loss module</span></a> and during
-<a class="reference internal" href="getting-started-4.html#gs-logging"><span class="std std-ref">evaluation</span></a>, and one augmented by an exploration module
+<p>The next step is to build our policy.
+We’ll be making a regular, deterministic
+version of the actor to be used within the
+<a class="reference internal" href="getting-started-2.html#gs-optim"><span class="std std-ref">loss module</span></a> and during
+<a class="reference internal" href="getting-started-4.html#gs-logging"><span class="std std-ref">evaluation</span></a>.
+Next, we will augment it with an exploration module
 for <a class="reference internal" href="getting-started-3.html#gs-storage"><span class="std std-ref">inference</span></a>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">EGreedyModule</span></a><span class="p">,</span> <a href="https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html#torch.nn.Sequential" title="torch.nn.Sequential" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-class"><span class="n">MLP</span></a><span class="p">,</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictModuleBase.html#tensordict.nn.TensorDictModuleBase" title="tensordict.nn.TensorDictModuleBase" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class"><span class="n">QValueModule</span></a>
 
@@ -541,8 +555,8 @@ training loop:</p>
 </figure>
 <p>This concludes our series of “Getting started with TorchRL” tutorials!
 Feel free to share feedback about it on GitHub.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 21.883 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  11 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 22.067 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  91 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-getting-started-5-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d04ba01cba3add54c2b1a3c96ae6320d/getting-started-5.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">getting-started-5.ipynb</span></code></a></p>

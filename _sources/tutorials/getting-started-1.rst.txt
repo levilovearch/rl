@@ -25,7 +25,15 @@ Get started with TorchRL's modules
 
 .. _gs_modules:
 
-.. GENERATED FROM PYTHON SOURCE LINES 12-39
+.. note:: To run this tutorial in a notebook, add an installation cell
+  at the beginning containing:
+
+    .. code-block::
+
+        !pip install tensordict
+        !pip install torchrl
+
+.. GENERATED FROM PYTHON SOURCE LINES 20-47
 
 Reinforcement Learning is designed to create policies that can effectively
 tackle specific tasks. Policies can take various forms, from a differentiable
@@ -55,7 +63,7 @@ space to the action space. For maximum generality, we will use a
 instantiated in the previous tutorial.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-53
+.. GENERATED FROM PYTHON SOURCE LINES 47-61
 
 .. code-block:: Python
 
@@ -80,14 +88,14 @@ instantiated in the previous tutorial.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-58
+.. GENERATED FROM PYTHON SOURCE LINES 62-66
 
 This is all that's required to execute our policy! The use of a lazy module
 allows us to bypass the need to fetch the shape of the observation space, as
 the module will automatically determine it. This policy is now ready to be
 run in the environment:
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-62
+.. GENERATED FROM PYTHON SOURCE LINES 66-70
 
 .. code-block:: Python
 
@@ -127,7 +135,7 @@ run in the environment:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-76
+.. GENERATED FROM PYTHON SOURCE LINES 71-84
 
 Specialized wrappers
 --------------------
@@ -143,7 +151,7 @@ default values for the ``in_keys`` and ``out_keys``, making integration
 with many common environments straightforward:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-83
+.. GENERATED FROM PYTHON SOURCE LINES 84-91
 
 .. code-block:: Python
 
@@ -186,7 +194,7 @@ with many common environments straightforward:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-95
+.. GENERATED FROM PYTHON SOURCE LINES 92-103
 
 The list of available specialized TensorDictModules is available in the
 :ref:`API reference <tdmodules>`.
@@ -200,7 +208,7 @@ the :class:`~torchrl.modules.MLP` and the :class:`~torchrl.modules.ConvNet`
 (CNN) modules. We can substitute our policy module with one of these:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-106
+.. GENERATED FROM PYTHON SOURCE LINES 103-114
 
 .. code-block:: Python
 
@@ -222,7 +230,7 @@ the :class:`~torchrl.modules.MLP` and the :class:`~torchrl.modules.ConvNet`
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 107-132
+.. GENERATED FROM PYTHON SOURCE LINES 115-140
 
 TorchRL also supports RNN-based policies. Since this is a more technical
 topic, it is treated in :ref:`a separate tutorial <RNN_tuto>`.
@@ -250,7 +258,7 @@ normal distribution using three components:
   populate our tensordict with samples and log-probabilities.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 132-152
+.. GENERATED FROM PYTHON SOURCE LINES 140-160
 
 .. code-block:: Python
 
@@ -309,7 +317,7 @@ normal distribution using three components:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-165
+.. GENERATED FROM PYTHON SOURCE LINES 161-173
 
 There are a few things to note about this rollout:
 
@@ -324,7 +332,7 @@ other properties of the distribution instead of using random samples if
 your application requires it. This can be controlled via the
 :func:`~torchrl.envs.utils.set_exploration_type` function:
 
-.. GENERATED FROM PYTHON SOURCE LINES 165-175
+.. GENERATED FROM PYTHON SOURCE LINES 173-183
 
 .. code-block:: Python
 
@@ -345,7 +353,7 @@ your application requires it. This can be controlled via the
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 176-190
+.. GENERATED FROM PYTHON SOURCE LINES 184-198
 
 Check the ``default_interaction_type`` keyword argument in
 the docstrings to know more.
@@ -362,7 +370,7 @@ exploration module (check also
 :class:`~torchrl.modules.OrnsteinUhlenbeckProcessWrapper`).
 To see this module in action, let's revert to a deterministic policy:
 
-.. GENERATED FROM PYTHON SOURCE LINES 190-196
+.. GENERATED FROM PYTHON SOURCE LINES 198-204
 
 .. code-block:: Python
 
@@ -379,7 +387,7 @@ To see this module in action, let's revert to a deterministic policy:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 197-205
+.. GENERATED FROM PYTHON SOURCE LINES 205-213
 
 Our :math:`\epsilon`-greedy exploration module will usually be customized
 with a number of annealing frames and an initial value for the
@@ -390,7 +398,7 @@ to :meth:`~torchrl.modules.EGreedyModule.step` is required (see the last
 :ref:`tutorial <gs_first_training>` for an example).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 205-209
+.. GENERATED FROM PYTHON SOURCE LINES 213-217
 
 .. code-block:: Python
 
@@ -405,14 +413,14 @@ to :meth:`~torchrl.modules.EGreedyModule.step` is required (see the last
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 210-214
+.. GENERATED FROM PYTHON SOURCE LINES 218-222
 
 To build our explorative policy, we only had to concatenate the
 deterministic policy module with the exploration module within a
 :class:`~tensordict.nn.TensorDictSequential` module (which is the analogous
 to :class:`~torch.nn.Sequential` in the tensordict realm).
 
-.. GENERATED FROM PYTHON SOURCE LINES 214-224
+.. GENERATED FROM PYTHON SOURCE LINES 222-232
 
 .. code-block:: Python
 
@@ -433,7 +441,7 @@ to :class:`~torch.nn.Sequential` in the tensordict realm).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 225-244
+.. GENERATED FROM PYTHON SOURCE LINES 233-252
 
 Because it must be able to sample random actions in the action space, the
 :class:`~torchrl.modules.EGreedyModule` must be equipped with the
@@ -455,7 +463,7 @@ state spaces by utilizing a neural network to encode for the ``Q(s, a)``
 value map. Let's consider another environment with a discrete action space
 for a clearer understanding:
 
-.. GENERATED FROM PYTHON SOURCE LINES 244-248
+.. GENERATED FROM PYTHON SOURCE LINES 252-256
 
 .. code-block:: Python
 
@@ -481,12 +489,12 @@ for a clearer understanding:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 249-251
+.. GENERATED FROM PYTHON SOURCE LINES 257-259
 
 We build a value network that produces one value per action when it reads a
 state from the environment:
 
-.. GENERATED FROM PYTHON SOURCE LINES 251-259
+.. GENERATED FROM PYTHON SOURCE LINES 259-267
 
 .. code-block:: Python
 
@@ -505,13 +513,13 @@ state from the environment:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 260-263
+.. GENERATED FROM PYTHON SOURCE LINES 268-271
 
 We can easily build our Q-Value actor by adding a
 :class:`~torchrl.modules.tensordict_module.QValueModule` after our value
 network:
 
-.. GENERATED FROM PYTHON SOURCE LINES 263-273
+.. GENERATED FROM PYTHON SOURCE LINES 271-281
 
 .. code-block:: Python
 
@@ -532,14 +540,14 @@ network:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 274-278
+.. GENERATED FROM PYTHON SOURCE LINES 282-286
 
 Let's check it out! We run the policy for a couple of steps and look at the
 output. We should find an ``"action_value"`` as well as a
 ``"chosen_action_value"`` entries in the rollout that we obtain:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 278-282
+.. GENERATED FROM PYTHON SOURCE LINES 286-290
 
 .. code-block:: Python
 
@@ -581,14 +589,14 @@ output. We should find an ``"action_value"`` as well as a
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 283-287
+.. GENERATED FROM PYTHON SOURCE LINES 291-295
 
 Because it relies on the ``argmax`` operator, this policy is deterministic.
 During data collection, we will need to explore the environment. For that,
 we are using the :class:`~torchrl.modules.tensordict_module.EGreedyModule`
 once again:
 
-.. GENERATED FROM PYTHON SOURCE LINES 287-293
+.. GENERATED FROM PYTHON SOURCE LINES 295-301
 
 .. code-block:: Python
 
@@ -605,7 +613,7 @@ once again:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-310
+.. GENERATED FROM PYTHON SOURCE LINES 302-318
 
 This is it for our short tutorial on building a policy with TorchRL!
 
@@ -627,7 +635,7 @@ Next steps:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 46.788 seconds)
+   **Total running time of the script:** (0 minutes 46.914 seconds)
 
 **Estimated memory usage:**  8 MB
 
