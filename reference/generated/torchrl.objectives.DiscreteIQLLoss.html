@@ -548,6 +548,24 @@ method.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.objectives.DiscreteIQLLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="headerlink" href="#torchrl.objectives.DiscreteIQLLoss.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>It is designed to read an input TensorDict and return another tensordict with loss keys named “loss*”.</p>
+<p>Splitting the loss in its component can then be used by the trainer to log the various loss values throughout
+training. Other scalars present in the output tensordict will be logged too.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensordict</strong> – an input tensordict with the values required to compute the loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new tensordict with no batch dimension containing various loss scalars which will be named “loss*”. It
+is essential that the losses are returned with this name as they will be read by the trainer before
+backpropagation.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
