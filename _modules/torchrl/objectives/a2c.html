@@ -634,7 +634,8 @@
 
         <span class="k">if</span> <span class="n">functional</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_functional</span><span class="p">(</span>
-                <span class="n">actor_network</span><span class="p">,</span> <span class="s2">&quot;actor_network&quot;</span><span class="p">,</span> <span class="n">funs_to_decorate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;get_dist&quot;</span><span class="p">]</span>
+                <span class="n">actor_network</span><span class="p">,</span>
+                <span class="s2">&quot;actor_network&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span> <span class="o">=</span> <span class="n">actor_network</span>
@@ -729,7 +730,7 @@
             <span class="o">*</span><span class="p">[(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">],</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_coef</span><span class="p">:</span>
-            <span class="n">keys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
 
     <span class="nd">@property</span>
@@ -793,11 +794,11 @@
             <span class="c1"># TODO: if the advantage is gathered by forward, this introduces an</span>
             <span class="c1"># overhead that we could easily reduce.</span>
             <span class="n">target_return</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value_target</span><span class="p">)</span>
-            <span class="n">tensordict_select</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
+            <span class="n">tensordict_select</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_network_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">critic</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span>
             <span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span> <span class="k">else</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">nullcontext</span><span class="p">():</span>
-                <span class="n">state_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">(</span>
+                <span class="n">state_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="p">(</span>
                     <span class="n">tensordict_select</span><span class="p">,</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
             <span class="n">loss_value</span> <span class="o">=</span> <span class="n">distance_loss</span><span class="p">(</span>
@@ -856,13 +857,19 @@
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">):</span>
             <span class="n">hp</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TD1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TD1Estimator</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TD1Estimator</span><span class="p">(</span>
+                <span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TD0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TD0Estimator</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TD0Estimator</span><span class="p">(</span>
+                <span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">GAE</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">GAE</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">GAE</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">TDLambda</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TDLambdaEstimator</span><span class="p">(</span><span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_estimator</span> <span class="o">=</span> <span class="n">TDLambdaEstimator</span><span class="p">(</span>
+                <span class="n">value_network</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_network</span><span class="p">,</span> <span class="o">**</span><span class="n">hp</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="o">==</span> <span class="n">ValueEstimators</span><span class="o">.</span><span class="n">VTrace</span><span class="p">:</span>
             <span class="c1"># VTrace currently does not support functional call on the actor</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">:</span>
