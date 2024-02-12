@@ -956,7 +956,7 @@
         <span class="n">reset_when_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">interruptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">torchrl.envs.batched_envs</span> <span class="kn">import</span> <span class="n">_BatchedEnv</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.batched_envs</span> <span class="kn">import</span> <span class="n">BatchedEnvBase</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -970,7 +970,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">env</span> <span class="o">=</span> <span class="n">create_env_fn</span>
             <span class="k">if</span> <span class="n">create_env_kwargs</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">_BatchedEnv</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">BatchedEnvBase</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                         <span class="s2">&quot;kwargs were passed to SyncDataCollector but they can&#39;t be set &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;on environment of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -1580,11 +1580,11 @@
 <span class="sd">            `&quot;env_state_dict&quot;`.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">torchrl.envs.batched_envs</span> <span class="kn">import</span> <span class="n">_BatchedEnv</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.batched_envs</span> <span class="kn">import</span> <span class="n">BatchedEnvBase</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">TransformedEnv</span><span class="p">):</span>
             <span class="n">env_state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">_BatchedEnv</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">BatchedEnvBase</span><span class="p">):</span>
             <span class="n">env_state_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">env_state_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>

@@ -443,6 +443,9 @@ This parameter has no effect for the <a class="reference internal" href="torchrl
 <li><p><strong>serial_for_single</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, creating a parallel environment
 with a single worker will return a <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a> instead.
 This option has no effect with <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>non_blocking</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, device moves will be done using the
+<code class="docutils literal notranslate"><span class="pre">non_blocking=True</span></code> option. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code> for batched environments
+on cuda devices, and <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></li>
 </ul>
 </dd>
 </dl>
@@ -455,8 +458,8 @@ This option has no effect with <a class="reference internal" href="torchrl.envs.
 <span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span>
 <span class="gp">... </span>    <span class="k">lambda</span><span class="p">:</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;stand&quot;</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="k">lambda</span><span class="p">:</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;humanoid&quot;</span><span class="p">,</span> <span class="s2">&quot;walk&quot;</span><span class="p">)])</span>  <span class="c1"># Creates two independent copies of Humanoid, one that walks one that stands</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># executes 10 random steps in the environment</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># data for Humanoid stand</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rollout</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># executes 10 random steps in the environment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rollout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># data for Humanoid stand</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
 <span class="go">        action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
@@ -487,7 +490,7 @@ This option has no effect with <a class="reference internal" href="torchrl.envs.
 <span class="go">    batch_size=torch.Size([10]),</span>
 <span class="go">    device=cpu,</span>
 <span class="go">    is_shared=False)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># data for Humanoid walk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rollout</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># data for Humanoid walk</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
 <span class="go">        action: Tensor(shape=torch.Size([10, 21]), device=cpu, dtype=torch.float64, is_shared=False),</span>
@@ -518,6 +521,7 @@ This option has no effect with <a class="reference internal" href="torchrl.envs.
 <span class="go">    batch_size=torch.Size([10]),</span>
 <span class="go">    device=cpu,</span>
 <span class="go">    is_shared=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># serial_for_single to avoid creating parallel envs if not necessary</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">make_env</span><span class="p">,</span> <span class="n">serial_for_single</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">SerialEnv</span><span class="p">)</span>  <span class="c1"># serial_for_single allows you to avoid creating parallel envs when not necessary</span>
 </pre></div>
