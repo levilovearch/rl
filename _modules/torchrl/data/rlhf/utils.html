@@ -386,13 +386,13 @@
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">importlib</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.rlhf.prompt</span> <span class="kn">import</span> <span class="n">PromptData</span>
@@ -409,8 +409,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">pass</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="o">...</span>
 
 
 <span class="k">class</span> <span class="nc">ConstantKLController</span><span class="p">(</span><span class="n">KLControllerBase</span><span class="p">):</span>
@@ -419,30 +419,39 @@
 <span class="sd">    This controller maintains a fixed coefficient no matter what values it is updated</span>
 <span class="sd">    with.</span>
 
-<span class="sd">    Arguments:</span>
-<span class="sd">        model: wrapped model that needs to be controlled. Must have attribute &#39;kl_coef&#39;</span>
+<span class="sd">    Keyword Arguments:</span>
 <span class="sd">        kl_coef (float): The coefficient to multiply KL with when calculating the</span>
 <span class="sd">            reward.</span>
+<span class="sd">        model (nn.Module, optional): wrapped model that needs to be controlled.</span>
+<span class="sd">            Must have an attribute ``&quot;kl_coef&quot;``. If provided, the ``&quot;kl_coef&quot;`` will</span>
+<span class="sd">            be updated in-place.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">kl_coef</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">kl_coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;kl_coef&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;kl_coef&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
                 <span class="s2">&quot;Model input to ConstantKLController doesn&#39;t have attribute &#39;kl_coef&#39;&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">kl_coef</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
 
 
 <span class="k">class</span> <span class="nc">AdaptiveKLController</span><span class="p">(</span><span class="n">KLControllerBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adaptive KL Controller as described in Ziegler et al. &quot;Fine-Tuning Language Models from Human Preferences&quot;.</span>
 
-<span class="sd">    Arguments:</span>
-<span class="sd">        model: wrapped model that needs to be controlled. Must have attribute &#39;kl_coef&#39;</span>
+<span class="sd">    Keyword Arguments:</span>
 <span class="sd">        init_kl_coef (float): The starting value of the coefficient.</span>
 <span class="sd">        target (float): The target KL value. When the observed KL is smaller, the</span>
 <span class="sd">            coefficient is decreased, thereby relaxing the KL penalty in the training</span>
@@ -451,19 +460,30 @@
 <span class="sd">            increased, thereby pulling the model back towards the reference model.</span>
 <span class="sd">        horizon (int): Scaling factor to control how aggressively we update the</span>
 <span class="sd">            coefficient.</span>
+<span class="sd">        model (nn.Module, optional): wrapped model that needs to be controlled.</span>
+<span class="sd">            Must have an attribute ``&quot;kl_coef&quot;``. If provided, the ``&quot;kl_coef&quot;`` will</span>
+<span class="sd">            be updated in-place.</span>
 
 <span class="sd">    Reference: Section 2.2 https://arxiv.org/pdf/1909.08593.pdf#page=2</span>
 <span class="sd">    Source: https://github.com/openai/lm-human-preferences/blob/master/lm_human_preferences/train_policy.py</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">init_kl_coef</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">init_kl_coef</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">init_kl_coef</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="n">horizon</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kl_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update ``self.coef`` adaptively.</span>
 
 <span class="sd">        Arguments:</span>
@@ -483,6 +503,9 @@
         <span class="n">proportional_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">kl_value</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># ϵₜ</span>
         <span class="n">mult</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">proportional_error</span> <span class="o">*</span> <span class="n">n_steps</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">*=</span> <span class="n">mult</span>  <span class="c1"># βₜ₊₁</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
 
 
 <div class="viewcode-block" id="RolloutFromModel"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.RolloutFromModel.html#torchrl.data.RolloutFromModel">[docs]</a><span class="k">class</span> <span class="nc">RolloutFromModel</span><span class="p">:</span>
@@ -612,8 +635,6 @@
 <span class="sd">            log_ratio (torch.Tensor): The log ratio of the probabilities of the generated tokens</span>
 <span class="sd">                according to the generative model and the reference model. Can be</span>
 <span class="sd">                obtained by calling the ``generate`` method.</span>
-<span class="sd">            kl_coef (float, optional): Coefficient with which to multiply the KL term before subtracting</span>
-<span class="sd">                from the reward. Defaults to 0.1.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A :class:`~tensordict.TensorDict` with the following keys:</span>
@@ -893,7 +914,7 @@
 
     <span class="k">def</span> <span class="nf">step_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># recover true kl</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">kl_scheduler</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kl_coef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kl_scheduler</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">)):</span>
             <span class="c1"># remove all values</span>
             <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kl_queue</span><span class="p">):</span>
