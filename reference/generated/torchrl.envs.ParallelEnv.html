@@ -660,6 +660,13 @@ the ParallelEnv device should be set to CUDA.</p></li>
 </pre></div>
 </div>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>ParallelEnv disable gradients in all operations (<a class="reference internal" href="#torchrl.envs.ParallelEnv.step" title="torchrl.envs.ParallelEnv.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a>,
+<a class="reference internal" href="#torchrl.envs.ParallelEnv.reset" title="torchrl.envs.ParallelEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> and <a class="reference internal" href="#torchrl.envs.ParallelEnv.step_and_maybe_reset" title="torchrl.envs.ParallelEnv.step_and_maybe_reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step_and_maybe_reset()</span></code></a>) because gradients
+cannot be passed through <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pipe</span></code> objects.
+Only <a class="reference internal" href="torchrl.envs.SerialEnv.html#torchrl.envs.SerialEnv" title="torchrl.envs.SerialEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerialEnv</span></code></a> will support backpropagation.</p>
+</div>
 <dl class="py property">
 <dt class="sig sig-object py" id="torchrl.envs.ParallelEnv.action_key">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchrl.envs.ParallelEnv.action_key" title="Permalink to this definition">¶</a></dt>

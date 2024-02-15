@@ -1420,6 +1420,12 @@
 <span class="s2">        &gt;&gt;&gt; # If no cuda device is available</span>
 <span class="s2">        &gt;&gt;&gt; env = ParallelEnv(N, MyEnv(..., device=&quot;cpu&quot;))</span>
 
+<span class="s2">    .. warning::</span>
+<span class="s2">      ParallelEnv disable gradients in all operations (:meth:`~.step`,</span>
+<span class="s2">      :meth:`~.reset` and :meth:`~.step_and_maybe_reset`) because gradients</span>
+<span class="s2">      cannot be passed through :class:`multiprocessing.Pipe` objects.</span>
+<span class="s2">      Only :class:`~torchrl.envs.SerialEnv` will support backpropagation.</span>
+
 <span class="s2">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_start_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1522,7 +1528,8 @@
             <span class="n">event</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
             <span class="n">event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="ParallelEnv.step_and_maybe_reset"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.ParallelEnv.html#torchrl.envs.ParallelEnv.step_and_maybe_reset">[docs]</a>    <span class="nd">@_check_start</span>
+<div class="viewcode-block" id="ParallelEnv.step_and_maybe_reset"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.ParallelEnv.html#torchrl.envs.ParallelEnv.step_and_maybe_reset">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="nd">@_check_start</span>
     <span class="k">def</span> <span class="nf">step_and_maybe_reset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">]:</span>
@@ -1584,6 +1591,7 @@
         <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">next_td</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_</span></div>
 
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="nd">@_check_start</span>
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
         <span class="c1"># We must use the in_keys and nothing else for the following reasons:</span>
@@ -1640,6 +1648,7 @@
                 <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="nd">@_check_start</span>
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">tensordict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
