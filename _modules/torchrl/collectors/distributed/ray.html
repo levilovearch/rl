@@ -851,7 +851,7 @@
         <span class="n">pending_samples</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">e</span><span class="o">.</span><span class="n">print_remote_collector_info</span><span class="o">.</span><span class="n">remote</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">remote_collectors</span><span class="p">()</span>
         <span class="p">]</span>
-        <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">object_refs</span><span class="o">=</span><span class="n">pending_samples</span><span class="p">)</span>
+        <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">pending_samples</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -981,7 +981,7 @@
             <span class="n">samples_ready</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_ready</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_collectors</span><span class="p">:</span>
                 <span class="n">samples_ready</span><span class="p">,</span> <span class="n">samples_not_ready</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span>
-                    <span class="n">object_refs</span><span class="o">=</span><span class="n">pending_tasks</span><span class="p">,</span> <span class="n">num_returns</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">pending_tasks</span><span class="p">)</span>
+                    <span class="n">pending_tasks</span><span class="p">,</span> <span class="n">num_returns</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">pending_tasks</span><span class="p">)</span>
                 <span class="p">)</span>
 
             <span class="c1"># Retrieve and concatenate Tensordicts</span>
@@ -1024,7 +1024,7 @@
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Missing pending tasks, something went wrong&quot;</span><span class="p">)</span>
 
             <span class="c1"># Wait for first worker to finish</span>
-            <span class="n">wait_results</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">object_refs</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">pending_tasks</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="n">wait_results</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pending_tasks</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
             <span class="n">future</span> <span class="o">=</span> <span class="n">wait_results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">collector_index</span> <span class="o">=</span> <span class="n">pending_tasks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
             <span class="n">collector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remote_collectors</span><span class="p">()[</span><span class="n">collector_index</span><span class="p">]</span>
@@ -1057,7 +1057,7 @@
 
         <span class="c1"># Wait for the in-process collections tasks to finish.</span>
         <span class="n">refs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pending_tasks</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">object_refs</span><span class="o">=</span><span class="n">refs</span><span class="p">,</span> <span class="n">num_returns</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">))</span>
+        <span class="n">ray</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="n">num_returns</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">))</span>
 
         <span class="c1"># Cancel the in-process collections tasks</span>
         <span class="c1"># for ref in refs:</span>
