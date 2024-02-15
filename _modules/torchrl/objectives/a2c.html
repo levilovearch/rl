@@ -382,6 +382,7 @@
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 <span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
@@ -394,9 +395,11 @@
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributions</span> <span class="k">as</span> <span class="n">d</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.objectives.common</span> <span class="kn">import</span> <span class="n">LossModule</span>
+
 <span class="kn">from</span> <span class="nn">torchrl.objectives.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_cache_values</span><span class="p">,</span>
     <span class="n">_GAMMA_LMBDA_DEPREC_ERROR</span><span class="p">,</span>
+    <span class="n">_reduce</span><span class="p">,</span>
     <span class="n">default_value_kwargs</span><span class="p">,</span>
     <span class="n">distance_loss</span><span class="p">,</span>
     <span class="n">ValueEstimators</span><span class="p">,</span>
@@ -447,6 +450,10 @@
 <span class="sd">            Functionalizing permits features like meta-RL, but makes it</span>
 <span class="sd">            impossible to use distributed models (DDP, FSDP, ...) and comes</span>
 <span class="sd">            with a little cost. Defaults to ``True``.</span>
+<span class="sd">        reduction (str, optional): Specifies the reduction to apply to the output:</span>
+<span class="sd">            ``&quot;none&quot;`` | ``&quot;mean&quot;`` | ``&quot;sum&quot;``. ``&quot;none&quot;``: no reduction will be applied,</span>
+<span class="sd">            ``&quot;mean&quot;``: the sum of the output will be divided by the number of</span>
+<span class="sd">            elements in the output, ``&quot;sum&quot;``: the output will be summed. Default: ``&quot;mean&quot;``.</span>
 
 <span class="sd">    .. note:</span>
 <span class="sd">      The advantage (typically GAE) can be computed by the loss function or</span>
@@ -613,6 +620,7 @@
         <span class="n">functional</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">actor</span><span class="p">:</span> <span class="n">ProbabilisticTensorDictSequential</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">critic</span><span class="p">:</span> <span class="n">ProbabilisticTensorDictSequential</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">actor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">actor_network</span> <span class="o">=</span> <span class="n">actor</span>
@@ -624,6 +632,8 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s2">&quot;Missing positional arguments actor_network or critic_network.&quot;</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="n">reduction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">reduction</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_functional</span> <span class="o">=</span> <span class="n">functional</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_out_keys</span> <span class="o">=</span> <span class="kc">None</span>
@@ -656,6 +666,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">samples_mc_entropy</span> <span class="o">=</span> <span class="n">samples_mc_entropy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">entropy_bonus</span> <span class="o">=</span> <span class="n">entropy_bonus</span> <span class="ow">and</span> <span class="n">entropy_coef</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">reduction</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">device</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
@@ -768,7 +779,7 @@
             <span class="n">entropy</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">rsample</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_mc_entropy</span><span class="p">,))</span>
-            <span class="n">entropy</span> <span class="o">=</span> <span class="o">-</span><span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">entropy</span> <span class="o">=</span> <span class="o">-</span><span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">entropy</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_log_probs</span><span class="p">(</span>
@@ -837,14 +848,17 @@
         <span class="k">assert</span> <span class="ow">not</span> <span class="n">advantage</span><span class="o">.</span><span class="n">requires_grad</span>
         <span class="n">log_probs</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_probs</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">log_probs</span> <span class="o">*</span> <span class="n">advantage</span><span class="p">)</span>
-        <span class="n">td_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;loss_objective&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()},</span> <span class="p">[])</span>
+        <span class="n">td_out</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;loss_objective&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">},</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">[])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entropy_bonus</span><span class="p">:</span>
             <span class="n">entropy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_entropy_bonus</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
-            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;entropy&quot;</span><span class="p">,</span> <span class="n">entropy</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>  <span class="c1"># for logging</span>
-            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;loss_entropy&quot;</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">entropy_coef</span> <span class="o">*</span> <span class="n">entropy</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;entropy&quot;</span><span class="p">,</span> <span class="n">entropy</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>  <span class="c1"># for logging</span>
+            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;loss_entropy&quot;</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">entropy_coef</span> <span class="o">*</span> <span class="n">entropy</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_coef</span><span class="p">:</span>
-            <span class="n">loss_critic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_critic</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;loss_critic&quot;</span><span class="p">,</span> <span class="n">loss_critic</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+            <span class="n">loss_critic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_critic</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+            <span class="n">td_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;loss_critic&quot;</span><span class="p">,</span> <span class="n">loss_critic</span><span class="p">)</span>
+        <span class="n">td_out</span> <span class="o">=</span> <span class="n">td_out</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_reduce</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">[]</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">td_out</span></div>
 
 <div class="viewcode-block" id="A2CLoss.make_value_estimator"><a class="viewcode-back" href="../../../reference/generated/torchrl.objectives.A2CLoss.html#torchrl.objectives.A2CLoss.make_value_estimator">[docs]</a>    <span class="k">def</span> <span class="nf">make_value_estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_type</span><span class="p">:</span> <span class="n">ValueEstimators</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparams</span><span class="p">):</span>
