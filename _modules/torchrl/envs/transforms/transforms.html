@@ -5542,11 +5542,10 @@
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">next_tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">step_count_key</span><span class="p">,</span> <span class="n">truncated_key</span><span class="p">,</span> <span class="n">done_key</span><span class="p">,</span> <span class="n">terminated_key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="k">for</span> <span class="n">step_count_key</span><span class="p">,</span> <span class="n">truncated_key</span><span class="p">,</span> <span class="n">done_key</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">step_count_keys</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">truncated_keys</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">terminated_keys</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="n">step_count</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">step_count_key</span><span class="p">)</span>
             <span class="n">next_step_count</span> <span class="o">=</span> <span class="n">step_count</span> <span class="o">+</span> <span class="mi">1</span>
@@ -5557,9 +5556,12 @@
                 <span class="n">truncated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">|</span> <span class="n">next_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">truncated_key</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_done</span><span class="p">:</span>
                     <span class="n">done</span> <span class="o">=</span> <span class="n">next_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">done_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                    <span class="n">terminated</span> <span class="o">=</span> <span class="n">next_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">terminated_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">truncated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">terminated</span>
+
+                    <span class="c1"># we can have terminated and truncated</span>
+                    <span class="c1"># terminated = next_tensordict.get(terminated_key, None)</span>
+                    <span class="c1"># if terminated is not None:</span>
+                    <span class="c1">#     truncated = truncated &amp; ~terminated</span>
+
                     <span class="n">done</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">|</span> <span class="n">done</span>  <span class="c1"># we assume no done after reset</span>
                     <span class="n">next_tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">done_key</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
                 <span class="n">next_tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">truncated_key</span><span class="p">,</span> <span class="n">truncated</span><span class="p">)</span>
