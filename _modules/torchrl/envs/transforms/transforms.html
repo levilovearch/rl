@@ -385,6 +385,7 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">importlib.util</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
@@ -434,25 +435,7 @@
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_sort_keys</span><span class="p">,</span> <span class="n">_update_during_reset</span><span class="p">,</span> <span class="n">step_mdp</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.value.functional</span> <span class="kn">import</span> <span class="n">reward2go</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">center_crop</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">InterpolationMode</span><span class="p">,</span> <span class="n">resize</span>
-
-        <span class="k">def</span> <span class="nf">interpolation_fn</span><span class="p">(</span><span class="n">interpolation</span><span class="p">):</span>  <span class="c1"># noqa: D103</span>
-            <span class="k">return</span> <span class="n">InterpolationMode</span><span class="p">(</span><span class="n">interpolation</span><span class="p">)</span>
-
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-
-        <span class="k">def</span> <span class="nf">interpolation_fn</span><span class="p">(</span><span class="n">interpolation</span><span class="p">):</span>  <span class="c1"># noqa: D103</span>
-            <span class="k">return</span> <span class="n">interpolation</span>
-
-        <span class="kn">from</span> <span class="nn">torchvision.transforms.functional_tensor</span> <span class="kn">import</span> <span class="n">resize</span>
-
-    <span class="n">_has_tv</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">_has_tv</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">_has_tv</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;torchvision&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 <span class="n">IMAGE_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pixels&quot;</span><span class="p">]</span>
 <span class="n">_MAX_NOOPS_TRIALS</span> <span class="o">=</span> <span class="mi">10</span>
@@ -2127,6 +2110,18 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">in_keys</span><span class="o">=</span><span class="n">in_keys</span><span class="p">,</span> <span class="n">out_keys</span><span class="o">=</span><span class="n">out_keys</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">InterpolationMode</span>
+
+            <span class="k">def</span> <span class="nf">interpolation_fn</span><span class="p">(</span><span class="n">interpolation</span><span class="p">):</span>  <span class="c1"># noqa: D103</span>
+                <span class="k">return</span> <span class="n">InterpolationMode</span><span class="p">(</span><span class="n">interpolation</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">interpolation_fn</span><span class="p">(</span><span class="n">interpolation</span><span class="p">):</span>  <span class="c1"># noqa: D103</span>
+                <span class="k">return</span> <span class="n">interpolation</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="n">interpolation_fn</span><span class="p">(</span><span class="n">interpolation</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
@@ -2137,6 +2132,10 @@
         <span class="k">if</span> <span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
             <span class="n">sizes</span> <span class="o">=</span> <span class="n">observation</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
             <span class="n">observation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">resize</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">torchvision.transforms.functional_tensor</span> <span class="kn">import</span> <span class="n">resize</span>
         <span class="n">observation</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span>
             <span class="n">observation</span><span class="p">,</span>
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">],</span>
@@ -2206,6 +2205,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="k">if</span> <span class="n">h</span> <span class="k">else</span> <span class="n">w</span>
 
     <span class="k">def</span> <span class="nf">_apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">center_crop</span>
+
         <span class="n">observation</span> <span class="o">=</span> <span class="n">center_crop</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">observation</span>
 

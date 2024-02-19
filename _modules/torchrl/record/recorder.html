@@ -382,6 +382,7 @@
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="kn">import</span> <span class="nn">importlib.util</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
@@ -394,11 +395,7 @@
 <span class="kn">from</span> <span class="nn">torchrl.envs.transforms</span> <span class="kn">import</span> <span class="n">ObservationTransform</span><span class="p">,</span> <span class="n">Transform</span>
 <span class="kn">from</span> <span class="nn">torchrl.record.loggers</span> <span class="kn">import</span> <span class="n">Logger</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="n">center_crop</span> <span class="k">as</span> <span class="n">center_crop_fn</span>
-    <span class="kn">from</span> <span class="nn">torchvision.utils</span> <span class="kn">import</span> <span class="n">make_grid</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">center_crop_fn</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_has_tv</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;torchvision&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 
 <div class="viewcode-block" id="VideoRecorder"><a class="viewcode-back" href="../../../reference/generated/torchrl.record.VideoRecorder.html#torchrl.record.VideoRecorder">[docs]</a><span class="k">class</span> <span class="nc">VideoRecorder</span><span class="p">(</span><span class="n">ObservationTransform</span><span class="p">):</span>
@@ -474,7 +471,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">center_crop</span> <span class="o">=</span> <span class="n">center_crop</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_grid</span> <span class="o">=</span> <span class="n">make_grid</span>
-        <span class="k">if</span> <span class="n">center_crop</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">center_crop_fn</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">center_crop</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_has_tv</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                 <span class="s2">&quot;Could not load center_crop from torchvision. Make sure torchvision is installed.&quot;</span>
             <span class="p">)</span>
@@ -497,20 +494,26 @@
                 <span class="n">trailing_dim</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">observation_trsf</span><span class="o">.</span><span class="n">ndimension</span><span class="p">()</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
                 <span class="n">observation_trsf</span> <span class="o">=</span> <span class="n">observation_trsf</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="o">*</span><span class="n">trailing_dim</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_crop</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">center_crop_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_tv</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                         <span class="s2">&quot;Could not import torchvision, `center_crop` not available.&quot;</span>
                         <span class="s2">&quot;Make sure torchvision is installed in your environment.&quot;</span>
                     <span class="p">)</span>
+                <span class="kn">from</span> <span class="nn">torchvision.transforms.functional</span> <span class="kn">import</span> <span class="p">(</span>
+                    <span class="n">center_crop</span> <span class="k">as</span> <span class="n">center_crop_fn</span><span class="p">,</span>
+                <span class="p">)</span>
+
                 <span class="n">observation_trsf</span> <span class="o">=</span> <span class="n">center_crop_fn</span><span class="p">(</span>
                     <span class="n">observation_trsf</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">center_crop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_crop</span><span class="p">]</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_grid</span> <span class="ow">and</span> <span class="n">observation_trsf</span><span class="o">.</span><span class="n">ndimension</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">make_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_tv</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
                         <span class="s2">&quot;Could not import torchvision, `make_grid` not available.&quot;</span>
                         <span class="s2">&quot;Make sure torchvision is installed in your environment.&quot;</span>
                     <span class="p">)</span>
+                <span class="kn">from</span> <span class="nn">torchvision.utils</span> <span class="kn">import</span> <span class="n">make_grid</span>
+
                 <span class="n">observation_trsf</span> <span class="o">=</span> <span class="n">make_grid</span><span class="p">(</span><span class="n">observation_trsf</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">observation_trsf</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">observation</span>
