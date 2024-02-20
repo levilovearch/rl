@@ -921,6 +921,21 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_len</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># flip list</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">_flip_list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Stacking the elements of the list resulted in &quot;</span>
+                    <span class="s2">&quot;an error. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Storages of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> expect all elements of the list &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;to have the same tree structure. If the list is compact (each &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;leaf is itself a batch with the appropriate number of elements) &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;consider using a tuple instead, as lists are used within `extend` &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;for per-item addition.&quot;</span>
+                <span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
@@ -1698,6 +1713,13 @@
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">save_tensor</span><span class="p">(</span><span class="n">tensor_path</span><span class="p">,</span> <span class="n">tensor</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">tree_unflatten</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">data_specs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_flip_list</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">flat_data</span><span class="p">,</span> <span class="n">flat_specs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">tree_flatten</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
+    <span class="n">flat_data</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">flat_data</span><span class="p">)</span>
+    <span class="n">stacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">flat_data</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">tree_unflatten</span><span class="p">(</span><span class="n">stacks</span><span class="p">,</span> <span class="n">flat_specs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 
              </article>
