@@ -1246,6 +1246,21 @@ exists in <a class="reference internal" href="#torchrl.envs.GymLikeEnv.state_dic
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="torchrl.envs.GymLikeEnv.maybe_reset">
+<span class="sig-name descname"><span class="pre">maybe_reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="headerlink" href="#torchrl.envs.GymLikeEnv.maybe_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks the done keys of the input tensordict and, if needed, resets the environment where it is done.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensordict</strong> (<em>TensorDictBase</em>) – a tensordict coming from the output of <a class="reference internal" href="torchrl.envs.utils.step_mdp.html#torchrl.envs.utils.step_mdp" title="torchrl.envs.utils.step_mdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">step_mdp()</span></code></a>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensordict that is identical to the input where the environment was
+not reset and contains the new reset data where the environment was reset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="torchrl.envs.GymLikeEnv.modules">
 <span class="sig-name descname"><span class="pre">modules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.2)"><span class="pre">Module</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchrl.envs.GymLikeEnv.modules" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an iterator over all modules in the network.</p>
@@ -2225,7 +2240,9 @@ policy device before the policy is used. Default is <code class="docutils litera
 called on the sub-envs that are done. Default is True.</p></li>
 <li><p><strong>return_contiguous</strong> (<em>bool</em>) – if False, a LazyStackedTensorDict will be returned. Default is True.</p></li>
 <li><p><strong>tensordict</strong> (<em>TensorDict</em><em>, </em><em>optional</em>) – if auto_reset is False, an initial
-tensordict must be provided.</p></li>
+tensordict must be provided. Rollout will check if this tensordict has done flags and reset the
+environment in those dimensions (if needed). This normally should not occur if <code class="docutils literal notranslate"><span class="pre">tensordict</span></code> is the
+output of a reset, but can occur if <code class="docutils literal notranslate"><span class="pre">tensordict</span></code> is the last step of a previous rollout.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2331,6 +2348,26 @@ is_shared=False)
 [None, ‘time’]</p>
 </dd>
 </dl>
+<p>Rollouts can be used in a loop to emulate data collection.
+To do so, you need to pass as input the last tensordict coming from the previous rollout after calling
+<a class="reference internal" href="torchrl.envs.utils.step_mdp.html#torchrl.envs.utils.step_mdp" title="torchrl.envs.utils.step_mdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">step_mdp()</span></code></a> on it.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">GymEnv</span><span class="p">,</span> <span class="n">step_mdp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">rollout_td</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">max_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">auto_reset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">tensordict</span><span class="o">=</span><span class="n">input_td</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span>    <span class="n">input_td</span> <span class="o">=</span> <span class="n">step_mdp</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">rollout_td</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">

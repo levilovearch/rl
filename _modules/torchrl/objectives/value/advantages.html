@@ -406,7 +406,7 @@
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">RL_WARNINGS</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">step_mdp</span>
 
-<span class="kn">from</span> <span class="nn">torchrl.objectives.utils</span> <span class="kn">import</span> <span class="n">_vmap_func</span><span class="p">,</span> <span class="n">hold_out_net</span>
+<span class="kn">from</span> <span class="nn">torchrl.objectives.utils</span> <span class="kn">import</span> <span class="n">_vmap_func</span><span class="p">,</span> <span class="n">hold_out_net</span><span class="p">,</span> <span class="n">RANDOM_MODULE_LIST</span>
 <span class="kn">from</span> <span class="nn">torchrl.objectives.value.functional</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">generalized_advantage_estimate</span><span class="p">,</span>
     <span class="n">td0_return_estimate</span><span class="p">,</span>
@@ -457,6 +457,7 @@
     <span class="n">single_call</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">value_key</span><span class="p">:</span> <span class="n">NestedKey</span><span class="p">,</span>
     <span class="n">detach_next</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">vmap_randomness</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">in_keys</span> <span class="o">=</span> <span class="n">value_net</span><span class="o">.</span><span class="n">in_keys</span>
     <span class="k">if</span> <span class="n">single_call</span><span class="p">:</span>
@@ -520,9 +521,11 @@
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">params_stack</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">params</span><span class="p">,</span> <span class="n">next_params</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
-            <span class="n">data_out</span> <span class="o">=</span> <span class="n">_vmap_func</span><span class="p">(</span><span class="n">value_net</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))(</span><span class="n">data_in</span><span class="p">,</span> <span class="n">params_stack</span><span class="p">)</span>
+            <span class="n">data_out</span> <span class="o">=</span> <span class="n">_vmap_func</span><span class="p">(</span><span class="n">value_net</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">randomness</span><span class="o">=</span><span class="n">vmap_randomness</span><span class="p">)(</span>
+                <span class="n">data_in</span><span class="p">,</span> <span class="n">params_stack</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">data_out</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="n">value_net</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,))(</span><span class="n">data_in</span><span class="p">)</span>
+            <span class="n">data_out</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="n">value_net</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,),</span> <span class="n">randomness</span><span class="o">=</span><span class="n">vmap_randomness</span><span class="p">)(</span><span class="n">data_in</span><span class="p">)</span>
         <span class="n">value_est</span> <span class="o">=</span> <span class="n">data_out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value_key</span><span class="p">)</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">value_</span> <span class="o">=</span> <span class="n">value_est</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value_est</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value_key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -593,6 +596,7 @@
 
     <span class="n">default_keys</span> <span class="o">=</span> <span class="n">_AcceptedKeys</span><span class="p">()</span>
     <span class="n">value_network</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorDictModule</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span>
+    <span class="n">_vmap_randomness</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">advantage_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -805,7 +809,29 @@
             <span class="p">)</span> <span class="k">if</span> <span class="n">target_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">target_params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_network</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">value_network</span><span class="p">(</span><span class="n">step_td</span><span class="p">)</span>
         <span class="n">next_value</span> <span class="o">=</span> <span class="n">step_td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">next_value</span></div>
+        <span class="k">return</span> <span class="n">next_value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">vmap_randomness</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_randomness</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">do_break</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">RANDOM_MODULE_LIST</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_randomness</span> <span class="o">=</span> <span class="s2">&quot;different&quot;</span>
+                            <span class="n">do_break</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                <span class="k">if</span> <span class="n">do_break</span><span class="p">:</span>
+                    <span class="c1"># double break</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_randomness</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_randomness</span>
+
+    <span class="k">def</span> <span class="nf">set_vmap_randomness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vmap_randomness</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
 <div class="viewcode-block" id="TD0Estimator"><a class="viewcode-back" href="../../../../reference/generated/torchrl.objectives.value.TD0Estimator.html#torchrl.objectives.value.TD0Estimator">[docs]</a><span class="k">class</span> <span class="nc">TD0Estimator</span><span class="p">(</span><span class="n">ValueEstimatorBase</span><span class="p">):</span>
@@ -968,6 +994,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1169,6 +1196,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1380,6 +1408,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1626,6 +1655,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1708,6 +1738,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
@@ -1954,6 +1985,7 @@
                     <span class="n">single_call</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shifted</span><span class="p">,</span>
                     <span class="n">value_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
                     <span class="n">detach_next</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">vmap_randomness</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vmap_randomness</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor_keys</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
