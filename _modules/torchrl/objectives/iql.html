@@ -452,20 +452,22 @@
 <span class="sd">        ...     in_keys=[&quot;loc&quot;, &quot;scale&quot;],</span>
 <span class="sd">        ...     spec=spec,</span>
 <span class="sd">        ...     distribution_class=TanhNormal)</span>
-<span class="sd">        &gt;&gt;&gt; class ValueClass(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt; class QValueClass(nn.Module):</span>
 <span class="sd">        ...     def __init__(self):</span>
 <span class="sd">        ...         super().__init__()</span>
 <span class="sd">        ...         self.linear = nn.Linear(n_obs + n_act, 1)</span>
 <span class="sd">        ...     def forward(self, obs, act):</span>
 <span class="sd">        ...         return self.linear(torch.cat([obs, act], -1))</span>
-<span class="sd">        &gt;&gt;&gt; module = ValueClass()</span>
-<span class="sd">        &gt;&gt;&gt; qvalue = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&#39;observation&#39;, &#39;action&#39;])</span>
-<span class="sd">        &gt;&gt;&gt; module = nn.Linear(n_obs, 1)</span>
-<span class="sd">        &gt;&gt;&gt; value = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&quot;observation&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; qvalue = SafeModule(</span>
+<span class="sd">        ...     QValueClass(),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;, &quot;action&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_action_value&quot;],</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; value = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, 1),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_value&quot;],</span>
+<span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; loss = IQLLoss(actor, qvalue, value)</span>
 <span class="sd">        &gt;&gt;&gt; batch = [2, ]</span>
 <span class="sd">        &gt;&gt;&gt; action = spec.rand(batch)</span>
@@ -513,20 +515,22 @@
 <span class="sd">        ...     in_keys=[&quot;loc&quot;, &quot;scale&quot;],</span>
 <span class="sd">        ...     spec=spec,</span>
 <span class="sd">        ...     distribution_class=TanhNormal)</span>
-<span class="sd">        &gt;&gt;&gt; class ValueClass(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt; class QValueClass(nn.Module):</span>
 <span class="sd">        ...     def __init__(self):</span>
 <span class="sd">        ...         super().__init__()</span>
 <span class="sd">        ...         self.linear = nn.Linear(n_obs + n_act, 1)</span>
 <span class="sd">        ...     def forward(self, obs, act):</span>
 <span class="sd">        ...         return self.linear(torch.cat([obs, act], -1))</span>
-<span class="sd">        &gt;&gt;&gt; module = ValueClass()</span>
-<span class="sd">        &gt;&gt;&gt; qvalue = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&#39;observation&#39;, &#39;action&#39;])</span>
-<span class="sd">        &gt;&gt;&gt; module = nn.Linear(n_obs, 1)</span>
-<span class="sd">        &gt;&gt;&gt; value = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&quot;observation&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; qvalue = SafeModule(</span>
+<span class="sd">        ...     QValueClass(),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;, &quot;action&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_action_value&quot;],</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; value = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, 1),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_value&quot;],</span>
+<span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; loss = IQLLoss(actor, qvalue, value)</span>
 <span class="sd">        &gt;&gt;&gt; batch = [2, ]</span>
 <span class="sd">        &gt;&gt;&gt; action = spec.rand(batch)</span>
@@ -544,7 +548,7 @@
 <span class="sd">    method.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; loss.select_out_keys(&#39;loss_actor&#39;, &#39;loss_qvalue&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; _ = loss.select_out_keys(&#39;loss_actor&#39;, &#39;loss_qvalue&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; loss_actor, loss_qvalue = loss(</span>
 <span class="sd">        ...     observation=torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     action=action,</span>
@@ -874,7 +878,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        actor_network (ProbabilisticActor): stochastic actor</span>
-<span class="sd">        qvalue_network (TensorDictModule): Q(s) parametric model</span>
+<span class="sd">        qvalue_network (TensorDictModule): Q(s, a) parametric model.</span>
 <span class="sd">        value_network (TensorDictModule, optional): V(s) parametric model.</span>
 
 <span class="sd">    Keyword Args:</span>
@@ -905,34 +909,33 @@
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data.tensor_specs import OneHotDiscreteTensorSpec</span>
-<span class="sd">        &gt;&gt;&gt; from torchrl.modules.distributions.continuous import NormalParamWrapper</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.distributions.discrete import OneHotCategorical</span>
-<span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import ProbabilisticActor, ValueOperator</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import ProbabilisticActor</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.common import SafeModule</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.objectives.iql import DiscreteIQLLoss</span>
 <span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
 <span class="sd">        &gt;&gt;&gt; n_act, n_obs = 4, 3</span>
 <span class="sd">        &gt;&gt;&gt; spec = OneHotDiscreteTensorSpec(n_act)</span>
-<span class="sd">        &gt;&gt;&gt; module = TensorDictModule(nn.Linear(n_obs, n_act), in_keys=[&quot;observation&quot;], out_keys=[&quot;logits&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; module = SafeModule(nn.Linear(n_obs, n_act), in_keys=[&quot;observation&quot;], out_keys=[&quot;logits&quot;])</span>
 <span class="sd">        &gt;&gt;&gt; actor = ProbabilisticActor(</span>
 <span class="sd">        ...     module=module,</span>
 <span class="sd">        ...     in_keys=[&quot;logits&quot;],</span>
 <span class="sd">        ...     out_keys=[&quot;action&quot;],</span>
 <span class="sd">        ...     spec=spec,</span>
 <span class="sd">        ...     distribution_class=OneHotCategorical)</span>
-<span class="sd">        &gt;&gt;&gt; qvalue = TensorDictModule(</span>
-<span class="sd">        ...     nn.Linear(n_obs),</span>
+<span class="sd">        &gt;&gt;&gt; qvalue = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, n_act),</span>
 <span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
 <span class="sd">        ...     out_keys=[&quot;state_action_value&quot;],</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; value = TensorDictModule(</span>
-<span class="sd">        ...     nn.Linear(n_obs),</span>
+<span class="sd">        &gt;&gt;&gt; value = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, 1),</span>
 <span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
 <span class="sd">        ...     out_keys=[&quot;state_value&quot;],</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; loss = DiscreteIQLLoss(actor, qvalue, value)</span>
 <span class="sd">        &gt;&gt;&gt; batch = [2, ]</span>
-<span class="sd">        &gt;&gt;&gt; action = spec.rand(batch)</span>
+<span class="sd">        &gt;&gt;&gt; action = spec.rand(batch).long()</span>
 <span class="sd">        &gt;&gt;&gt; data = TensorDict({</span>
 <span class="sd">        ...         &quot;observation&quot;: torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...         &quot;action&quot;: action,</span>
@@ -964,40 +967,33 @@
 <span class="sd">        &gt;&gt;&gt; import torch</span>
 <span class="sd">        &gt;&gt;&gt; from torch import nn</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.data.tensor_specs import OneHotDiscreteTensorSpec</span>
-<span class="sd">        &gt;&gt;&gt; from torchrl.modules.distributions.continuous import NormalParamWrapper</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.distributions.discrete import OneHotCategorical</span>
-<span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import ProbabilisticActor, ValueOperator</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import ProbabilisticActor</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.common import SafeModule</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.objectives.iql import DiscreteIQLLoss</span>
-<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
 <span class="sd">        &gt;&gt;&gt; _ = torch.manual_seed(42)</span>
 <span class="sd">        &gt;&gt;&gt; n_act, n_obs = 4, 3</span>
 <span class="sd">        &gt;&gt;&gt; spec = OneHotDiscreteTensorSpec(n_act)</span>
-<span class="sd">        &gt;&gt;&gt; net = NormalParamWrapper(nn.Linear(n_obs, 2 * n_act))</span>
-<span class="sd">        &gt;&gt;&gt; module = SafeModule(net, in_keys=[&quot;observation&quot;], out_keys=[&quot;logits&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; module = SafeModule(nn.Linear(n_obs, n_act), in_keys=[&quot;observation&quot;], out_keys=[&quot;logits&quot;])</span>
 <span class="sd">        &gt;&gt;&gt; actor = ProbabilisticActor(</span>
 <span class="sd">        ...     module=module,</span>
 <span class="sd">        ...     in_keys=[&quot;logits&quot;],</span>
 <span class="sd">        ...     out_keys=[&quot;action&quot;],</span>
 <span class="sd">        ...     spec=spec,</span>
 <span class="sd">        ...     distribution_class=OneHotCategorical)</span>
-<span class="sd">        &gt;&gt;&gt; class ValueClass(nn.Module):</span>
-<span class="sd">        ...     def __init__(self):</span>
-<span class="sd">        ...         super().__init__()</span>
-<span class="sd">        ...         self.linear = nn.Linear(n_obs, n_act)</span>
-<span class="sd">        ...     def forward(self, obs):</span>
-<span class="sd">        ...         return self.linear(obs)</span>
-<span class="sd">        &gt;&gt;&gt; module = ValueClass()</span>
-<span class="sd">        &gt;&gt;&gt; qvalue = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&#39;observation&#39;])</span>
-<span class="sd">        &gt;&gt;&gt; module = nn.Linear(n_obs, 1)</span>
-<span class="sd">        &gt;&gt;&gt; value = ValueOperator(</span>
-<span class="sd">        ...     module=module,</span>
-<span class="sd">        ...     in_keys=[&quot;observation&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; qvalue = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, n_act),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_action_value&quot;],</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; value = SafeModule(</span>
+<span class="sd">        ...     nn.Linear(n_obs, 1),</span>
+<span class="sd">        ...     in_keys=[&quot;observation&quot;],</span>
+<span class="sd">        ...     out_keys=[&quot;state_value&quot;],</span>
+<span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; loss = DiscreteIQLLoss(actor, qvalue, value)</span>
 <span class="sd">        &gt;&gt;&gt; batch = [2, ]</span>
-<span class="sd">        &gt;&gt;&gt; action = spec.rand(batch)</span>
+<span class="sd">        &gt;&gt;&gt; action = spec.rand(batch).long()</span>
 <span class="sd">        &gt;&gt;&gt; loss_actor, loss_qvalue, loss_value, entropy = loss(</span>
 <span class="sd">        ...     observation=torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     action=action,</span>
@@ -1012,7 +1008,7 @@
 <span class="sd">    method.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; loss.select_out_keys(&#39;loss_actor&#39;, &#39;loss_qvalue&#39;, &#39;loss_value&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; _ = loss.select_out_keys(&#39;loss_actor&#39;, &#39;loss_qvalue&#39;, &#39;loss_value&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; loss_actor, loss_qvalue, loss_value = loss(</span>
 <span class="sd">        ...     observation=torch.randn(*batch, n_obs),</span>
 <span class="sd">        ...     action=action,</span>
