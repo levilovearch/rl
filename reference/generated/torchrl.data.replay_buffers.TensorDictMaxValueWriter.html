@@ -400,41 +400,109 @@ Can be <code class="docutils literal notranslate"><span class="pre">&quot;max&qu
 </ul>
 </dd>
 </dl>
-<p>Examples:
-&gt;&gt;&gt; import torch
-&gt;&gt;&gt; from tensordict import TensorDict
-&gt;&gt;&gt; from torchrl.data import LazyTensorStorage, TensorDictReplayBuffer, TensorDictMaxValueWriter
-&gt;&gt;&gt; from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
-&gt;&gt;&gt; rb = TensorDictReplayBuffer(
-…     storage=LazyTensorStorage(1),
-…     sampler=SamplerWithoutReplacement(),
-…     batch_size=1,
-…     writer=TensorDictMaxValueWriter(rank_key=”key”),
-… )
-&gt;&gt;&gt; td = TensorDict({
-…     “key”: torch.tensor(range(10)),
-…     “obs”: torch.tensor(range(10))
-… }, batch_size=10)
-&gt;&gt;&gt; rb.extend(td)
-&gt;&gt;&gt; print(rb.sample().get(“obs”).item())
-9
-&gt;&gt;&gt; td = TensorDict({
-…     “key”: torch.tensor(range(10, 20)),
-…     “obs”: torch.tensor(range(10, 20))
-… }, batch_size=10)
-&gt;&gt;&gt; rb.extend(td)
-&gt;&gt;&gt; print(rb.sample().get(“obs”).item())
-19
-&gt;&gt;&gt; td = TensorDict({
-…     “key”: torch.tensor(range(10)),
-…     “obs”: torch.tensor(range(10))
-… }, batch_size=10)
-&gt;&gt;&gt; rb.extend(td)
-&gt;&gt;&gt; print(rb.sample().get(“obs”).item())
-19</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">LazyTensorStorage</span><span class="p">,</span> <span class="n">TensorDictReplayBuffer</span><span class="p">,</span> <span class="n">TensorDictMaxValueWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.samplers</span> <span class="kn">import</span> <span class="n">SamplerWithoutReplacement</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">sampler</span><span class="o">=</span><span class="n">SamplerWithoutReplacement</span><span class="p">(),</span>
+<span class="gp">... </span>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">=</span><span class="n">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">rank_key</span><span class="o">=</span><span class="s2">&quot;key&quot;</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">... </span><span class="p">},</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+<span class="go">9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="gp">... </span><span class="p">},</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+<span class="go">19</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">... </span><span class="p">},</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+<span class="go">19</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This class isn’t compatible with storages with more than one dimension.
+This doesn’t mean that storing trajectories is prohibited, but that
+the trajectories stored must be stored on a per-trajectory basis.
+Here are some examples of valid and invalid usages of the class.
+First, a flat buffer where we store individual transitions:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">TensorStorage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Simplest use case: data comes in 1d and is stored as such</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;reward&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">},</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">=</span><span class="n">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">rank_key</span><span class="o">=</span><span class="s2">&quot;reward&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># We initialize the buffer: a total of 100 *transitions* can be stored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Samples 5 *transitions* at random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>Second, a buffer where we store trajectories. The max signal is aggregated
+in each batch (e.g. the reward of each rollout is summed):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># One can also store batches of data, each batch being a sub-trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">ParallelEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;Pendulum-v1&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get a batch of [2, 10] -- format is [Batch, Time]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rollout</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="n">max_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">=</span><span class="n">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">rank_key</span><span class="o">=</span><span class="s2">&quot;reward&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># We initialize the buffer: a total of 100 *trajectories* (!) can be stored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rollout</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Sample 5 trajectories at random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If data come in batch but a flat buffer is needed, we can simply flatten
+the data before extending the buffer:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">=</span><span class="n">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">rank_key</span><span class="o">=</span><span class="s2">&quot;reward&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># We initialize the buffer: a total of 100 *transitions* can be stored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rollout</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Sample 5 trajectories at random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">rb</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">sample</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>It is not possible to create a buffer that is extended along the time
+dimension, which is usually the recommended way of using buffers with
+batches of trajectories. Since trajectories are overlapping, it’s hard
+if not impossible to aggregate the reward values and compare them.
+This constructor isn’t valid (notice the ndim argument):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">TensorDictReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>  <span class="c1"># Breaks!</span>
+<span class="gp">... </span>    <span class="n">writer</span><span class="o">=</span><span class="n">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">rank_key</span><span class="o">=</span><span class="s2">&quot;reward&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.data.replay_buffers.TensorDictMaxValueWriter.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/writers.html#TensorDictMaxValueWriter.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.TensorDictMaxValueWriter.add" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.2)"><span class="pre">torch.Tensor</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/writers.html#TensorDictMaxValueWriter.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.TensorDictMaxValueWriter.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inserts a single element of data at an appropriate index, and returns that index.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">rank_key</span></code> in the data passed to this module should be structured as [].
 If it has more dimensions, it will be reduced to a single value using the <code class="docutils literal notranslate"><span class="pre">reduction</span></code> method.</p>
@@ -442,7 +510,7 @@ If it has more dimensions, it will be reduced to a single value using the <code 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.data.replay_buffers.TensorDictMaxValueWriter.extend">
-<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/writers.html#TensorDictMaxValueWriter.extend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.TensorDictMaxValueWriter.extend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/writers.html#TensorDictMaxValueWriter.extend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.TensorDictMaxValueWriter.extend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inserts a series of data points at appropriate indices.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">rank_key</span></code> in the data passed to this module should be structured as [B].
 If it has more dimensions, it will be reduced to a single value using the <code class="docutils literal notranslate"><span class="pre">reduction</span></code> method.</p>

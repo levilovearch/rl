@@ -381,6 +381,7 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">heapq</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -394,8 +395,8 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">MemoryMappedTensor</span>
-<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">_STRDTYPE2DTYPE</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">MemoryMappedTensor</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">_STRDTYPE2DTYPE</span><span class="p">,</span> <span class="n">expand_as_right</span><span class="p">,</span> <span class="n">is_tensorclass</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">multiprocessing</span> <span class="k">as</span> <span class="n">mp</span>
 
 <span class="k">try</span><span class="p">:</span>
@@ -409,7 +410,7 @@
 
 
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.storages</span> <span class="kn">import</span> <span class="n">Storage</span>
-<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="n">_reduce</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="n">_is_int</span><span class="p">,</span> <span class="n">_reduce</span>
 
 
 <div class="viewcode-block" id="Writer"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.Writer.html#torchrl.data.replay_buffers.Writer">[docs]</a><span class="k">class</span> <span class="nc">Writer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -449,7 +450,26 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="o">...</span></div>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">_replicate_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="c1"># replicates the index in a non-zero format to have as many indices as</span>
+        <span class="c1"># elements truly written when the storage is multidim</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">index</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])),</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">index0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">))</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">index0</span><span class="p">,</span> <span class="n">mesh</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">index</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">mesh</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">numel</span><span class="p">(),</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ImmutableDatasetWriter"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.ImmutableDatasetWriter.html#torchrl.data.replay_buffers.ImmutableDatasetWriter">[docs]</a><span class="k">class</span> <span class="nc">ImmutableDatasetWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
@@ -498,13 +518,15 @@
             <span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;cursor&quot;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="RoundRobinWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.RoundRobinWriter.html#torchrl.data.replay_buffers.RoundRobinWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
+<div class="viewcode-block" id="RoundRobinWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.RoundRobinWriter.html#torchrl.data.replay_buffers.RoundRobinWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
         <span class="n">_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
         <span class="c1"># we need to update the cursor first to avoid race conditions between workers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_max_size_along_dim0</span><span class="p">(</span>
+            <span class="n">single_data</span><span class="o">=</span><span class="n">data</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">_cursor</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RoundRobinWriter.extend"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.RoundRobinWriter.html#torchrl.data.replay_buffers.RoundRobinWriter.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">cur_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
@@ -517,16 +539,17 @@
         <span class="k">if</span> <span class="n">batch_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Expected at least one element in extend.&quot;</span><span class="p">)</span>
         <span class="n">device</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">max_size_along0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_max_size_along_dim0</span><span class="p">(</span><span class="n">batched_data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
         <span class="n">index</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
                 <span class="n">cur_size</span><span class="p">,</span> <span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
             <span class="p">)</span>
-            <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
+            <span class="o">%</span> <span class="n">max_size_along0</span>
         <span class="p">)</span>
         <span class="c1"># we need to update the cursor first to avoid race conditions between workers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">)</span> <span class="o">%</span> <span class="n">max_size_along0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">index</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;_cursor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="p">}</span>
@@ -570,30 +593,44 @@
 <div class="viewcode-block" id="TensorDictRoundRobinWriter"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictRoundRobinWriter.html#torchrl.data.replay_buffers.TensorDictRoundRobinWriter">[docs]</a><span class="k">class</span> <span class="nc">TensorDictRoundRobinWriter</span><span class="p">(</span><span class="n">RoundRobinWriter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A RoundRobin Writer class for composable, tensordict-based replay buffers.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TensorDictRoundRobinWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictRoundRobinWriter.html#torchrl.data.replay_buffers.TensorDictRoundRobinWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
+<div class="viewcode-block" id="TensorDictRoundRobinWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictRoundRobinWriter.html#torchrl.data.replay_buffers.TensorDictRoundRobinWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
         <span class="c1"># we need to update the cursor first to avoid race conditions between workers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">ret</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">ret</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="n">max_size_along_dim0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_max_size_along_dim0</span><span class="p">(</span><span class="n">single_data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">max_size_along_dim0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+                <span class="s2">&quot;index&quot;</span><span class="p">,</span>
+                <span class="n">expand_as_right</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span> <span class="n">data</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TensorDictRoundRobinWriter.extend"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictRoundRobinWriter.html#torchrl.data.replay_buffers.TensorDictRoundRobinWriter.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">cur_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="n">device</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">max_size_along_dim0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_max_size_along_dim0</span><span class="p">(</span><span class="n">batched_data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
         <span class="n">index</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
                 <span class="n">cur_size</span><span class="p">,</span> <span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
             <span class="p">)</span>
-            <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
+            <span class="o">%</span> <span class="n">max_size_along_dim0</span>
         <span class="p">)</span>
         <span class="c1"># we need to update the cursor first to avoid race conditions between workers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">max_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span> <span class="o">+</span> <span class="n">cur_size</span><span class="p">)</span> <span class="o">%</span> <span class="n">max_size_along_dim0</span>
         <span class="c1"># storage must convert the data to the appropriate format if needed</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_tensorclass</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+                <span class="s2">&quot;index&quot;</span><span class="p">,</span>
+                <span class="n">expand_as_right</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span> <span class="n">data</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">index</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="TensorDictMaxValueWriter"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter">[docs]</a><span class="k">class</span> <span class="nc">TensorDictMaxValueWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
@@ -605,37 +642,102 @@
 <span class="sd">            Can be ``&quot;max&quot;``, ``&quot;min&quot;``, ``&quot;mean&quot;``, ``&quot;median&quot;`` or ``&quot;sum&quot;``.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">    &gt;&gt;&gt; import torch</span>
-<span class="sd">    &gt;&gt;&gt; from tensordict import TensorDict</span>
-<span class="sd">    &gt;&gt;&gt; from torchrl.data import LazyTensorStorage, TensorDictReplayBuffer, TensorDictMaxValueWriter</span>
-<span class="sd">    &gt;&gt;&gt; from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement</span>
-<span class="sd">    &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
-<span class="sd">    ...     storage=LazyTensorStorage(1),</span>
-<span class="sd">    ...     sampler=SamplerWithoutReplacement(),</span>
-<span class="sd">    ...     batch_size=1,</span>
-<span class="sd">    ...     writer=TensorDictMaxValueWriter(rank_key=&quot;key&quot;),</span>
-<span class="sd">    ... )</span>
-<span class="sd">    &gt;&gt;&gt; td = TensorDict({</span>
-<span class="sd">    ...     &quot;key&quot;: torch.tensor(range(10)),</span>
-<span class="sd">    ...     &quot;obs&quot;: torch.tensor(range(10))</span>
-<span class="sd">    ... }, batch_size=10)</span>
-<span class="sd">    &gt;&gt;&gt; rb.extend(td)</span>
-<span class="sd">    &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
-<span class="sd">    9</span>
-<span class="sd">    &gt;&gt;&gt; td = TensorDict({</span>
-<span class="sd">    ...     &quot;key&quot;: torch.tensor(range(10, 20)),</span>
-<span class="sd">    ...     &quot;obs&quot;: torch.tensor(range(10, 20))</span>
-<span class="sd">    ... }, batch_size=10)</span>
-<span class="sd">    &gt;&gt;&gt; rb.extend(td)</span>
-<span class="sd">    &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
-<span class="sd">    19</span>
-<span class="sd">    &gt;&gt;&gt; td = TensorDict({</span>
-<span class="sd">    ...     &quot;key&quot;: torch.tensor(range(10)),</span>
-<span class="sd">    ...     &quot;obs&quot;: torch.tensor(range(10))</span>
-<span class="sd">    ... }, batch_size=10)</span>
-<span class="sd">    &gt;&gt;&gt; rb.extend(td)</span>
-<span class="sd">    &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
-<span class="sd">    19</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.data import LazyTensorStorage, TensorDictReplayBuffer, TensorDictMaxValueWriter</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement</span>
+<span class="sd">        &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
+<span class="sd">        ...     storage=LazyTensorStorage(1),</span>
+<span class="sd">        ...     sampler=SamplerWithoutReplacement(),</span>
+<span class="sd">        ...     batch_size=1,</span>
+<span class="sd">        ...     writer=TensorDictMaxValueWriter(rank_key=&quot;key&quot;),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; td = TensorDict({</span>
+<span class="sd">        ...     &quot;key&quot;: torch.tensor(range(10)),</span>
+<span class="sd">        ...     &quot;obs&quot;: torch.tensor(range(10))</span>
+<span class="sd">        ... }, batch_size=10)</span>
+<span class="sd">        &gt;&gt;&gt; rb.extend(td)</span>
+<span class="sd">        &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
+<span class="sd">        9</span>
+<span class="sd">        &gt;&gt;&gt; td = TensorDict({</span>
+<span class="sd">        ...     &quot;key&quot;: torch.tensor(range(10, 20)),</span>
+<span class="sd">        ...     &quot;obs&quot;: torch.tensor(range(10, 20))</span>
+<span class="sd">        ... }, batch_size=10)</span>
+<span class="sd">        &gt;&gt;&gt; rb.extend(td)</span>
+<span class="sd">        &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
+<span class="sd">        19</span>
+<span class="sd">        &gt;&gt;&gt; td = TensorDict({</span>
+<span class="sd">        ...     &quot;key&quot;: torch.tensor(range(10)),</span>
+<span class="sd">        ...     &quot;obs&quot;: torch.tensor(range(10))</span>
+<span class="sd">        ... }, batch_size=10)</span>
+<span class="sd">        &gt;&gt;&gt; rb.extend(td)</span>
+<span class="sd">        &gt;&gt;&gt; print(rb.sample().get(&quot;obs&quot;).item())</span>
+<span class="sd">        19</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        This class isn&#39;t compatible with storages with more than one dimension.</span>
+<span class="sd">        This doesn&#39;t mean that storing trajectories is prohibited, but that</span>
+<span class="sd">        the trajectories stored must be stored on a per-trajectory basis.</span>
+<span class="sd">        Here are some examples of valid and invalid usages of the class.</span>
+<span class="sd">        First, a flat buffer where we store individual transitions:</span>
+
+<span class="sd">            &gt;&gt;&gt; from torchrl.data import TensorStorage</span>
+<span class="sd">            &gt;&gt;&gt; # Simplest use case: data comes in 1d and is stored as such</span>
+<span class="sd">            &gt;&gt;&gt; data = TensorDict({</span>
+<span class="sd">            ...     &quot;obs&quot;: torch.zeros(10, 3),</span>
+<span class="sd">            ...     &quot;reward&quot;: torch.zeros(10, 1),</span>
+<span class="sd">            ... }, batch_size=[10])</span>
+<span class="sd">            &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
+<span class="sd">            ...     storage=LazyTensorStorage(max_size=100),</span>
+<span class="sd">            ...     writer=TensorDictMaxValueWriter(rank_key=&quot;reward&quot;)</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; # We initialize the buffer: a total of 100 *transitions* can be stored</span>
+<span class="sd">            &gt;&gt;&gt; rb.extend(data)</span>
+<span class="sd">            &gt;&gt;&gt; # Samples 5 *transitions* at random</span>
+<span class="sd">            &gt;&gt;&gt; sample = rb.sample(5)</span>
+<span class="sd">            &gt;&gt;&gt; assert sample.shape == (5,)</span>
+
+<span class="sd">        Second, a buffer where we store trajectories. The max signal is aggregated</span>
+<span class="sd">        in each batch (e.g. the reward of each rollout is summed):</span>
+
+<span class="sd">            &gt;&gt;&gt; # One can also store batches of data, each batch being a sub-trajectory</span>
+<span class="sd">            &gt;&gt;&gt; env = ParallelEnv(2, lambda: GymEnv(&quot;Pendulum-v1&quot;))</span>
+<span class="sd">            &gt;&gt;&gt; # Get a batch of [2, 10] -- format is [Batch, Time]</span>
+<span class="sd">            &gt;&gt;&gt; rollout = env.rollout(max_steps=10)</span>
+<span class="sd">            &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
+<span class="sd">            ...     storage=LazyTensorStorage(max_size=100),</span>
+<span class="sd">            ...     writer=TensorDictMaxValueWriter(rank_key=&quot;reward&quot;)</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; # We initialize the buffer: a total of 100 *trajectories* (!) can be stored</span>
+<span class="sd">            &gt;&gt;&gt; rb.extend(rollout)</span>
+<span class="sd">            &gt;&gt;&gt; # Sample 5 trajectories at random</span>
+<span class="sd">            &gt;&gt;&gt; sample = rb.sample(5)</span>
+<span class="sd">            &gt;&gt;&gt; assert sample.shape == (5, 10)</span>
+
+<span class="sd">        If data come in batch but a flat buffer is needed, we can simply flatten</span>
+<span class="sd">        the data before extending the buffer:</span>
+
+<span class="sd">            &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
+<span class="sd">            ...     storage=LazyTensorStorage(max_size=100),</span>
+<span class="sd">            ...     writer=TensorDictMaxValueWriter(rank_key=&quot;reward&quot;)</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; # We initialize the buffer: a total of 100 *transitions* can be stored</span>
+<span class="sd">            &gt;&gt;&gt; rb.extend(rollout.reshape(-1))</span>
+<span class="sd">            &gt;&gt;&gt; # Sample 5 trajectories at random</span>
+<span class="sd">            &gt;&gt;&gt; sample = rb.sample(5)</span>
+<span class="sd">            &gt;&gt;&gt; assert sample.shape == (5,)</span>
+
+<span class="sd">        It is not possible to create a buffer that is extended along the time</span>
+<span class="sd">        dimension, which is usually the recommended way of using buffers with</span>
+<span class="sd">        batches of trajectories. Since trajectories are overlapping, it&#39;s hard</span>
+<span class="sd">        if not impossible to aggregate the reward values and compare them.</span>
+<span class="sd">        This constructor isn&#39;t valid (notice the ndim argument):</span>
+
+<span class="sd">            &gt;&gt;&gt; rb = TensorDictReplayBuffer(</span>
+<span class="sd">            ...     storage=LazyTensorStorage(max_size=100, ndim=2),  # Breaks!</span>
+<span class="sd">            ...     writer=TensorDictMaxValueWriter(rank_key=&quot;reward&quot;)</span>
+<span class="sd">            ... )</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -646,6 +748,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_reduction</span> <span class="o">=</span> <span class="n">reduction</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_rank_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;reward&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">register_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">:</span> <span class="n">Storage</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;TensorDictMaxValueWriter is not compatible with storages with more than one dimension. &quot;</span>
+                <span class="s2">&quot;See the docstring constructor note about storing trajectories with TensorDictMaxValueWriter.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">register_storage</span><span class="p">(</span><span class="n">storage</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TensorDictMaxValueWriter.get_insert_index"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter.get_insert_index">[docs]</a>    <span class="k">def</span> <span class="nf">get_insert_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the index where the data should be inserted, or ``None`` if it should not be inserted.&quot;&quot;&quot;</span>
@@ -660,7 +770,7 @@
             <span class="p">)</span>
 
         <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">rank_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rank_key</span><span class="p">)</span>
+        <span class="n">rank_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rank_key</span><span class="p">)</span>
 
         <span class="c1"># If time dimension, sum along it.</span>
         <span class="k">if</span> <span class="n">rank_data</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -691,7 +801,7 @@
 
         <span class="k">return</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="TensorDictMaxValueWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="TensorDictMaxValueWriter.add"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Inserts a single element of data at an appropriate index, and returns that index.</span>
 
 <span class="sd">        The ``rank_key`` in the data passed to this module should be structured as [].</span>
@@ -701,34 +811,37 @@
         <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="k">return</span> <span class="n">index</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TensorDictMaxValueWriter.extend"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TensorDictMaxValueWriter.extend"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictMaxValueWriter.html#torchrl.data.replay_buffers.TensorDictMaxValueWriter.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Inserts a series of data points at appropriate indices.</span>
 
 <span class="sd">        The ``rank_key`` in the data passed to this module should be structured as [B].</span>
 <span class="sd">        If it has more dimensions, it will be reduced to a single value using the ``reduction`` method.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># a map of [idx_in_storage, idx_in_data]</span>
         <span class="n">data_to_replace</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_insert_index</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">data_to_replace</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">for</span> <span class="n">data_idx</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">storage_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_insert_index</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">storage_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data_to_replace</span><span class="p">[</span><span class="n">storage_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_idx</span>
 
+        <span class="c1"># -1 will be interpreted as invalid by prioritized buffers</span>
         <span class="c1"># Replace the data in the storage all at once</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_to_replace</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data_to_replace</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="n">storage_idx</span><span class="p">,</span> <span class="n">data_idx</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data_to_replace</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">dtype</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">device</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
-            <span class="n">keys</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">index</span><span class="p">[</span><span class="n">values</span><span class="p">]</span> <span class="o">=</span> <span class="n">keys</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">values</span><span class="p">])</span>
-            <span class="k">return</span> <span class="n">keys</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
+            <span class="n">out_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">data_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">data_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">storage_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">storage_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">out_index</span><span class="p">[</span><span class="n">data_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">storage_idx</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">storage_idx</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">data_idx</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">out_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate_index</span><span class="p">(</span><span class="n">out_index</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="mi">0</span>

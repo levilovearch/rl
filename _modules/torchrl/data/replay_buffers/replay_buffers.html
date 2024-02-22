@@ -422,6 +422,7 @@
     <span class="n">StorageEnsemble</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_is_int</span><span class="p">,</span>
     <span class="n">_reduce</span><span class="p">,</span>
     <span class="n">_to_numpy</span><span class="p">,</span>
     <span class="n">_to_torch</span><span class="p">,</span>
@@ -475,6 +476,27 @@
 <span class="sd">              incompatible with prefetching (since this requires to know the</span>
 <span class="sd">              batch-size in advance) as well as with samplers that have a</span>
 <span class="sd">              ``drop_last`` argument.</span>
+<span class="sd">        dim_extend (int, optional): indicates the dim to consider for</span>
+<span class="sd">            extension when calling :meth:`~.extend`. Defaults to ``storage.ndim-1``.</span>
+<span class="sd">            When using ``dim_extend &gt; 0``, we recommend using the ``ndim``</span>
+<span class="sd">            argument in the storage instantiation if that argument is</span>
+<span class="sd">            available, to let storages know that the data is</span>
+<span class="sd">            multi-dimensional and keep consistent notions of storage-capacity</span>
+<span class="sd">            and batch-size during sampling.</span>
+
+<span class="sd">            .. note:: This argument has no effect on :meth:`~.add` and</span>
+<span class="sd">                therefore should be used with caution when both :meth:`~.add`</span>
+<span class="sd">                and :meth:`~.extend` are used in a codebase. For example:</span>
+
+<span class="sd">                    &gt;&gt;&gt; data = torch.zeros(3, 4)</span>
+<span class="sd">                    &gt;&gt;&gt; rb = ReplayBuffer(</span>
+<span class="sd">                    ...     storage=LazyTensorStorage(10, ndim=2),</span>
+<span class="sd">                    ...     dim_extend=1)</span>
+<span class="sd">                    &gt;&gt;&gt; # these two approaches are equivalent:</span>
+<span class="sd">                    &gt;&gt;&gt; for d in data.unbind(1):</span>
+<span class="sd">                    ...     rb.add(d)</span>
+<span class="sd">                    &gt;&gt;&gt; rb.extend(data)</span>
+
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -556,6 +578,7 @@
         <span class="n">prefetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transform</span><span class="p">:</span> <span class="s2">&quot;Transform&quot;</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># noqa-F821</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dim_extend</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">storage</span> <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ListStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">1_000</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -607,6 +630,42 @@
                 <span class="s2">&quot;Please pass the batch-size to the ReplayBuffer constructor.&quot;</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="k">if</span> <span class="n">dim_extend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dim_extend</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dim_extend must be a positive value.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim_extend</span> <span class="o">=</span> <span class="n">dim_extend</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim_extend</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dim_extend</span>
+
+    <span class="nd">@dim_extend</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dim_extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dim_extend&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dim_extend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dim_extend</span> <span class="o">!=</span> <span class="n">value</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;dim_extend cannot be reset. Please create a new replay buffer.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dim_extend</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.transforms</span> <span class="kn">import</span> <span class="n">_TransposeTransform</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim_extend</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;The storage `ndim` attribute must be greater &quot;</span>
+                    <span class="s2">&quot;than the `dim_extend` attribute of the buffer.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_transform</span><span class="p">(</span><span class="n">_TransposeTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim_extend</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_get_collate_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collate_fn</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_collate_fn</span> <span class="o">=</span> <span class="p">(</span>
@@ -1017,6 +1076,26 @@
 <span class="sd">              incompatible with prefetching (since this requires to know the</span>
 <span class="sd">              batch-size in advance) as well as with samplers that have a</span>
 <span class="sd">              ``drop_last`` argument.</span>
+<span class="sd">        dim_extend (int, optional): indicates the dim to consider for</span>
+<span class="sd">            extension when calling :meth:`~.extend`. Defaults to ``storage.ndim-1``.</span>
+<span class="sd">            When using ``dim_extend &gt; 0``, we recommend using the ``ndim``</span>
+<span class="sd">            argument in the storage instantiation if that argument is</span>
+<span class="sd">            available, to let storages know that the data is</span>
+<span class="sd">            multi-dimensional and keep consistent notions of storage-capacity</span>
+<span class="sd">            and batch-size during sampling.</span>
+
+<span class="sd">            .. note:: This argument has no effect on :meth:`~.add` and</span>
+<span class="sd">                therefore should be used with caution when both :meth:`~.add`</span>
+<span class="sd">                and :meth:`~.extend` are used in a codebase. For example:</span>
+
+<span class="sd">                    &gt;&gt;&gt; data = torch.zeros(3, 4)</span>
+<span class="sd">                    &gt;&gt;&gt; rb = ReplayBuffer(</span>
+<span class="sd">                    ...     storage=LazyTensorStorage(10, ndim=2),</span>
+<span class="sd">                    ...     dim_extend=1)</span>
+<span class="sd">                    &gt;&gt;&gt; # these two approaches are equivalent:</span>
+<span class="sd">                    &gt;&gt;&gt; for d in data.unbind(1):</span>
+<span class="sd">                    ...     rb.add(d)</span>
+<span class="sd">                    &gt;&gt;&gt; rb.extend(data)</span>
 
 <span class="sd">    .. note::</span>
 <span class="sd">        Generic prioritized replay buffers (ie. non-tensordict backed) require</span>
@@ -1067,6 +1146,7 @@
         <span class="n">prefetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transform</span><span class="p">:</span> <span class="s2">&quot;Transform&quot;</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># noqa-F821</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dim_extend</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">storage</span> <span class="o">=</span> <span class="n">ListStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">1_000</span><span class="p">)</span>
@@ -1079,6 +1159,7 @@
             <span class="n">prefetch</span><span class="o">=</span><span class="n">prefetch</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">dim_extend</span><span class="o">=</span><span class="n">dim_extend</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1125,6 +1206,26 @@
 <span class="sd">            This is to be used when the sampler is of type</span>
 <span class="sd">            :class:`~torchrl.data.PrioritizedSampler`.</span>
 <span class="sd">            Defaults to ``&quot;td_error&quot;``.</span>
+<span class="sd">        dim_extend (int, optional): indicates the dim to consider for</span>
+<span class="sd">            extension when calling :meth:`~.extend`. Defaults to ``storage.ndim-1``.</span>
+<span class="sd">            When using ``dim_extend &gt; 0``, we recommend using the ``ndim``</span>
+<span class="sd">            argument in the storage instantiation if that argument is</span>
+<span class="sd">            available, to let storages know that the data is</span>
+<span class="sd">            multi-dimensional and keep consistent notions of storage-capacity</span>
+<span class="sd">            and batch-size during sampling.</span>
+
+<span class="sd">            .. note:: This argument has no effect on :meth:`~.add` and</span>
+<span class="sd">                therefore should be used with caution when both :meth:`~.add`</span>
+<span class="sd">                and :meth:`~.extend` are used in a codebase. For example:</span>
+
+<span class="sd">                    &gt;&gt;&gt; data = torch.zeros(3, 4)</span>
+<span class="sd">                    &gt;&gt;&gt; rb = ReplayBuffer(</span>
+<span class="sd">                    ...     storage=LazyTensorStorage(10, ndim=2),</span>
+<span class="sd">                    ...     dim_extend=1)</span>
+<span class="sd">                    &gt;&gt;&gt; # these two approaches are equivalent:</span>
+<span class="sd">                    &gt;&gt;&gt; for d in data.unbind(1):</span>
+<span class="sd">                    ...     rb.add(d)</span>
+<span class="sd">                    &gt;&gt;&gt; rb.extend(data)</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -1196,10 +1297,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">priority_key</span> <span class="o">=</span> <span class="n">priority_key</span>
 
     <span class="k">def</span> <span class="nf">_get_priority_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;_data&quot;</span> <span class="ow">in</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">)</span>
-
         <span class="n">priority</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">priority_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># We have to flatten the priority otherwise we&#39;ll be aggregating</span>
+            <span class="c1"># the priority across batches</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">priority</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">default_priority</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1213,12 +1315,13 @@
                 <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">priority_key</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> but expected &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;scalar value&quot;</span>
             <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">unflatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span><span class="p">])</span>
+
         <span class="k">return</span> <span class="n">priority</span>
 
     <span class="k">def</span> <span class="nf">_get_priority_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;_data&quot;</span> <span class="ow">in</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">)</span>
-
         <span class="n">priority</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">priority_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">priority</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
@@ -1226,9 +1329,16 @@
                 <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
                 <span class="n">device</span><span class="o">=</span><span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
             <span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># We have to flatten the priority otherwise we&#39;ll be aggregating</span>
+            <span class="c1"># the priority across batches</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">priority</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">priority</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">reduction</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span><span class="o">.</span><span class="n">unflatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">ndim</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="n">priority</span>
 
@@ -1237,66 +1347,47 @@
             <span class="k">with</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-            <span class="n">data_add</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;_data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="p">[],</span>
-                <span class="n">device</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
-                <span class="n">data_add</span><span class="p">[</span><span class="s2">&quot;_rb_batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data_add</span> <span class="o">=</span> <span class="n">data</span>
-
-        <span class="n">index</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">data_add</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data_add</span><span class="p">):</span>
-                <span class="n">data_add</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_index_in_td</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
 
-            <span class="c1"># priority = self._get_priority(data)</span>
-            <span class="c1"># if priority:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_tensordict_priority</span><span class="p">(</span><span class="n">data_add</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_tensordict_priority</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">index</span></div>
 
 <div class="viewcode-block" id="TensorDictReplayBuffer.extend"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.TensorDictReplayBuffer.html#torchrl.data.TensorDictReplayBuffer.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordicts</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-
-        <span class="n">tensordicts</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;_data&quot;</span><span class="p">:</span> <span class="n">tensordicts</span><span class="p">},</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">tensordicts</span><span class="o">.</span><span class="n">batch_size</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">batch_dims</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="c1"># we want the tensordict to have one dimension only. The batch size</span>
-            <span class="c1"># of the sampled tensordicts can be changed thereafter</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span><span class="p">):</span>
-                <span class="n">tensordicts</span> <span class="o">=</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">tensordicts</span> <span class="o">=</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
-            <span class="c1"># we keep track of the batch size to reinstantiate it when sampling</span>
-            <span class="k">if</span> <span class="s2">&quot;_rb_batch_size&quot;</span> <span class="ow">in</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                    <span class="s2">&quot;conflicting key &#39;_rb_batch_size&#39;. Consider removing from data.&quot;</span>
-                <span class="p">)</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tensordicts</span><span class="o">.</span><span class="n">batch_size</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
-                <span class="n">tensordicts</span><span class="o">.</span><span class="n">batch_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">batch_dims</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only accepts TensorDictBase subclasses. tensorclasses &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;and other types are not compatible with that class. &quot;</span>
+                <span class="s2">&quot;Please use a regular `ReplayBuffer` instead.&quot;</span>
             <span class="p">)</span>
-            <span class="n">tensordicts</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;_rb_batch_size&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
-        <span class="n">tensordicts</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">,</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tensordicts</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">tensordicts</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int</span><span class="p">),</span>
-        <span class="p">)</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">tensordicts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">))</span>
-            <span class="n">tensordicts</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">tensordicts</span> <span class="o">=</span> <span class="n">tensordicts</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">tensordicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">)</span>
 
         <span class="n">index</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_extend</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_index_in_td</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_tensordict_priority</span><span class="p">(</span><span class="n">tensordicts</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">index</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_index_in_td</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">tensordict</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">index</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">():</span>
+                    <span class="c1"># if index has 2 dims and is in a non-zero format</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">unflatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="n">dim</span><span class="p">])</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;could not find how to reshape index with shape </span><span class="si">{</span><span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> to fit in tensordict with shape </span><span class="si">{</span><span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">expand_as_right</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">update_tensordict_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">,</span> <span class="n">PrioritizedSampler</span><span class="p">):</span>
@@ -1309,7 +1400,7 @@
         <span class="k">while</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">priority</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
             <span class="c1"># reduce index</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_priority</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_priority</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">priority</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TensorDictReplayBuffer.sample"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.TensorDictReplayBuffer.html#torchrl.data.TensorDictReplayBuffer.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1346,18 +1437,33 @@
             <span class="n">is_locked</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">is_locked</span>
             <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">unlock_</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">_to_torch</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span> <span class="n">data</span><span class="o">.</span><span class="n">batch_dims</span><span class="p">]</span> <span class="o">!=</span> <span class="n">data</span><span class="o">.</span><span class="n">batch_size</span><span class="p">:</span>
-                    <span class="n">v</span> <span class="o">=</span> <span class="n">expand_as_right</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-                <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;index&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">_to_torch</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">expand_as_right</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">is_locked</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_tc</span> <span class="ow">and</span> <span class="n">include_info</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot include info in non-tensordict data&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">return_info</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">info</span>
-        <span class="k">return</span> <span class="n">data</span></div></div>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    <span class="nd">@pin_memory_output</span>
+    <span class="k">def</span> <span class="nf">_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replay_lock</span><span class="p">:</span>
+            <span class="n">index</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">INT_CLASSES</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collate_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">data</span><span class="o">.</span><span class="n">unlock_</span><span class="p">(),</span> <span class="n">_set_dispatch_td_nn_modules</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">info</span></div>
 
 
 <div class="viewcode-block" id="TensorDictPrioritizedReplayBuffer"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.TensorDictPrioritizedReplayBuffer.html#torchrl.data.TensorDictPrioritizedReplayBuffer">[docs]</a><span class="k">class</span> <span class="nc">TensorDictPrioritizedReplayBuffer</span><span class="p">(</span><span class="n">TensorDictReplayBuffer</span><span class="p">):</span>
@@ -1411,6 +1517,26 @@
 <span class="sd">        reduction (str, optional): the reduction method for multidimensional</span>
 <span class="sd">            tensordicts (ie stored trajectories). Can be one of &quot;max&quot;, &quot;min&quot;,</span>
 <span class="sd">            &quot;median&quot; or &quot;mean&quot;.</span>
+<span class="sd">        dim_extend (int, optional): indicates the dim to consider for</span>
+<span class="sd">            extension when calling :meth:`~.extend`. Defaults to ``storage.ndim-1``.</span>
+<span class="sd">            When using ``dim_extend &gt; 0``, we recommend using the ``ndim``</span>
+<span class="sd">            argument in the storage instantiation if that argument is</span>
+<span class="sd">            available, to let storages know that the data is</span>
+<span class="sd">            multi-dimensional and keep consistent notions of storage-capacity</span>
+<span class="sd">            and batch-size during sampling.</span>
+
+<span class="sd">            .. note:: This argument has no effect on :meth:`~.add` and</span>
+<span class="sd">                therefore should be used with caution when both :meth:`~.add`</span>
+<span class="sd">                and :meth:`~.extend` are used in a codebase. For example:</span>
+
+<span class="sd">                    &gt;&gt;&gt; data = torch.zeros(3, 4)</span>
+<span class="sd">                    &gt;&gt;&gt; rb = ReplayBuffer(</span>
+<span class="sd">                    ...     storage=LazyTensorStorage(10, ndim=2),</span>
+<span class="sd">                    ...     dim_extend=1)</span>
+<span class="sd">                    &gt;&gt;&gt; # these two approaches are equivalent:</span>
+<span class="sd">                    &gt;&gt;&gt; for d in data.unbind(1):</span>
+<span class="sd">                    ...     rb.add(d)</span>
+<span class="sd">                    &gt;&gt;&gt; rb.extend(data)</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -1483,6 +1609,7 @@
         <span class="n">transform</span><span class="p">:</span> <span class="s2">&quot;Transform&quot;</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># noqa-F821</span>
         <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dim_extend</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">storage</span> <span class="o">=</span> <span class="n">ListStorage</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="mi">1_000</span><span class="p">)</span>
@@ -1498,6 +1625,7 @@
             <span class="n">prefetch</span><span class="o">=</span><span class="n">prefetch</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">dim_extend</span><span class="o">=</span><span class="n">dim_extend</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

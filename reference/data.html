@@ -535,13 +535,13 @@ to the <code class="xref py py-meth docutils literal notranslate"><span class="p
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage" title="torchrl.data.replay_buffers.ListStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ListStorage</span></code></a>(max_size)</p></td>
 <td><p>A storage stored in a list.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyTensorStorage.html#torchrl.data.replay_buffers.LazyTensorStorage" title="torchrl.data.replay_buffers.LazyTensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazyTensorStorage</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyTensorStorage.html#torchrl.data.replay_buffers.LazyTensorStorage" title="torchrl.data.replay_buffers.LazyTensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazyTensorStorage</span></code></a>(max_size, *[, device, ndim])</p></td>
 <td><p>A pre-allocated tensor storage for tensors and tensordicts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.LazyMemmapStorage.html#torchrl.data.replay_buffers.LazyMemmapStorage" title="torchrl.data.replay_buffers.LazyMemmapStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LazyMemmapStorage</span></code></a>(max_size, *[, ...])</p></td>
 <td><p>A memory-mapped storage for tensors and tensordicts.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>(storage[, max_size, device, ndim])</p></td>
 <td><p>A storage for tensors and tensordicts.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.Writer.html#torchrl.data.replay_buffers.Writer" title="torchrl.data.replay_buffers.Writer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Writer</span></code></a>()</p></td>
@@ -630,26 +630,127 @@ to it, as the following example shows:</p>
 <section id="storing-trajectories">
 <h3>Storing trajectories<a class="headerlink" href="#storing-trajectories" title="Permalink to this heading">¶</a></h3>
 <p>It is not too difficult to store trajectories in the replay buffer.
-One element to pay attention to is that the size of the replay buffer is always
+One element to pay attention to is that the size of the replay buffer is by default
 the size of the leading dimension of the storage: in other words, creating a
 replay buffer with a storage of size 1M when storing multidimensional data
 does not mean storing 1M frames but 1M trajectories. However, if trajectories
 (or episodes/rollouts) are flattened before being stored, the capacity will still
 be 1M steps.</p>
+<p>There is a way to circumvent this by telling the storage how many dimensions
+it should take into account when saving data. This can be done through the <code class="docutils literal notranslate"><span class="pre">ndim</span></code>
+keyword argument which is accepted by all contiguous storages such as
+<a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code></a> and the likes. When a
+multidimensional storage is passed to a buffer, the buffer will automatically
+consider the last dimension as the “time” dimension, as it is conventional in
+TorchRL. This can be overridden through the <code class="docutils literal notranslate"><span class="pre">dim_extend</span></code> keyword argument
+in <a class="reference internal" href="generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer" title="torchrl.data.ReplayBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReplayBuffer</span></code></a>.
+This is the recommended way to save trajectories that are obtained through
+<a class="reference internal" href="generated/torchrl.envs.ParallelEnv.html#torchrl.envs.ParallelEnv" title="torchrl.envs.ParallelEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelEnv</span></code></a> or its serial counterpart, as we will see
+below.</p>
 <p>When sampling trajectories, it may be desirable to sample sub-trajectories
 to diversify learning or make the sampling more efficient.
-TorchRL offers two distinctive ways of accomplishing this:
-- The <a class="reference internal" href="generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.samplers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a> allows to</p>
-<blockquote>
-<div><p>sample a given number of slices of trajectories stored one after another
+TorchRL offers two distinctive ways of accomplishing this:</p>
+<ul>
+<li><p>The <a class="reference internal" href="generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.samplers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a> allows to
+sample a given number of slices of trajectories stored one after another
 along the leading dimension of the <code class="xref py py-class docutils literal notranslate"><span class="pre">TensorStorage</span></code>.
 This is the recommended way of sampling sub-trajectories in TorchRL __especially__
 when using offline datasets (which are stored using that convention).
 This strategy requires to flatten the trajectories before extending the replay
-buffer and reshaping them after sampling. The <a class="reference internal" href="generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.samplers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a>
-gives extensive details about this storage and sampling strategy.</p>
-</div></blockquote>
-<ul class="simple">
+buffer and reshaping them after sampling.
+The <a class="reference internal" href="generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.samplers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a> class docstrings
+gives extensive details about this storage and sampling strategy.
+Note that <a class="reference internal" href="generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.samplers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a>
+is compatible with multidimensional storages. The following examples show
+how to use this feature with and without flattening of the tensordict.
+In the first scenario, we are collecting data from a single environment. In
+that case, we are happy with a storage that concatenates the data coming in
+along the first dimension, since there will be no interruption introduced
+by the collection schedule:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">TransformedEnv</span><span class="p">,</span> <span class="n">StepCounter</span><span class="p">,</span> <span class="n">GymEnv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.collectors</span> <span class="kn">import</span> <span class="n">SyncDataCollector</span><span class="p">,</span> <span class="n">RandomPolicy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">LazyTensorStorage</span><span class="p">,</span> <span class="n">SliceSampler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span><span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">),</span> <span class="n">StepCounter</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collector</span> <span class="o">=</span> <span class="n">SyncDataCollector</span><span class="p">(</span><span class="n">env</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_spec</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">frames_per_batch</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">total_frames</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">sampler</span><span class="o">=</span><span class="n">SliceSampler</span><span class="p">(</span><span class="n">num_slices</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">traj_key</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;collector&quot;</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">truncated_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict_length</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">collector</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">break</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rb</span><span class="p">)</span> <span class="o">==</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rb</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rb</span><span class="p">[:][</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;step_count&quot;</span><span class="p">])</span>
+<span class="go">tensor([[32],</span>
+<span class="go">        [33],</span>
+<span class="go">        [34],</span>
+<span class="go">        [35],</span>
+<span class="go">        [36],</span>
+<span class="go">        [37],</span>
+<span class="go">        [38],</span>
+<span class="go">        [39],</span>
+<span class="go">        [40],</span>
+<span class="go">        [41],</span>
+<span class="go">        [11],</span>
+<span class="go">        [12],</span>
+<span class="go">        [13],</span>
+<span class="go">        [14],</span>
+<span class="go">        [15],</span>
+<span class="go">        [16],</span>
+<span class="go">        [17],</span>
+<span class="go">        [...</span>
+</pre></div>
+</div>
+<p>If there are more than one environment run in a batch, we could still store
+the data in the same buffer as before by calling <code class="docutils literal notranslate"><span class="pre">data.reshape(-1)</span></code> which
+will flatten the <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">T]</span></code> size into <code class="docutils literal notranslate"><span class="pre">[B</span> <span class="pre">*</span> <span class="pre">T]</span></code> but that means that the
+trajectories of, say, the first environment of the batch will be interleaved
+by trajectories of the other environments, a scenario that <code class="docutils literal notranslate"><span class="pre">SliceSampler</span></code>
+cannot handle. To solve this, we suggest to use the <code class="docutils literal notranslate"><span class="pre">ndim</span></code> argument in the
+storage constructor:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span><span class="n">SerialEnv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="k">lambda</span><span class="p">:</span> <span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">)),</span> <span class="n">StepCounter</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collector</span> <span class="o">=</span> <span class="n">SyncDataCollector</span><span class="p">(</span><span class="n">env</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_spec</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">frames_per_batch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_frames</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">sampler</span><span class="o">=</span><span class="n">SliceSampler</span><span class="p">(</span><span class="n">num_slices</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">traj_key</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;collector&quot;</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">truncated_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict_length</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">collector</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">break</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rb</span><span class="p">)</span> <span class="o">==</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rb</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rb</span><span class="p">[:][</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;step_count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+<span class="go">tensor([[ 6,  5],</span>
+<span class="go">        [ 2,  2],</span>
+<span class="go">        [ 3,  3],</span>
+<span class="go">        [ 4,  4],</span>
+<span class="go">        [ 5,  5],</span>
+<span class="go">        [ 6,  6],</span>
+<span class="go">        [ 7,  7],</span>
+<span class="go">        [ 8,  8],</span>
+<span class="go">        [ 9,  9],</span>
+<span class="go">        [10, 10],</span>
+<span class="go">        [11, 11],</span>
+<span class="go">        [12, 12],</span>
+<span class="go">        [13, 13],</span>
+<span class="go">        [14, 14],</span>
+<span class="go">        [15, 15],</span>
+<span class="go">        [16, 16],</span>
+<span class="go">        [17, 17],</span>
+<span class="go">        [18,  1],</span>
+<span class="go">        [19,  2],</span>
+<span class="go">        [...</span>
+</pre></div>
+</div>
+</li>
 <li><p>Trajectories can also be stored independently, with the each element of the
 leading dimension pointing to a different trajectory. This requires
 for the trajectories to have a congruent shape (or to be padded).
