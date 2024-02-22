@@ -411,8 +411,9 @@ Defaults to None.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">MLP</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">MLP</span><span class="p">,</span> <span class="n">QValueActor</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">OneHotDiscreteTensorSpec</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.objectives</span> <span class="kn">import</span> <span class="n">DiscreteCQLLoss</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_act</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">value_net</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">in_features</span><span class="o">=</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">out_features</span><span class="o">=</span><span class="n">n_act</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">OneHotDiscreteTensorSpec</span><span class="p">(</span><span class="n">n_act</span><span class="p">)</span>
@@ -430,8 +431,11 @@ Defaults to None.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
-<span class="go">        loss: Tensor(shape=torch.Size([]), device=cuda:0, dtype=torch.float32, is_shared=True),</span>
-<span class="go">        loss_cql: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
+<span class="go">        loss_cql: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        loss_qvalue: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        pred_value: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        target_value: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        td_error: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
 <span class="go">    batch_size=torch.Size([]),</span>
 <span class="go">    device=None,</span>
 <span class="go">    is_shared=False)</span>

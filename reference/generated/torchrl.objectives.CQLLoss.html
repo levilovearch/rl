@@ -485,8 +485,9 @@ Default is <code class="docutils literal notranslate"><span class="pre">False</s
 <span class="go">        alpha: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">        entropy: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">        loss_actor: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        loss_actor_bc: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">        loss_alpha: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="go">        loss_alpha_prime: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        loss_cql: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False),</span>
 <span class="go">        loss_qvalue: Tensor(shape=torch.Size([]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
 <span class="go">    batch_size=torch.Size([]),</span>
 <span class="go">    device=None,</span>
@@ -527,10 +528,10 @@ The return value is a tuple of tensors in the following order:
 <span class="gp">&gt;&gt;&gt; </span><span class="n">qvalue</span> <span class="o">=</span> <span class="n">ValueOperator</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;observation&#39;</span><span class="p">,</span> <span class="s1">&#39;action&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span> <span class="o">=</span> <span class="n">CQLLoss</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="n">qvalue</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span> <span class="o">=</span> <span class="n">CQLLoss</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="n">qvalue</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">action</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="p">,</span> <span class="n">loss_qvalue</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="p">,</span> <span class="n">loss_actor_bc</span><span class="p">,</span> <span class="n">loss_qvalue</span><span class="p">,</span> <span class="n">loss_cql</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">next_done</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
@@ -543,7 +544,7 @@ The return value is a tuple of tensors in the following order:
 <p>The output keys can also be filtered using the <code class="xref py py-meth docutils literal notranslate"><span class="pre">CQLLoss.select_out_keys()</span></code>
 method.</p>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span><span class="o">.</span><span class="n">select_out_keys</span><span class="p">(</span><span class="s1">&#39;loss_actor&#39;</span><span class="p">,</span> <span class="s1">&#39;loss_qvalue&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">select_out_keys</span><span class="p">(</span><span class="s1">&#39;loss_actor&#39;</span><span class="p">,</span> <span class="s1">&#39;loss_qvalue&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loss_actor</span><span class="p">,</span> <span class="n">loss_qvalue</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">observation</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
