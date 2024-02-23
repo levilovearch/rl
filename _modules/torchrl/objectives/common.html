@@ -391,7 +391,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">is_tensor_collection</span><span class="p">,</span> <span class="n">TensorDict</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 
 <span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">TensorDictModule</span><span class="p">,</span> <span class="n">TensorDictModuleBase</span><span class="p">,</span> <span class="n">TensorDictParams</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
@@ -627,6 +627,13 @@
             <span class="c1"># For buffers, a cloned expansion (or equivalently a repeat) is returned.</span>
 
             <span class="k">def</span> <span class="nf">_compare_and_expand</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">param</span><span class="o">.</span><span class="n">_apply_nest</span><span class="p">(</span>
+                        <span class="n">_compare_and_expand</span><span class="p">,</span>
+                        <span class="n">batch_size</span><span class="o">=</span><span class="p">[</span><span class="n">expand_dim</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span>
+                        <span class="n">filter_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">call_on_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">):</span>
                     <span class="n">buffer</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">expand_dim</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                     <span class="k">return</span> <span class="n">buffer</span>
@@ -636,7 +643,7 @@
                     <span class="c1"># is called:</span>
                     <span class="k">return</span> <span class="n">expanded_param</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">p_out</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">expand_dim</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">])</span>
+                    <span class="n">p_out</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">expand_dim</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                     <span class="n">p_out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
                         <span class="n">p_out</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span>
                             <span class="n">p_out</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">p_out</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
@@ -649,6 +656,7 @@
                     <span class="n">_compare_and_expand</span><span class="p">,</span>
                     <span class="n">batch_size</span><span class="o">=</span><span class="p">[</span><span class="n">expand_dim</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span>
                     <span class="n">filter_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">call_on_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="n">no_convert</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
