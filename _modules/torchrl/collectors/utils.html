@@ -381,12 +381,13 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">pad</span><span class="p">,</span> <span class="n">set_lazy_legacy</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">NestedKey</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">set_lazy_legacy</span><span class="p">,</span> <span class="n">TensorDictBase</span>
 
 
 <span class="k">def</span> <span class="nf">_stack_output</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
@@ -407,7 +408,11 @@
 
 <div class="viewcode-block" id="split_trajectories"><a class="viewcode-back" href="../../../reference/generated/torchrl.collectors.utils.split_trajectories.html#torchrl.collectors.utils.split_trajectories">[docs]</a><span class="nd">@set_lazy_legacy</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">split_trajectories</span><span class="p">(</span>
-    <span class="n">rollout_tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">rollout_tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">trajectory_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">done_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A util function for trajectory separation.</span>
 
@@ -418,28 +423,101 @@
 <span class="sd">    Args:</span>
 <span class="sd">        rollout_tensordict (TensorDictBase): a rollout with adjacent trajectories</span>
 <span class="sd">            along the last dimension.</span>
-<span class="sd">        prefix (str or tuple of str, optional): the prefix used to read and write meta-data,</span>
+<span class="sd">        prefix (NestedKey, optional): the prefix used to read and write meta-data,</span>
 <span class="sd">            such as ``&quot;traj_ids&quot;`` (the optional integer id of each trajectory)</span>
 <span class="sd">            and the ``&quot;mask&quot;`` entry indicating which data are valid and which</span>
-<span class="sd">            aren&#39;t. Defaults to ``None`` (no prefix).</span>
+<span class="sd">            aren&#39;t. Defaults to ``&quot;collector&quot;`` if the input has a ``&quot;collector&quot;``</span>
+<span class="sd">            entry, ``()`` (no prefix) otherwise.</span>
+<span class="sd">            ``prefix`` is kept as a legacy feature and will be deprecated eventually.</span>
+<span class="sd">            Prefer ``trajectory_key`` or ``done_key`` whenever possible.</span>
+<span class="sd">        trajectory_key (NestedKey, optional): the key pointing to the trajectory</span>
+<span class="sd">            ids. Supersedes ``done_key`` and ``prefix``. If not provided, defaults</span>
+<span class="sd">            to ``(prefix, &quot;traj_ids&quot;)``.</span>
+<span class="sd">        done_key (NestedKey, optional): the key pointing to the ``&quot;done&quot;&quot;`` signal,</span>
+<span class="sd">            if the trajectory could not be directly recovered. Defaults to ``&quot;done&quot;``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A new tensordict with a leading dimension corresponding to the trajectory.</span>
+<span class="sd">        A ``&quot;mask&quot;`` boolean entry sharing the ``trajectory_key`` prefix</span>
+<span class="sd">        and the tensordict shape is also added. It indicated the valid elements of the tensordict,</span>
+<span class="sd">        as well as a ``&quot;traj_ids&quot;`` entry if ``trajectory_key`` could not be found.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.collectors.utils import split_trajectories</span>
+<span class="sd">        &gt;&gt;&gt; obs = torch.cat([torch.arange(10), torch.arange(5)])</span>
+<span class="sd">        &gt;&gt;&gt; obs_ = torch.cat([torch.arange(1, 11), torch.arange(1, 6)])</span>
+<span class="sd">        &gt;&gt;&gt; done = torch.zeros(15, dtype=torch.bool)</span>
+<span class="sd">        &gt;&gt;&gt; done[9] = True</span>
+<span class="sd">        &gt;&gt;&gt; trajectory_id = torch.cat([torch.zeros(10, dtype=torch.int32),</span>
+<span class="sd">        ...     torch.ones(5, dtype=torch.int32)])</span>
+<span class="sd">        &gt;&gt;&gt; data = TensorDict({&quot;obs&quot;: obs, (&quot;next&quot;, &quot;obs&quot;): obs_, (&quot;next&quot;, &quot;done&quot;): done, &quot;trajectory&quot;: trajectory_id}, batch_size=[15])</span>
+<span class="sd">        &gt;&gt;&gt; data_split = split_trajectories(data, done_key=&quot;done&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(data_split)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                mask: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        obs: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([2, 10]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                traj_ids: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                trajectory: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([2, 10]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; # check that split_trajectory got the trajectories right with the done signal</span>
+<span class="sd">        &gt;&gt;&gt; assert (data_split[&quot;traj_ids&quot;] == data_split[&quot;trajectory&quot;]).all()</span>
+<span class="sd">        &gt;&gt;&gt; print(data_split[&quot;mask&quot;])</span>
+<span class="sd">        tensor([[ True,  True,  True,  True,  True,  True,  True,  True,  True,  True],</span>
+<span class="sd">                [ True,  True,  True,  True,  True, False, False, False, False, False]])</span>
+<span class="sd">        &gt;&gt;&gt; data_split = split_trajectories(data, trajectory_key=&quot;trajectory&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(data_split)</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                mask: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        obs: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([2, 10]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                obs: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int64, is_shared=False),</span>
+<span class="sd">                trajectory: Tensor(shape=torch.Size([2, 10]), device=cpu, dtype=torch.int32, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([2, 10]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;.-|-.&quot;</span>
+    <span class="n">mask_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">trajectory_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="n">_replace_last</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">)</span>
-        <span class="n">mask_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-        <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">)</span>
-        <span class="n">mask_key</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="s2">&quot;traj_ids&quot;</span>
-        <span class="n">mask_key</span> <span class="o">=</span> <span class="s2">&quot;mask&quot;</span>
+        <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="n">trajectory_key</span>
+        <span class="n">mask_key</span> <span class="o">=</span> <span class="n">_replace_last</span><span class="p">(</span><span class="n">trajectory_key</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown key type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;collector&quot;</span> <span class="ow">in</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;collector&quot;</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="s2">&quot;traj_ids&quot;</span>
+            <span class="n">mask_key</span> <span class="o">=</span> <span class="s2">&quot;mask&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">traj_ids_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;traj_ids&quot;</span><span class="p">)</span>
+            <span class="n">mask_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">)</span>
 
+    <span class="n">rollout_tensordict</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">traj_ids</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">traj_ids_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">done</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;done&quot;</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">traj_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">done_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">done_key</span> <span class="o">=</span> <span class="s2">&quot;done&quot;</span>
+        <span class="n">done_key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">done_key</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">done_key</span><span class="p">)</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),)</span>
         <span class="n">done_sel</span> <span class="o">=</span> <span class="n">done</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
         <span class="n">pads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
@@ -470,7 +548,8 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">ndimension</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">rollout_tensordict</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">unflatten_keys</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rollout_tensordict</span>
+
     <span class="n">out_splits</span> <span class="o">=</span> <span class="n">rollout_tensordict</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">splits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">out_split</span> <span class="ow">in</span> <span class="n">out_splits</span><span class="p">:</span>
@@ -488,8 +567,7 @@
         <span class="n">MAX</span> <span class="o">=</span> <span class="n">out_splits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">td</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
         <span class="p">[</span><span class="n">pad</span><span class="p">(</span><span class="n">out_split</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">MAX</span> <span class="o">-</span> <span class="n">out_split</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">out_split</span> <span class="ow">in</span> <span class="n">out_splits</span><span class="p">],</span> <span class="mi">0</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
-    <span class="c1"># td = td.unflatten_keys(sep)</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">td</span></div>
 </pre></div>
 
