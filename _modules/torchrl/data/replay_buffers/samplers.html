@@ -1178,6 +1178,7 @@
     <span class="k">def</span> <span class="nf">_tensor_slices_from_startend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
         <span class="c1"># start is a 2d tensor resulting from nonzero()</span>
         <span class="c1"># seq_length is a 1d tensor indicating the desired length of each sequence</span>
+
         <span class="k">def</span> <span class="nf">_start_to_end</span><span class="p">(</span><span class="n">st</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">ndims</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">ndim</span> <span class="k">else</span> <span class="mi">0</span>
@@ -1211,7 +1212,7 @@
             <span class="c1"># We first try with the traj_key</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">TensorStorage</span><span class="p">):</span>
-                    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">)</span>
+                    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_used_traj_key</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">trajectory</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="p">)</span>
@@ -1219,7 +1220,7 @@
                         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                             <span class="s2">&quot;Could not get a tensordict out of the storage, which is required for SliceSampler to compute the trajectories.&quot;</span>
                         <span class="p">)</span>
-                <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="n">trajectory</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">storage</span><span class="p">)])</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_start_stop_traj</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="n">trajectory</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_values</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="s2">&quot;stop-and-length&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
                 <span class="k">return</span> <span class="n">vals</span>
