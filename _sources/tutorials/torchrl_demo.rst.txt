@@ -1270,30 +1270,10 @@ Functional Programming (Ensembling / Meta-RL)
 .. code-block:: Python
 
 
-    from tensordict.nn import make_functional
+    from tensordict import TensorDict
 
-    params = make_functional(sequence)
-    len(list(sequence.parameters()))  # functional modules have no parameters
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    0
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 552-555
-
-.. code-block:: Python
-
-
-    sequence(tensordict, params)
+    params = TensorDict.from_module(sequence)
+    print("extracted params", params)
 
 
 
@@ -1303,28 +1283,125 @@ Functional Programming (Ensembling / Meta-RL)
 
  .. code-block:: none
 
-
-    TensorDict(
+    extracted params TensorDict(
         fields={
-            action: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.float32, is_shared=False),
-            hidden: Tensor(shape=torch.Size([3, 3]), device=cpu, dtype=torch.float32, is_shared=False),
-            observation: Tensor(shape=torch.Size([3, 5]), device=cpu, dtype=torch.float32, is_shared=False),
-            value: Tensor(shape=torch.Size([3, 1]), device=cpu, dtype=torch.float32, is_shared=False)},
-        batch_size=torch.Size([3]),
+            module: TensorDict(
+                fields={
+                    0: TensorDict(
+                        fields={
+                            module: TensorDict(
+                                fields={
+                                    bias: Parameter(shape=torch.Size([3]), device=cpu, dtype=torch.float32, is_shared=False),
+                                    weight: Parameter(shape=torch.Size([3, 5]), device=cpu, dtype=torch.float32, is_shared=False)},
+                                batch_size=torch.Size([]),
+                                device=None,
+                                is_shared=False)},
+                        batch_size=torch.Size([]),
+                        device=None,
+                        is_shared=False),
+                    1: TensorDict(
+                        fields={
+                            module: TensorDict(
+                                fields={
+                                    bias: Parameter(shape=torch.Size([4]), device=cpu, dtype=torch.float32, is_shared=False),
+                                    weight: Parameter(shape=torch.Size([4, 3]), device=cpu, dtype=torch.float32, is_shared=False)},
+                                batch_size=torch.Size([]),
+                                device=None,
+                                is_shared=False)},
+                        batch_size=torch.Size([]),
+                        device=None,
+                        is_shared=False),
+                    2: TensorDict(
+                        fields={
+                            module: TensorDict(
+                                fields={
+                                    0: TensorDict(
+                                        fields={
+                                            bias: Parameter(shape=torch.Size([4]), device=cpu, dtype=torch.float32, is_shared=False),
+                                            weight: Parameter(shape=torch.Size([4, 7]), device=cpu, dtype=torch.float32, is_shared=False)},
+                                        batch_size=torch.Size([]),
+                                        device=None,
+                                        is_shared=False),
+                                    1: TensorDict(
+                                        fields={
+                                        },
+                                        batch_size=torch.Size([]),
+                                        device=None,
+                                        is_shared=False),
+                                    2: TensorDict(
+                                        fields={
+                                            bias: Parameter(shape=torch.Size([5]), device=cpu, dtype=torch.float32, is_shared=False),
+                                            weight: Parameter(shape=torch.Size([5, 4]), device=cpu, dtype=torch.float32, is_shared=False)},
+                                        batch_size=torch.Size([]),
+                                        device=None,
+                                        is_shared=False),
+                                    3: TensorDict(
+                                        fields={
+                                        },
+                                        batch_size=torch.Size([]),
+                                        device=None,
+                                        is_shared=False),
+                                    4: TensorDict(
+                                        fields={
+                                            bias: Parameter(shape=torch.Size([1]), device=cpu, dtype=torch.float32, is_shared=False),
+                                            weight: Parameter(shape=torch.Size([1, 5]), device=cpu, dtype=torch.float32, is_shared=False)},
+                                        batch_size=torch.Size([]),
+                                        device=None,
+                                        is_shared=False)},
+                                batch_size=torch.Size([]),
+                                device=None,
+                                is_shared=False)},
+                        batch_size=torch.Size([]),
+                        device=None,
+                        is_shared=False)},
+                batch_size=torch.Size([]),
+                device=None,
+                is_shared=False)},
+        batch_size=torch.Size([]),
         device=None,
         is_shared=False)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 556-563
+
+.. GENERATED FROM PYTHON SOURCE LINES 552-553
+
+functional call using tensordict:
+
+.. GENERATED FROM PYTHON SOURCE LINES 553-557
 
 .. code-block:: Python
 
 
+    with params.to_module(sequence):
+        sequence(tensordict)
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 558-559
+
+Using vectorized map for model ensembling
+
+.. GENERATED FROM PYTHON SOURCE LINES 559-572
+
+.. code-block:: Python
+
     from torch import vmap
 
     params_expand = params.expand(4)
-    tensordict_exp = vmap(sequence, (None, 0))(tensordict, params_expand)
+
+
+    def exec_sequence(params, data):
+        with params.to_module(sequence):
+            return sequence(data)
+
+
+    tensordict_exp = vmap(exec_sequence, (0, None))(params_expand, tensordict)
     print(tensordict_exp)
 
 
@@ -1348,12 +1425,12 @@ Functional Programming (Ensembling / Meta-RL)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 564-566
+.. GENERATED FROM PYTHON SOURCE LINES 573-575
 
 Specialized Classes
 ------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 566-579
+.. GENERATED FROM PYTHON SOURCE LINES 575-588
 
 .. code-block:: Python
 
@@ -1383,7 +1460,7 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 580-584
+.. GENERATED FROM PYTHON SOURCE LINES 589-593
 
 .. code-block:: Python
 
@@ -1404,7 +1481,7 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 585-598
+.. GENERATED FROM PYTHON SOURCE LINES 594-607
 
 .. code-block:: Python
 
@@ -1428,7 +1505,7 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 599-618
+.. GENERATED FROM PYTHON SOURCE LINES 608-627
 
 .. code-block:: Python
 
@@ -1472,7 +1549,7 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 619-634
+.. GENERATED FROM PYTHON SOURCE LINES 628-643
 
 .. code-block:: Python
 
@@ -1513,7 +1590,7 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 635-654
+.. GENERATED FROM PYTHON SOURCE LINES 644-663
 
 .. code-block:: Python
 
@@ -1557,12 +1634,12 @@ Specialized Classes
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 655-657
+.. GENERATED FROM PYTHON SOURCE LINES 664-666
 
 Using Environments and Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. GENERATED FROM PYTHON SOURCE LINES 657-685
+.. GENERATED FROM PYTHON SOURCE LINES 666-694
 
 .. code-block:: Python
 
@@ -1627,7 +1704,7 @@ Using Environments and Modules
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 686-704
+.. GENERATED FROM PYTHON SOURCE LINES 695-713
 
 .. code-block:: Python
 
@@ -1682,7 +1759,7 @@ Using Environments and Modules
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 705-708
+.. GENERATED FROM PYTHON SOURCE LINES 714-717
 
 .. code-block:: Python
 
@@ -1702,7 +1779,7 @@ Using Environments and Modules
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 709-720
+.. GENERATED FROM PYTHON SOURCE LINES 718-729
 
 .. code-block:: Python
 
@@ -1724,12 +1801,12 @@ Using Environments and Modules
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 721-723
+.. GENERATED FROM PYTHON SOURCE LINES 730-732
 
 Collectors
 ^^^^^^^^^^
 
-.. GENERATED FROM PYTHON SOURCE LINES 723-729
+.. GENERATED FROM PYTHON SOURCE LINES 732-738
 
 .. code-block:: Python
 
@@ -1746,11 +1823,11 @@ Collectors
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 730-731
+.. GENERATED FROM PYTHON SOURCE LINES 739-740
 
 EnvCreator makes sure that we can send a lambda function from process to process
 
-.. GENERATED FROM PYTHON SOURCE LINES 731-738
+.. GENERATED FROM PYTHON SOURCE LINES 740-747
 
 .. code-block:: Python
 
@@ -1768,11 +1845,11 @@ EnvCreator makes sure that we can send a lambda function from process to process
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 739-740
+.. GENERATED FROM PYTHON SOURCE LINES 748-749
 
 Sync data collector
 
-.. GENERATED FROM PYTHON SOURCE LINES 740-752
+.. GENERATED FROM PYTHON SOURCE LINES 749-761
 
 .. code-block:: Python
 
@@ -1795,7 +1872,7 @@ Sync data collector
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 753-762
+.. GENERATED FROM PYTHON SOURCE LINES 762-771
 
 .. code-block:: Python
 
@@ -1847,7 +1924,7 @@ Sync data collector
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 763-784
+.. GENERATED FROM PYTHON SOURCE LINES 772-793
 
 .. code-block:: Python
 
@@ -1911,12 +1988,12 @@ Sync data collector
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 785-787
+.. GENERATED FROM PYTHON SOURCE LINES 794-796
 
 Objectives
 ^^^^^^^^^^
 
-.. GENERATED FROM PYTHON SOURCE LINES 787-809
+.. GENERATED FROM PYTHON SOURCE LINES 796-818
 
 .. code-block:: Python
 
@@ -1949,7 +2026,7 @@ Objectives
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 810-826
+.. GENERATED FROM PYTHON SOURCE LINES 819-835
 
 .. code-block:: Python
 
@@ -1976,7 +2053,7 @@ Objectives
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 827-830
+.. GENERATED FROM PYTHON SOURCE LINES 836-839
 
 .. code-block:: Python
 
@@ -2007,7 +2084,7 @@ Objectives
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 831-834
+.. GENERATED FROM PYTHON SOURCE LINES 840-843
 
 .. code-block:: Python
 
@@ -2042,7 +2119,7 @@ Objectives
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 835-854
+.. GENERATED FROM PYTHON SOURCE LINES 844-863
 
 State of the Library
 ^^^^^^^^^^^^^^^^^^^^
@@ -2064,7 +2141,7 @@ RL (or just curious), try it! Give us feedback: what will make the success of
 TorchRL is how well it covers researchers needs. To do that, we need their input!
 Since the library is nascent, it is a great time for you to shape it the way you want!
 
-.. GENERATED FROM PYTHON SOURCE LINES 856-860
+.. GENERATED FROM PYTHON SOURCE LINES 865-869
 
 Installing the Library
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -2074,9 +2151,9 @@ The library is on PyPI: *pip install torchrl*
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (3 minutes 45.466 seconds)
+   **Total running time of the script:** (3 minutes 44.632 seconds)
 
-**Estimated memory usage:**  14 MB
+**Estimated memory usage:**  15 MB
 
 
 .. _sphx_glr_download_tutorials_torchrl_demo.py:

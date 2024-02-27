@@ -352,7 +352,7 @@ of the graph, otherwise the actor and value loss will be mixed up.
 For this, the :func:`~torchrl.objectives.utils.hold_out_params` function
 can be used.
 
-.. GENERATED FROM PYTHON SOURCE LINES 292-309
+.. GENERATED FROM PYTHON SOURCE LINES 292-308
 
 .. code-block:: Python
 
@@ -364,12 +364,11 @@ can be used.
     ) -> torch.Tensor:
         td_copy = tensordict.select(*self.actor_in_keys)
         # Get an action from the actor network: since we made it functional, we need to pass the params
-        td_copy = self.actor_network(td_copy, params=self.actor_network_params)
+        with self.actor_network_params.to_module(self.actor_network):
+            td_copy = self.actor_network(td_copy)
         # get the value associated with that action
-        td_copy = self.value_network(
-            td_copy,
-            params=self.value_network_params.detach(),
-        )
+        with self.value_network_params.detach().to_module(self.value_network):
+            td_copy = self.value_network(td_copy)
         return -td_copy.get("state_action_value")
 
 
@@ -380,7 +379,7 @@ can be used.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 310-316
+.. GENERATED FROM PYTHON SOURCE LINES 309-315
 
 The value loss method
 ~~~~~~~~~~~~~~~~~~~~~
@@ -389,7 +388,7 @@ We now need to optimize our value network parameters.
 To do this, we will rely on the value estimator of our class:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 316-353
+.. GENERATED FROM PYTHON SOURCE LINES 315-352
 
 .. code-block:: Python
 
@@ -404,7 +403,8 @@ To do this, we will rely on the value estimator of our class:
         td_copy = tensordict.clone()
 
         # V(s, a)
-        self.value_network(td_copy, params=self.value_network_params)
+        with self.value_network_params.to_module(self.value_network):
+            self.value_network(td_copy)
         pred_val = td_copy.get("state_action_value").squeeze(-1)
 
         # we manually reconstruct the parameters of the actor-critic, where the first
@@ -419,9 +419,8 @@ To do this, we will rely on the value estimator of our class:
             batch_size=self.target_actor_network_params.batch_size,
             device=self.target_actor_network_params.device,
         )
-        target_value = self.value_estimator.value_estimate(
-            tensordict, target_params=target_params
-        ).squeeze(-1)
+        with target_params.to_module(self.value_estimator):
+            target_value = self.value_estimator.value_estimate(tensordict).squeeze(-1)
 
         # Computes the value loss: L2, L1 or smooth L1 depending on `self.loss_function`
         loss_value = distance_loss(pred_val, target_value, loss_function=self.loss_function)
@@ -437,7 +436,7 @@ To do this, we will rely on the value estimator of our class:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 354-360
+.. GENERATED FROM PYTHON SOURCE LINES 353-359
 
 Putting things together in a forward call
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -446,7 +445,7 @@ The only missing piece is the forward method, which will glue together the
 value and actor loss, collect the cost values and write them in a ``TensorDict``
 delivered to the user.
 
-.. GENERATED FROM PYTHON SOURCE LINES 360-404
+.. GENERATED FROM PYTHON SOURCE LINES 359-403
 
 .. code-block:: Python
 
@@ -501,7 +500,7 @@ delivered to the user.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-443
+.. GENERATED FROM PYTHON SOURCE LINES 404-442
 
 Now that we have our loss, we can use it to train a policy to solve a
 control task.
@@ -542,7 +541,7 @@ We write a :func:`make_env` helper function that will create an environment
 with either one of the two backends considered above (``dm-control`` or ``gym``).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 443-478
+.. GENERATED FROM PYTHON SOURCE LINES 442-477
 
 .. code-block:: Python
 
@@ -588,7 +587,7 @@ with either one of the two backends considered above (``dm-control`` or ``gym``)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 479-506
+.. GENERATED FROM PYTHON SOURCE LINES 478-505
 
 Transforms
 ~~~~~~~~~~
@@ -618,7 +617,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
   take care of computing the normalizing constants later on.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 506-558
+.. GENERATED FROM PYTHON SOURCE LINES 505-557
 
 .. code-block:: Python
 
@@ -681,7 +680,7 @@ base environment in a specialized :class:`torchr.envs.TransformedEnv` class.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 559-583
+.. GENERATED FROM PYTHON SOURCE LINES 558-582
 
 Parallel execution
 ~~~~~~~~~~~~~~~~~~
@@ -708,7 +707,7 @@ To leverage the vectorization capabilities of PyTorch, we adopt
 the first method:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 583-618
+.. GENERATED FROM PYTHON SOURCE LINES 582-617
 
 .. code-block:: Python
 
@@ -754,7 +753,7 @@ the first method:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 619-634
+.. GENERATED FROM PYTHON SOURCE LINES 618-633
 
 .. note::
 
@@ -772,7 +771,7 @@ the first method:
 Scaling the reward helps us control the signal magnitude for a more
 efficient learning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 634-636
+.. GENERATED FROM PYTHON SOURCE LINES 633-635
 
 .. code-block:: Python
 
@@ -785,12 +784,12 @@ efficient learning.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 637-639
+.. GENERATED FROM PYTHON SOURCE LINES 636-638
 
 We also define when a trajectory will be truncated. A thousand steps (500 if
 frame-skip = 2) is a good number to use for the cheetah task:
 
-.. GENERATED FROM PYTHON SOURCE LINES 639-642
+.. GENERATED FROM PYTHON SOURCE LINES 638-641
 
 .. code-block:: Python
 
@@ -804,7 +803,7 @@ frame-skip = 2) is a good number to use for the cheetah task:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 643-653
+.. GENERATED FROM PYTHON SOURCE LINES 642-652
 
 Normalization of the observations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -817,7 +816,7 @@ environment and run it for a given number of steps, collect data over a given
 number of steps and compute its summary statistics.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 653-665
+.. GENERATED FROM PYTHON SOURCE LINES 652-664
 
 .. code-block:: Python
 
@@ -840,13 +839,13 @@ number of steps and compute its summary statistics.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 666-669
+.. GENERATED FROM PYTHON SOURCE LINES 665-668
 
 Normalization stats
 ~~~~~~~~~~~~~~~~~~~
 Number of random steps used as for stats computation using ``ObservationNorm``
 
-.. GENERATED FROM PYTHON SOURCE LINES 669-674
+.. GENERATED FROM PYTHON SOURCE LINES 668-673
 
 .. code-block:: Python
 
@@ -862,11 +861,11 @@ Number of random steps used as for stats computation using ``ObservationNorm``
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 675-676
+.. GENERATED FROM PYTHON SOURCE LINES 674-675
 
 Number of environments in each data collector
 
-.. GENERATED FROM PYTHON SOURCE LINES 676-678
+.. GENERATED FROM PYTHON SOURCE LINES 675-677
 
 .. code-block:: Python
 
@@ -879,12 +878,12 @@ Number of environments in each data collector
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 679-681
+.. GENERATED FROM PYTHON SOURCE LINES 678-680
 
 We pass the stats computed earlier to normalize the output of our
 environment:
 
-.. GENERATED FROM PYTHON SOURCE LINES 681-690
+.. GENERATED FROM PYTHON SOURCE LINES 680-689
 
 .. code-block:: Python
 
@@ -904,7 +903,7 @@ environment:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 691-722
+.. GENERATED FROM PYTHON SOURCE LINES 690-721
 
 Building the model
 ------------------
@@ -938,7 +937,7 @@ sample of data. For this purpose, we generate fake data from the
 environment specs.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 722-782
+.. GENERATED FROM PYTHON SOURCE LINES 721-781
 
 .. code-block:: Python
 
@@ -1009,7 +1008,7 @@ environment specs.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 783-789
+.. GENERATED FROM PYTHON SOURCE LINES 782-788
 
 Exploration
 ~~~~~~~~~~~
@@ -1018,7 +1017,7 @@ The policy is wrapped in a :class:`~torchrl.modules.OrnsteinUhlenbeckProcessWrap
 exploration module, as suggested in the original paper.
 Let's define the number of frames before OU noise reaches its minimum value
 
-.. GENERATED FROM PYTHON SOURCE LINES 789-799
+.. GENERATED FROM PYTHON SOURCE LINES 788-798
 
 .. code-block:: Python
 
@@ -1039,7 +1038,7 @@ Let's define the number of frames before OU noise reaches its minimum value
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 800-844
+.. GENERATED FROM PYTHON SOURCE LINES 799-843
 
 Data collector
 --------------
@@ -1086,7 +1085,7 @@ One should also pass:
 
 The total frames we will use during training should be around 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 844-846
+.. GENERATED FROM PYTHON SOURCE LINES 843-845
 
 .. code-block:: Python
 
@@ -1099,7 +1098,7 @@ The total frames we will use during training should be around 1M.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 847-855
+.. GENERATED FROM PYTHON SOURCE LINES 846-854
 
 The number of frames returned by the collector at each iteration of the outer
 loop is equal to the length of each sub-trajectories times the number of
@@ -1110,7 +1109,7 @@ In other words, we expect batches from the collector to have a shape
 ``traj_len=frames_per_batch/env_per_collector``:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 855-875
+.. GENERATED FROM PYTHON SOURCE LINES 854-874
 
 .. code-block:: Python
 
@@ -1141,7 +1140,7 @@ In other words, we expect batches from the collector to have a shape
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 876-886
+.. GENERATED FROM PYTHON SOURCE LINES 875-885
 
 Evaluator: building your recorder object
 ----------------------------------------
@@ -1154,7 +1153,7 @@ from these simulations.
 
 The following helper function builds this object:
 
-.. GENERATED FROM PYTHON SOURCE LINES 886-907
+.. GENERATED FROM PYTHON SOURCE LINES 885-906
 
 .. code-block:: Python
 
@@ -1186,11 +1185,11 @@ The following helper function builds this object:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 908-909
+.. GENERATED FROM PYTHON SOURCE LINES 907-908
 
 We will be recording the performance every 10 batch collected
 
-.. GENERATED FROM PYTHON SOURCE LINES 909-922
+.. GENERATED FROM PYTHON SOURCE LINES 908-921
 
 .. code-block:: Python
 
@@ -1214,7 +1213,7 @@ We will be recording the performance every 10 batch collected
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 923-936
+.. GENERATED FROM PYTHON SOURCE LINES 922-935
 
 Replay buffer
 -------------
@@ -1230,7 +1229,7 @@ function takes care of creating the replay buffer with the desired
 hyperparameters:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 936-963
+.. GENERATED FROM PYTHON SOURCE LINES 935-962
 
 .. code-block:: Python
 
@@ -1268,11 +1267,11 @@ hyperparameters:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 964-965
+.. GENERATED FROM PYTHON SOURCE LINES 963-964
 
 We'll store the replay buffer in a temporary directory on disk
 
-.. GENERATED FROM PYTHON SOURCE LINES 965-971
+.. GENERATED FROM PYTHON SOURCE LINES 964-970
 
 .. code-block:: Python
 
@@ -1289,7 +1288,7 @@ We'll store the replay buffer in a temporary directory on disk
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 972-993
+.. GENERATED FROM PYTHON SOURCE LINES 971-992
 
 Replay buffer storage and batch size
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1313,7 +1312,7 @@ samples sub-trajectories of 2 time steps each.
 
 Let's start with the number of frames stored in the buffer
 
-.. GENERATED FROM PYTHON SOURCE LINES 993-1002
+.. GENERATED FROM PYTHON SOURCE LINES 992-1001
 
 .. code-block:: Python
 
@@ -1333,11 +1332,11 @@ Let's start with the number of frames stored in the buffer
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1003-1004
+.. GENERATED FROM PYTHON SOURCE LINES 1002-1003
 
 Prioritized replay buffer is disabled by default
 
-.. GENERATED FROM PYTHON SOURCE LINES 1004-1006
+.. GENERATED FROM PYTHON SOURCE LINES 1003-1005
 
 .. code-block:: Python
 
@@ -1350,12 +1349,12 @@ Prioritized replay buffer is disabled by default
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1007-1009
+.. GENERATED FROM PYTHON SOURCE LINES 1006-1008
 
 We also need to define how many updates we'll be doing per batch of data
 collected. This is known as the update-to-data or ``UTD`` ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1009-1011
+.. GENERATED FROM PYTHON SOURCE LINES 1008-1010
 
 .. code-block:: Python
 
@@ -1368,11 +1367,11 @@ collected. This is known as the update-to-data or ``UTD`` ratio:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1012-1013
+.. GENERATED FROM PYTHON SOURCE LINES 1011-1012
 
 We'll be feeding the loss with trajectories of length 25:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1013-1015
+.. GENERATED FROM PYTHON SOURCE LINES 1012-1014
 
 .. code-block:: Python
 
@@ -1385,14 +1384,14 @@ We'll be feeding the loss with trajectories of length 25:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1016-1020
+.. GENERATED FROM PYTHON SOURCE LINES 1015-1019
 
 In the original paper, the authors perform one update with a batch of 64
 elements for each frame collected. Here, we reproduce the same ratio
 but while realizing several updates at each batch collection. We
 adapt our batch-size to achieve the same number of update-per-frame ratio:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1020-1031
+.. GENERATED FROM PYTHON SOURCE LINES 1019-1030
 
 .. code-block:: Python
 
@@ -1414,7 +1413,7 @@ adapt our batch-size to achieve the same number of update-per-frame ratio:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1032-1039
+.. GENERATED FROM PYTHON SOURCE LINES 1031-1038
 
 Loss module construction
 ------------------------
@@ -1424,7 +1423,7 @@ Because we have target parameters to update, we _must_ create a target network
 updater.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1039-1046
+.. GENERATED FROM PYTHON SOURCE LINES 1038-1045
 
 .. code-block:: Python
 
@@ -1442,11 +1441,11 @@ updater.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1047-1048
+.. GENERATED FROM PYTHON SOURCE LINES 1046-1047
 
 let's use the TD(lambda) estimator!
 
-.. GENERATED FROM PYTHON SOURCE LINES 1048-1050
+.. GENERATED FROM PYTHON SOURCE LINES 1047-1049
 
 .. code-block:: Python
 
@@ -1459,7 +1458,7 @@ let's use the TD(lambda) estimator!
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1051-1069
+.. GENERATED FROM PYTHON SOURCE LINES 1050-1068
 
 .. note::
   Off-policy usually dictates a TD(0) estimator. Here, we use a TD(:math:`\lambda`)
@@ -1480,7 +1479,7 @@ classes. They're built with the loss module as argument, and the update is
 achieved via a call to `updater.step()` at the appropriate location in the
 training loop.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1069-1074
+.. GENERATED FROM PYTHON SOURCE LINES 1068-1073
 
 .. code-block:: Python
 
@@ -1496,14 +1495,14 @@ training loop.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1075-1079
+.. GENERATED FROM PYTHON SOURCE LINES 1074-1078
 
 Optimizer
 ~~~~~~~~~
 
 Finally, we will use the Adam optimizer for the policy and value network:
 
-.. GENERATED FROM PYTHON SOURCE LINES 1079-1090
+.. GENERATED FROM PYTHON SOURCE LINES 1078-1089
 
 .. code-block:: Python
 
@@ -1525,7 +1524,7 @@ Finally, we will use the Adam optimizer for the policy and value network:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1091-1097
+.. GENERATED FROM PYTHON SOURCE LINES 1090-1096
 
 Time to train the policy
 ------------------------
@@ -1534,7 +1533,7 @@ The training loop is pretty straightforward now that we have built all the
 modules we need.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1097-1183
+.. GENERATED FROM PYTHON SOURCE LINES 1096-1182
 
 .. code-block:: Python
 
@@ -1631,7 +1630,7 @@ modules we need.
 .. code-block:: pytb
 
     Traceback (most recent call last):
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 1127, in <module>
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 1126, in <module>
         loss_dict = loss_module(sampled_tensordict)
       File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1529, in _wrapped_call_impl
         return self._call_impl(*args, **kwargs)
@@ -1639,38 +1638,22 @@ modules we need.
         result = forward_call(*args, **kwargs)
       File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_contextlib.py", line 126, in decorate_context
         return func(*args, **kwargs)
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 365, in _forward
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 364, in _forward
         loss_value, td_error, pred_val, target_value = self.loss_value(
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 327, in _loss_value
-        self.value_network(td_copy, params=self.value_network_params)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1529, in _wrapped_call_impl
-        return self._call_impl(*args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
-        return forward_call(*args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/common.py", line 289, in wrapper
-        return func(_self, tensordict, *args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_contextlib.py", line 126, in decorate_context
-        return func(*args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/utils.py", line 261, in wrapper
-        return func(_self, tensordict, *args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/common.py", line 1224, in forward
-        raise err from RuntimeError(
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/common.py", line 1198, in forward
-        raise err
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/common.py", line 1184, in forward
-        tensors = self._call_module(tensors, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/nn/common.py", line 1141, in _call_module
-        out = self.module(*tensors, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1529, in _wrapped_call_impl
-        return self._call_impl(*args, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
-        return forward_call(*args, **kwargs)
-    TypeError: forward() got an unexpected keyword argument 'params'
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 342, in _loss_value
+        with target_params.to_module(self.value_estimator):
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/utils.py", line 1167, in new_func
+        out = func(_self, *args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/base.py", line 597, in to_module
+        return self._to_module(
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py", line 407, in _to_module
+        child = __dict__["_modules"][key]
+    KeyError: 'module'
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1184-1193
+.. GENERATED FROM PYTHON SOURCE LINES 1183-1192
 
 Experiment results
 ------------------
@@ -1682,7 +1665,7 @@ that our policy learned quite well to solve the task.
   As already mentioned above, to get a more reasonable performance,
   use a greater value for ``total_frames`` for example, 1M.
 
-.. GENERATED FROM PYTHON SOURCE LINES 1193-1204
+.. GENERATED FROM PYTHON SOURCE LINES 1192-1203
 
 .. code-block:: Python
 
@@ -1698,7 +1681,7 @@ that our policy learned quite well to solve the task.
     plt.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 1205-1226
+.. GENERATED FROM PYTHON SOURCE LINES 1204-1225
 
 Conclusion
 ----------
@@ -1725,9 +1708,9 @@ To iterate further on this loss module we might consider:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 28.002 seconds)
+   **Total running time of the script:** (1 minutes 28.345 seconds)
 
-**Estimated memory usage:**  2825 MB
+**Estimated memory usage:**  2894 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ddpg.py:
