@@ -384,6 +384,8 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">functools</span>
+
 <span class="kn">import</span> <span class="nn">gc</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
@@ -551,6 +553,10 @@
 <span class="sd">        non_blocking (bool, optional): if ``True``, device moves will be done using the</span>
 <span class="sd">            ``non_blocking=True`` option. Defaults to ``True`` for batched environments</span>
 <span class="sd">            on cuda devices, and ``False`` otherwise.</span>
+<span class="sd">        mp_start_method (str, optional): the multiprocessing start method.</span>
+<span class="sd">            Uses the default start method if not indicated (&#39;spawn&#39; by default in</span>
+<span class="sd">            TorchRL if not initiated differently before first import).</span>
+<span class="sd">            To be used only with :class:`~torchrl.envs.ParallelEnv` subclasses.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from torchrl.envs import GymEnv, ParallelEnv, SerialEnv, EnvCreator</span>
@@ -654,6 +660,7 @@
         <span class="n">num_sub_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">serial_for_single</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">non_blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">mp_start_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serial_for_single</span> <span class="o">=</span> <span class="n">serial_for_single</span>
@@ -712,6 +719,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_properties_set</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_metadata</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">,</span> <span class="n">create_env_kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_non_blocking</span> <span class="o">=</span> <span class="n">non_blocking</span>
+        <span class="k">if</span> <span class="n">mp_start_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ParallelEnv</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot use mp_start_method=</span><span class="si">{</span><span class="n">mp_start_method</span><span class="si">}</span><span class="s2"> with envs of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_start_method</span> <span class="o">=</span> <span class="n">mp_start_method</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">non_blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1438,7 +1450,18 @@
 
         <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_threads</span><span class="p">)</span>
 
-        <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_start_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mp_start_method</span><span class="p">)</span>
+            <span class="n">proc_fun</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span>
+            <span class="n">num_sub_threads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sub_threads</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+            <span class="n">proc_fun</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                <span class="n">_ProcessNoWarn</span><span class="p">,</span>
+                <span class="n">num_threads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sub_threads</span><span class="p">,</span>
+                <span class="n">_start_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mp_start_method</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">num_sub_threads</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">_num_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span>
 
@@ -1481,13 +1504,10 @@
                         <span class="s2">&quot;_selected_reset_keys&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_reset_keys</span><span class="p">,</span>
                         <span class="s2">&quot;_selected_step_keys&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_step_keys</span><span class="p">,</span>
                         <span class="s2">&quot;has_lazy_inputs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_lazy_inputs</span><span class="p">,</span>
+                        <span class="s2">&quot;num_threads&quot;</span><span class="p">:</span> <span class="n">num_sub_threads</span><span class="p">,</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
-                <span class="n">process</span> <span class="o">=</span> <span class="n">_ProcessNoWarn</span><span class="p">(</span>
-                    <span class="n">target</span><span class="o">=</span><span class="n">func</span><span class="p">,</span>
-                    <span class="n">num_threads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sub_threads</span><span class="p">,</span>
-                    <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
-                <span class="p">)</span>
+                <span class="n">process</span> <span class="o">=</span> <span class="n">proc_fun</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">func</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
                 <span class="n">process</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
                 <span class="n">child_pipe</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -1853,7 +1873,10 @@
     <span class="n">_selected_step_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">has_lazy_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">num_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># for fork start method</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">shared_tensordict</span><span class="o">.</span><span class="n">device</span>
     <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
         <span class="c1"># Check if some tensors are shared on cuda</span>
