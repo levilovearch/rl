@@ -381,7 +381,6 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
-<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
@@ -943,7 +942,7 @@
                 <span class="s2">&quot;loss_qvalue&quot;</span><span class="p">:</span> <span class="n">loss_qval</span><span class="p">,</span>
                 <span class="s2">&quot;loss_alpha&quot;</span><span class="p">:</span> <span class="n">loss_alpha</span><span class="p">,</span>
                 <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
-                <span class="s2">&quot;entropy&quot;</span><span class="p">:</span> <span class="o">-</span><span class="n">sample_log_prob</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+                <span class="s2">&quot;entropy&quot;</span><span class="p">:</span> <span class="o">-</span><span class="n">sample_log_prob</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
                 <span class="s2">&quot;state_action_value_actor&quot;</span><span class="p">:</span> <span class="n">state_action_value_actor</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
                 <span class="s2">&quot;action_log_prob_actor&quot;</span><span class="p">:</span> <span class="n">action_log_prob_actor</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
                 <span class="s2">&quot;next.state_value&quot;</span><span class="p">:</span> <span class="n">next_state_value</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
@@ -951,8 +950,11 @@
             <span class="p">},</span>
             <span class="p">[],</span>
         <span class="p">)</span>
-        <span class="n">td_out</span> <span class="o">=</span> <span class="n">td_out</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
-            <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_reduce</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">td_out</span> <span class="o">=</span> <span class="n">td_out</span><span class="o">.</span><span class="n">named_apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;loss_&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">value</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="p">[],</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">td_out</span></div>
 
