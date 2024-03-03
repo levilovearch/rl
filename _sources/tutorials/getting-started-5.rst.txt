@@ -175,7 +175,38 @@ its optimizer and target parameter updater:
 
 
 
+.. rst-class:: sphx-glr-script-out
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/getting-started-5.py", line 112, in <module>
+        optim = Adam(loss.parameters(), lr=0.02)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/adam.py", line 45, in __init__
+        super().__init__(params, defaults)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/optimizer.py", line 284, in __init__
+        self.add_param_group(cast(dict, param_group))
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_compile.py", line 22, in inner
+        import torch._dynamo
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/__init__.py", line 2, in <module>
+        from . import convert_frame, eval_frame, resume_execution
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/convert_frame.py", line 31, in <module>
+        from torch.fx.experimental.symbolic_shapes import (
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
+        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
+        import sympy
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 52, in <module>
+        from .core import (sympify, SympifyError, cacheit, Basic, Atom,
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
+        from .expr import Expr, AtomicExpr, UnevaluatedExpr
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
+        from .mul import Mul
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
+        from .numbers import Rational
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
+        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -202,12 +233,6 @@ We'll be using a CSV logger to log our results, and save rendered videos.
     record_env = TransformedEnv(
         GymEnv("CartPole-v1", from_pixels=True, pixels_only=False), video_recorder
     )
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 133-141
@@ -260,12 +285,6 @@ as having longer trajectories).
     )
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 176-181
 
 Rendering
@@ -283,12 +302,6 @@ video locally (notice that we are not exploring).
     video_recorder.dump()
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 186-194
 
 This is what your rendered CartPole video will look like after a full
@@ -303,9 +316,9 @@ Feel free to share feedback about it on GitHub.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 22.061 seconds)
+   **Total running time of the script:** (0 minutes 7.228 seconds)
 
-**Estimated memory usage:**  71 MB
+**Estimated memory usage:**  517 MB
 
 
 .. _sphx_glr_download_tutorials_getting-started-5.py:

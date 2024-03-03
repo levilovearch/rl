@@ -672,7 +672,38 @@ this work.
 
 
 
+.. rst-class:: sphx-glr-script-out
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/dqn_with_rnn.py", line 383, in <module>
+        optim = torch.optim.Adam(policy.parameters(), lr=3e-4)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/adam.py", line 45, in __init__
+        super().__init__(params, defaults)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/optimizer.py", line 284, in __init__
+        self.add_param_group(cast(dict, param_group))
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_compile.py", line 22, in inner
+        import torch._dynamo
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/__init__.py", line 2, in <module>
+        from . import convert_frame, eval_frame, resume_execution
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/convert_frame.py", line 31, in <module>
+        from torch.fx.experimental.symbolic_shapes import (
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
+        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
+        import sympy
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 52, in <module>
+        from .core import (sympify, SympifyError, cacheit, Basic, Atom,
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
+        from .expr import Expr, AtomicExpr, UnevaluatedExpr
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
+        from .mul import Mul
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
+        from .numbers import Rational
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
+        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -703,12 +734,6 @@ on disk.
     rb = TensorDictReplayBuffer(
         storage=LazyMemmapStorage(20_000), batch_size=4, prefetch=10
     )
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 407-413
@@ -761,56 +786,6 @@ every 50 data collection, and plot the results after training.
             traj_lens.append(rollout.get(("next", "step_count")).max().item())
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-      0%|          | 0/1000000 [00:00<?, ?it/s]Let us print the first batch of data.
-    Pay attention to the key names which will reflect what can be found in this data structure, in particular: the output of the QValueModule (action_values, action and chosen_action_value),the 'is_init' key that will tell us if a step is initial or not, and the recurrent_state keys.
-     TensorDict(
-        fields={
-            action: Tensor(shape=torch.Size([50, 2]), device=cpu, dtype=torch.int64, is_shared=False),
-            action_value: Tensor(shape=torch.Size([50, 2]), device=cpu, dtype=torch.float32, is_shared=False),
-            chosen_action_value: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-            collector: TensorDict(
-                fields={
-                    traj_ids: Tensor(shape=torch.Size([50]), device=cpu, dtype=torch.int64, is_shared=False)},
-                batch_size=torch.Size([50]),
-                device=None,
-                is_shared=False),
-            done: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            embed: Tensor(shape=torch.Size([50, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-            is_init: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            next: TensorDict(
-                fields={
-                    done: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                    is_init: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                    pixels: Tensor(shape=torch.Size([50, 1, 84, 84]), device=cpu, dtype=torch.float32, is_shared=False),
-                    recurrent_state_c: Tensor(shape=torch.Size([50, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-                    recurrent_state_h: Tensor(shape=torch.Size([50, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-                    reward: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                    step_count: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.int64, is_shared=False),
-                    terminated: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                    truncated: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-                batch_size=torch.Size([50]),
-                device=None,
-                is_shared=False),
-            pixels: Tensor(shape=torch.Size([50, 1, 84, 84]), device=cpu, dtype=torch.float32, is_shared=False),
-            recurrent_state_c: Tensor(shape=torch.Size([50, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-            recurrent_state_h: Tensor(shape=torch.Size([50, 1, 128]), device=cpu, dtype=torch.float32, is_shared=False),
-            step_count: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.int64, is_shared=False),
-            terminated: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            truncated: Tensor(shape=torch.Size([50, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-        batch_size=torch.Size([50]),
-        device=None,
-        is_shared=False)
-      0%|          | 50/1000000 [00:00<2:13:16, 125.04it/s]      0%|          | 50/1000000 [00:13<2:13:16, 125.04it/s]    steps: 9, loss_val:  0.0005, action_spread: tensor([ 4, 46]):   0%|          | 50/1000000 [00:19<2:13:16, 125.04it/s]    steps: 9, loss_val:  0.0005, action_spread: tensor([ 4, 46]):   0%|          | 100/1000000 [00:20<66:15:42,  4.19it/s]    steps: 12, loss_val:  0.0003, action_spread: tensor([ 8, 42]):   0%|          | 100/1000000 [00:39<66:15:42,  4.19it/s]    steps: 12, loss_val:  0.0003, action_spread: tensor([ 8, 42]):   0%|          | 150/1000000 [00:40<86:14:09,  3.22it/s]    steps: 12, loss_val:  0.0003, action_spread: tensor([ 6, 44]):   0%|          | 150/1000000 [00:59<86:14:09,  3.22it/s]    steps: 12, loss_val:  0.0003, action_spread: tensor([ 6, 44]):   0%|          | 200/1000000 [01:00<95:50:31,  2.90it/s]    steps: 19, loss_val:  0.0003, action_spread: tensor([36, 14]):   0%|          | 200/1000000 [01:19<95:50:31,  2.90it/s]
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 450-452
 
 Let's plot our results:
@@ -826,17 +801,6 @@ Let's plot our results:
         plt.plot(traj_lens)
         plt.xlabel("Test collection")
         plt.title("Test trajectory lengths")
-
-
-
-
-.. image-sg:: /tutorials/images/sphx_glr_dqn_with_rnn_001.png
-   :alt: Test trajectory lengths
-   :srcset: /tutorials/images/sphx_glr_dqn_with_rnn_001.png
-   :class: sphx-glr-single-img
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 460-478
@@ -863,9 +827,9 @@ Further Reading
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 21.568 seconds)
+   **Total running time of the script:** (0 minutes 50.940 seconds)
 
-**Estimated memory usage:**  1915 MB
+**Estimated memory usage:**  642 MB
 
 
 .. _sphx_glr_download_tutorials_dqn_with_rnn.py:

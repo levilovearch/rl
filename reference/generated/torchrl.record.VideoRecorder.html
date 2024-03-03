@@ -414,22 +414,30 @@ to <code class="docutils literal notranslate"><span class="pre">in_keys</span></
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>The following example shows how to save a rollout under a video. First a few imports:
-&gt;&gt;&gt; from torchrl.record import VideoRecorder
-&gt;&gt;&gt; from torchrl.record.loggers.csv import CSVLogger
-&gt;&gt;&gt; from torchrl.envs import TransformedEnv, DMControlEnv</p>
+<p>The following example shows how to save a rollout under a video. First a few imports:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.record</span> <span class="kn">import</span> <span class="n">VideoRecorder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.record.loggers.csv</span> <span class="kn">import</span> <span class="n">CSVLogger</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">TransformedEnv</span><span class="p">,</span> <span class="n">DMControlEnv</span>
+</pre></div>
+</div>
 <p>The video format is chosen in the logger. Wandb and tensorboard will take care of that
-on their own, CSV accepts various video formats.
-&gt;&gt;&gt; logger = CSVLogger(exp_name=”cheetah”, log_dir=”cheetah_videos”, video_format=”mp4”)</p>
+on their own, CSV accepts various video formats.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">logger</span> <span class="o">=</span> <span class="n">CSVLogger</span><span class="p">(</span><span class="n">exp_name</span><span class="o">=</span><span class="s2">&quot;cheetah&quot;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="s2">&quot;cheetah_videos&quot;</span><span class="p">,</span> <span class="n">video_format</span><span class="o">=</span><span class="s2">&quot;mp4&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Some envs (eg, Atari games) natively return images, some require the user to ask for them.
-Check <code class="xref py py-class docutils literal notranslate"><span class="pre">GymEnv</span></code> or <a class="reference internal" href="torchrl.envs.DMControlEnv.html#torchrl.envs.DMControlEnv" title="torchrl.envs.DMControlEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">DMControlEnv</span></code></a> to see how to render images
-in these contexts.
-&gt;&gt;&gt; base_env = DMControlEnv(“cheetah”, “run”, from_pixels=True)
-&gt;&gt;&gt; env = TransformedEnv(base_env, VideoRecorder(logger=logger, tag=”run_video”))
-&gt;&gt;&gt; env.rollout(100)</p>
-<p>All transforms have a dump function, mostly a no-op except for <code class="docutils literal notranslate"><span class="pre">VideoRecorder</span></code>, and <code class="xref py py-class docutils literal notranslate"><span class="pre">Composite</span></code>
-which will dispatch the <cite>dumps</cite> to all its members.
-&gt;&gt;&gt; env.transform.dump()</p>
+Check <a class="reference internal" href="torchrl.envs.GymEnv.html#torchrl.envs.GymEnv" title="torchrl.envs.GymEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">GymEnv</span></code></a> or <a class="reference internal" href="torchrl.envs.DMControlEnv.html#torchrl.envs.DMControlEnv" title="torchrl.envs.DMControlEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">DMControlEnv</span></code></a> to see how to render images
+in these contexts.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">base_env</span> <span class="o">=</span> <span class="n">DMControlEnv</span><span class="p">(</span><span class="s2">&quot;cheetah&quot;</span><span class="p">,</span> <span class="s2">&quot;run&quot;</span><span class="p">,</span> <span class="n">from_pixels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span><span class="n">base_env</span><span class="p">,</span> <span class="n">VideoRecorder</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">&quot;run_video&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All transforms have a dump function, mostly a no-op except for <code class="docutils literal notranslate"><span class="pre">VideoRecorder</span></code>, and <a class="reference internal" href="torchrl.envs.transforms.Compose.html#torchrl.envs.transforms.Compose" title="torchrl.envs.transforms.Compose"><code class="xref py py-class docutils literal notranslate"><span class="pre">Compose</span></code></a>
+which will dispatch the <cite>dumps</cite> to all its members.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">env</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+</pre></div>
+</div>
 <p>Our video is available under <code class="docutils literal notranslate"><span class="pre">./cheetah_videos/cheetah/videos/run_video_0.mp4</span></code>!</p>
 </dd></dl>
 

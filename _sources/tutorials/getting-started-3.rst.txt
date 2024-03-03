@@ -268,7 +268,46 @@ the data we just collected, we initialize and populate the buffer in one go:
 
 
 
+.. rst-class:: sphx-glr-script-out
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/getting-started-3.py", line 149, in <module>
+        indices = buffer.extend(data)
+      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 512, in extend
+        return self._extend(data)
+      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 482, in _extend
+        index = self._writer.extend(data)
+      File "/pytorch/rl/torchrl/data/replay_buffers/writers.py", line 172, in extend
+        self._storage[index] = data
+      File "/pytorch/rl/torchrl/data/replay_buffers/storages.py", line 107, in __setitem__
+        ret = self.set(index, value)
+      File "/pytorch/rl/torchrl/_utils.py", line 382, in _lazy_call_fn
+        result = self._delazify(self.func_name)(*args, **kwargs)
+      File "/pytorch/rl/torchrl/data/replay_buffers/storages.py", line 712, in set
+        self._storage[cursor] = data
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py", line 563, in __setitem__
+        indexed_bs = _getitem_batch_size(self.batch_size, index)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/utils.py", line 1744, in _getitem_batch_size
+        bs_shape = torch.broadcast_shapes(*shapes_dict.values())
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/functional.py", line 118, in broadcast_shapes
+        from torch.fx.experimental.symbolic_shapes import guard_size_oblivious
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
+        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
+        import sympy
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 30, in <module>
+        from sympy.core.cache import lazy_function
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
+        from .expr import Expr, AtomicExpr, UnevaluatedExpr
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
+        from .mul import Mul
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
+        from .numbers import Rational
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
+        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -286,12 +325,6 @@ we got from the collector:
     assert len(buffer) == collector.frames_per_batch
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 158-163
 
 The only thing left to know is how to gather data from the buffer.
@@ -307,43 +340,6 @@ will be unique:
 
     sample = buffer.sample(batch_size=30)
     print(sample)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    TensorDict(
-        fields={
-            action: Tensor(shape=torch.Size([30, 2]), device=cpu, dtype=torch.int64, is_shared=False),
-            collector: TensorDict(
-                fields={
-                    traj_ids: Tensor(shape=torch.Size([30]), device=cpu, dtype=torch.int64, is_shared=False)},
-                batch_size=torch.Size([30]),
-                device=cpu,
-                is_shared=False),
-            done: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            next: TensorDict(
-                fields={
-                    done: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                    observation: Tensor(shape=torch.Size([30, 4]), device=cpu, dtype=torch.float32, is_shared=False),
-                    reward: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                    terminated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                    truncated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-                batch_size=torch.Size([30]),
-                device=cpu,
-                is_shared=False),
-            observation: Tensor(shape=torch.Size([30, 4]), device=cpu, dtype=torch.float32, is_shared=False),
-            terminated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            truncated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-        batch_size=torch.Size([30]),
-        device=cpu,
-        is_shared=False)
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 168-190
@@ -374,9 +370,9 @@ Next steps
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 18.913 seconds)
+   **Total running time of the script:** (0 minutes 11.925 seconds)
 
-**Estimated memory usage:**  28 MB
+**Estimated memory usage:**  431 MB
 
 
 .. _sphx_glr_download_tutorials_getting-started-3.py:

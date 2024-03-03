@@ -673,7 +673,70 @@ multiple agents, with much customisation available.
 
 
 
+.. rst-class:: sphx-glr-script-out
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/multiagent_ppo.py", line 409, in <module>
+        MultiAgentMLP(
+      File "/pytorch/rl/torchrl/modules/models/multiagent.py", line 298, in __init__
+        super().__init__(
+      File "/pytorch/rl/torchrl/modules/models/multiagent.py", line 57, in __init__
+        self.__dict__["_empty_net"] = self._build_single_net(**kwargs)
+      File "/pytorch/rl/torchrl/modules/models/multiagent.py", line 322, in _build_single_net
+        return MLP(
+      File "/pytorch/rl/torchrl/modules/models/models.py", line 214, in __init__
+        layers = self._make_net(device)
+      File "/pytorch/rl/torchrl/modules/models/models.py", line 225, in _make_net
+        create_on_device(
+      File "/pytorch/rl/torchrl/modules/models/utils.py", line 123, in create_on_device
+        return module_class(*args, device=device, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 103, in __init__
+        self.reset_parameters()
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 109, in reset_parameters
+        init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/init.py", line 459, in kaiming_uniform_
+        return tensor.uniform_(-bound, bound, generator=generator)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_decomp/decompositions.py", line 2379, in uniform_
+        return self.copy_(uniform(self, low, high, generator))
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims_common/wrappers.py", line 252, in _fn
+        result = fn(*args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_decomp/decompositions.py", line 2367, in uniform
+        return prims._uniform_helper(
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_ops.py", line 571, in __call__
+        return self_._op(*args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims/__init__.py", line 293, in _backend_select_impl
+        return meta(*args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims/__init__.py", line 2853, in _uniform_meta
+        strides = utils.make_contiguous_strides_for(shape)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims_common/__init__.py", line 1565, in make_contiguous_strides_for
+        validate_shape(shape)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims_common/__init__.py", line 564, in validate_shape
+        validate_dim_length(l)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_prims_common/__init__.py", line 551, in validate_dim_length
+        torch._check_is_size(length)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/__init__.py", line 1151, in _check_is_size
+        _check(i >= 0, message)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/__init__.py", line 1138, in _check
+        _check_with(RuntimeError, cond, message)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/__init__.py", line 1102, in _check_with
+        from torch.fx.experimental.symbolic_shapes import expect_true
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
+        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
+        import sympy
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 52, in <module>
+        from .core import (sympify, SympifyError, cacheit, Basic, Atom,
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
+        from .expr import Expr, AtomicExpr, UnevaluatedExpr
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
+        from .mul import Mul
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
+        from .numbers import Rational
+      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
+        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -699,12 +762,6 @@ additional ``n_agents`` dimension.
         in_keys=[("agents", "observation")],
         out_keys=[("agents", "loc"), ("agents", "scale")],
     )
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 442-454
@@ -740,12 +797,6 @@ the :class:`TensorDictModule` above) has to end with the
         return_log_prob=True,
         log_prob_key=("agents", "sample_log_prob"),
     )  # we'll need the log-prob for the PPO loss
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 470-503
@@ -811,12 +862,6 @@ all the values along the ``n_agents`` dimension will be identical.
     )
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 526-534
 
 Let us try our policy and critic modules. As pointed earlier, the usage of
@@ -834,66 +879,6 @@ components as in single-agent learning. Isn't this fantastic?**
 
     print("Running policy:", policy(env.reset()))
     print("Running value:", critic(env.reset()))
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Running policy: TensorDict(
-        fields={
-            agents: TensorDict(
-                fields={
-                    action: Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, is_shared=False),
-                    episode_reward: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                    info: TensorDict(
-                        fields={
-                            agent_collisions: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                            final_rew: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                            pos_rew: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False)},
-                        batch_size=torch.Size([60, 3]),
-                        device=cpu,
-                        is_shared=False),
-                    loc: Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, is_shared=False),
-                    observation: Tensor(shape=torch.Size([60, 3, 18]), device=cpu, dtype=torch.float32, is_shared=False),
-                    sample_log_prob: Tensor(shape=torch.Size([60, 3]), device=cpu, dtype=torch.float32, is_shared=False),
-                    scale: Tensor(shape=torch.Size([60, 3, 2]), device=cpu, dtype=torch.float32, is_shared=False)},
-                batch_size=torch.Size([60, 3]),
-                device=cpu,
-                is_shared=False),
-            done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            terminated: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-        batch_size=torch.Size([60]),
-        device=cpu,
-        is_shared=False)
-    Running value: TensorDict(
-        fields={
-            agents: TensorDict(
-                fields={
-                    episode_reward: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                    info: TensorDict(
-                        fields={
-                            agent_collisions: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                            final_rew: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                            pos_rew: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False)},
-                        batch_size=torch.Size([60, 3]),
-                        device=cpu,
-                        is_shared=False),
-                    observation: Tensor(shape=torch.Size([60, 3, 18]), device=cpu, dtype=torch.float32, is_shared=False),
-                    state_value: Tensor(shape=torch.Size([60, 3, 1]), device=cpu, dtype=torch.float32, is_shared=False)},
-                batch_size=torch.Size([60, 3]),
-                device=cpu,
-                is_shared=False),
-            done: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-            terminated: Tensor(shape=torch.Size([60, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-        batch_size=torch.Size([60]),
-        device=cpu,
-        is_shared=False)
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 538-550
@@ -925,12 +910,6 @@ with the only difference that it will auto reset done states until the desired f
     )
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 560-572
 
 Replay buffer
@@ -958,12 +937,6 @@ makes it easy for us to build the inner training loop in a reproducible way.
         sampler=SamplerWithoutReplacement(),
         batch_size=minibatch_size,  # We will sample minibatches of this size
     )
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 582-603
@@ -1019,12 +992,6 @@ return the policy and value losses.
     GAE = loss_module.value_estimator
 
     optim = torch.optim.Adam(loss_module.parameters(), lr)
-
-
-
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 630-647
@@ -1112,17 +1079,6 @@ The steps include:
         pbar.update()
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    episode_reward_mean = 0:   0%|          | 0/10 [00:00<?, ?it/s]    episode_reward_mean = -0.4579917788505554:  10%|█         | 1/10 [00:07<01:05,  7.30s/it]    episode_reward_mean = 0.39507877826690674:  20%|██        | 2/10 [00:14<00:58,  7.28s/it]    episode_reward_mean = 1.2842429876327515:  30%|███       | 3/10 [00:21<00:50,  7.27s/it]     episode_reward_mean = 1.5311583280563354:  40%|████      | 4/10 [00:29<00:43,  7.26s/it]    episode_reward_mean = 2.0912442207336426:  50%|█████     | 5/10 [00:36<00:36,  7.26s/it]    episode_reward_mean = 2.4949307441711426:  60%|██████    | 6/10 [00:43<00:29,  7.26s/it]    episode_reward_mean = 2.478776454925537:  70%|███████   | 7/10 [00:50<00:21,  7.28s/it]     episode_reward_mean = 2.7761335372924805:  80%|████████  | 8/10 [00:58<00:14,  7.37s/it]    episode_reward_mean = 2.738668441772461:  90%|█████████ | 9/10 [01:06<00:07,  7.55s/it]     episode_reward_mean = 2.9966132640838623: 100%|██████████| 10/10 [01:14<00:00,  7.69s/it]
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 708-715
 
 Results
@@ -1142,17 +1098,6 @@ To make training last longer, increase the ``n_iters`` hyperparameter.
     plt.ylabel("Reward")
     plt.title("Episode reward mean")
     plt.show()
-
-
-
-
-.. image-sg:: /tutorials/images/sphx_glr_multiagent_ppo_001.png
-   :alt: Episode reward mean
-   :srcset: /tutorials/images/sphx_glr_multiagent_ppo_001.png
-   :class: sphx-glr-single-img
-
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 722-776
@@ -1247,9 +1192,9 @@ Here are a few videos of some possible scenarios you can try in VMAS.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 13.242 seconds)
+   **Total running time of the script:** (0 minutes 28.501 seconds)
 
-**Estimated memory usage:**  11 MB
+**Estimated memory usage:**  644 MB
 
 
 .. _sphx_glr_download_tutorials_multiagent_ppo.py:

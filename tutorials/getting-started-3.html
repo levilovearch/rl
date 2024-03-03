@@ -521,8 +521,8 @@ first-in first-out or other. A typical pseudo-code would look like this:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a> <span class="ow">in</span> <span class="n">collector</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">storage</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_optim</span><span class="p">):</span>
-<span class="gp">... </span>        <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">loss_val</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">)</span>
+<span class="gp">... </span>        <span class="n">sample</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+<span class="gp">... </span>        <span class="n">loss_val</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
 <span class="gp">... </span>        <span class="n">loss_val</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 <span class="gp">... </span>        <span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span> <span class="c1"># etc</span>
 </pre></div>
@@ -550,7 +550,45 @@ how big you want your buffer to be.</p>
 <a class="reference internal" href="../reference/generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.add" title="torchrl.data.ReplayBuffer.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> (single element) or
 <a class="reference internal" href="../reference/generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.extend" title="torchrl.data.ReplayBuffer.extend"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code></a> (multiple elements) methods. Using
 the data we just collected, we initialize and populate the buffer in one go:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="torch.Tensor" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">indices</span></a> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">indices</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/getting-started-3.py&quot;</span>, line <span class="m">149</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="n">indices</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py&quot;</span>, line <span class="m">512</span>, in <span class="n">extend</span>
+<span class="w">    </span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py&quot;</span>, line <span class="m">482</span>, in <span class="n">_extend</span>
+<span class="w">    </span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/writers.py&quot;</span>, line <span class="m">172</span>, in <span class="n">extend</span>
+<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/storages.py&quot;</span>, line <span class="m">107</span>, in <span class="n">__setitem__</span>
+<span class="w">    </span><span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/_utils.py&quot;</span>, line <span class="m">382</span>, in <span class="n">_lazy_call_fn</span>
+<span class="w">    </span><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delazify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_name</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/torchrl/data/replay_buffers/storages.py&quot;</span>, line <span class="m">712</span>, in <span class="n">set</span>
+<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span> <span class="o">=</span> <a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data</span></a>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py&quot;</span>, line <span class="m">563</span>, in <span class="n">__setitem__</span>
+<span class="w">    </span><span class="n">indexed_bs</span> <span class="o">=</span> <span class="n">_getitem_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/tensordict/utils.py&quot;</span>, line <span class="m">1744</span>, in <span class="n">_getitem_batch_size</span>
+<span class="w">    </span><span class="n">bs_shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">broadcast_shapes</span><span class="p">(</span><span class="o">*</span><span class="n">shapes_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/functional.py&quot;</span>, line <span class="m">118</span>, in <span class="n">broadcast_shapes</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.fx.experimental.symbolic_shapes</span> <span class="kn">import</span> <span class="n">guard_size_oblivious</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py&quot;</span>, line <span class="m">63</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.utils._sympy.functions</span> <span class="kn">import</span> <span class="n">FloorDiv</span><span class="p">,</span> <span class="n">Mod</span><span class="p">,</span> <span class="n">IsNonOverlappingAndDenseIndicator</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">import</span> <span class="nn">sympy</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py&quot;</span>, line <span class="m">30</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">sympy.core.cache</span> <span class="kn">import</span> <span class="n">lazy_function</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.expr</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">AtomicExpr</span><span class="p">,</span> <span class="n">UnevaluatedExpr</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py&quot;</span>, line <span class="m">4159</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.mul</span> <span class="kn">import</span> <span class="n">Mul</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py&quot;</span>, line <span class="m">2193</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py&quot;</span>, line <span class="m">4567</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="n">_sympy_converter</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">mpmath</span><span class="o">.</span><span class="n">rational</span><span class="o">.</span><span class="n">mpq</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))]</span> <span class="o">=</span> <span class="n">sympify_mpmath_mpq</span>
+<span class="gr">AttributeError</span>: <span class="n">module &#39;mpmath&#39; has no attribute &#39;rational&#39;</span>
 </pre></div>
 </div>
 <p>We can check that the buffer now has the same number of elements than what
@@ -563,36 +601,8 @@ Naturally, this relies on the <a class="reference internal" href="../reference/g
 method. Because we did not specify that sampling had to be done without
 repetitions, it is not guaranteed that the samples gathered from our buffer
 will be unique:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDict.html#tensordict.TensorDict" title="tensordict.TensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sample</span></a><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>TensorDict(
-    fields={
-        action: Tensor(shape=torch.Size([30, 2]), device=cpu, dtype=torch.int64, is_shared=False),
-        collector: TensorDict(
-            fields={
-                traj_ids: Tensor(shape=torch.Size([30]), device=cpu, dtype=torch.int64, is_shared=False)},
-            batch_size=torch.Size([30]),
-            device=cpu,
-            is_shared=False),
-        done: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-        next: TensorDict(
-            fields={
-                done: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                observation: Tensor(shape=torch.Size([30, 4]), device=cpu, dtype=torch.float32, is_shared=False),
-                reward: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.float32, is_shared=False),
-                terminated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-                truncated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-            batch_size=torch.Size([30]),
-            device=cpu,
-            is_shared=False),
-        observation: Tensor(shape=torch.Size([30, 4]), device=cpu, dtype=torch.float32, is_shared=False),
-        terminated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False),
-        truncated: Tensor(shape=torch.Size([30, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
-    batch_size=torch.Size([30]),
-    device=cpu,
-    is_shared=False)
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Again, our sample looks exactly the same as the data we gathered from the
@@ -617,8 +627,8 @@ simplicity. Try it out for yourself: build a buffer and indicate its
 batch-size in the constructor, then try to iterate over it. This is
 equivalent to calling <code class="docutils literal notranslate"><span class="pre">rb.sample()</span></code> within a loop!</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 18.913 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  28 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 11.925 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  431 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-getting-started-3-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/5cb0ffc0980a276546c9aeed94b0aa13/getting-started-3.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">getting-started-3.ipynb</span></code></a></p>

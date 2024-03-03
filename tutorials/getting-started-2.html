@@ -411,7 +411,7 @@ similar to what can be found in traditional supervised learning examples.</p>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_optim</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="gp">... </span>        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-<span class="gp">... </span>        <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.step" title="torch.optim.Adam.step" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">step</span></a><span class="p">()</span>
+<span class="gp">... </span>        <span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>In this concise tutorial, you will receive a brief overview of the loss modules. Due to the typically
@@ -511,14 +511,44 @@ the <a class="reference internal" href="../reference/generated/torchrl.objective
 per module if that is your choice).</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">Adam</span></a>
 
-<a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">optim</span></a> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">Adam</span></a><span class="p">(</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.parameters" title="torch.nn.Module.parameters" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-method"><span class="n">ddpg_loss</span><span class="o">.</span><span class="n">parameters</span></a><span class="p">())</span>
+<span class="n">optim</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">Adam</span></a><span class="p">(</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.parameters" title="torch.nn.Module.parameters" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-method"><span class="n">ddpg_loss</span><span class="o">.</span><span class="n">parameters</span></a><span class="p">())</span>
 <a href="https://pytorch.org/docs/stable/generated/torch.Tensor.backward.html#torch.Tensor.backward" title="torch.Tensor.backward" class="sphx-glr-backref-module-torch sphx-glr-backref-type-py-method"><span class="n">total_loss</span><span class="o">.</span><span class="n">backward</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/getting-started-2.py&quot;</span>, line <span class="m">134</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="n">optim</span> <span class="o">=</span> <a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam" title="torch.optim.Adam" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-class"><span class="n">Adam</span></a><span class="p">(</span><a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.parameters" title="torch.nn.Module.parameters" class="sphx-glr-backref-module-torch-nn sphx-glr-backref-type-py-method"><span class="n">ddpg_loss</span><span class="o">.</span><span class="n">parameters</span></a><span class="p">())</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/adam.py&quot;</span>, line <span class="m">45</span>, in <span class="n">__init__</span>
+<span class="w">    </span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">defaults</span><span class="p">)</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/optimizer.py&quot;</span>, line <span class="m">284</span>, in <span class="n">__init__</span>
+<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">add_param_group</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">param_group</span><span class="p">))</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/_compile.py&quot;</span>, line <span class="m">22</span>, in <span class="n">inner</span>
+<span class="w">    </span><span class="kn">import</span> <span class="nn">torch._dynamo</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/__init__.py&quot;</span>, line <span class="m">2</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">convert_frame</span><span class="p">,</span> <span class="n">eval_frame</span><span class="p">,</span> <span class="n">resume_execution</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/convert_frame.py&quot;</span>, line <span class="m">31</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.fx.experimental.symbolic_shapes</span> <span class="kn">import</span> <span class="p">(</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py&quot;</span>, line <span class="m">63</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.utils._sympy.functions</span> <span class="kn">import</span> <span class="n">FloorDiv</span><span class="p">,</span> <span class="n">Mod</span><span class="p">,</span> <span class="n">IsNonOverlappingAndDenseIndicator</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">import</span> <span class="nn">sympy</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py&quot;</span>, line <span class="m">52</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">SympifyError</span><span class="p">,</span> <span class="n">cacheit</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Atom</span><span class="p">,</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.expr</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">AtomicExpr</span><span class="p">,</span> <span class="n">UnevaluatedExpr</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py&quot;</span>, line <span class="m">4159</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.mul</span> <span class="kn">import</span> <span class="n">Mul</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py&quot;</span>, line <span class="m">2193</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="kn">from</span> <span class="nn">.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
+  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py&quot;</span>, line <span class="m">4567</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="n">_sympy_converter</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">mpmath</span><span class="o">.</span><span class="n">rational</span><span class="o">.</span><span class="n">mpq</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))]</span> <span class="o">=</span> <span class="n">sympify_mpmath_mpq</span>
+<span class="gr">AttributeError</span>: <span class="n">module &#39;mpmath&#39; has no attribute &#39;rational&#39;</span>
 </pre></div>
 </div>
 <p>The following items will typically be
 found in your training loop:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.step" title="torch.optim.Adam.step" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">step</span></a><span class="p">()</span>
-<a href="https://pytorch.org/docs/stable/generated/torch.optim.Adam.html#torch.optim.Adam.zero_grad" title="torch.optim.Adam.zero_grad" class="sphx-glr-backref-module-torch-optim sphx-glr-backref-type-py-method"><span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span></a><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+<span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -555,8 +585,8 @@ optimization step or each collection step:</p>
 <li><p>The <a class="reference internal" href="coding_ddpg.html#coding-ddpg"><span class="std std-ref">Coding a DDPG loss tutorial</span></a>;</p></li>
 <li><p>Losses in action in <a class="reference internal" href="coding_ppo.html#coding-ppo"><span class="std std-ref">PPO</span></a> or <a class="reference internal" href="coding_dqn.html#coding-dqn"><span class="std std-ref">DQN</span></a>.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 23.535 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  21 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 9.529 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  440 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-getting-started-2-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/ae2b99ca949badb94260561dacc8c210/getting-started-2.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">getting-started-2.ipynb</span></code></a></p>
