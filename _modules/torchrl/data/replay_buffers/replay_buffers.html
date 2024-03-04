@@ -708,13 +708,21 @@
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;sampler=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;writer=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;)&quot;</span>
-        <span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.transforms</span> <span class="kn">import</span> <span class="n">Compose</span>
+
+        <span class="n">storage</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;writer=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sampler=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">,</span> <span class="n">Compose</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;transform=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;collate_fn=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_collate_fn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="se">\n</span><span class="si">{</span><span class="n">storage</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="si">{</span><span class="n">sampler</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="si">{</span><span class="n">writer</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">transform</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="si">{</span><span class="n">collate_fn</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="nd">@pin_memory_output</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="n">NestedKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -1034,7 +1042,34 @@
             <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_futures_lock_placeholder&quot;</span><span class="p">)</span>
             <span class="n">_futures_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
             <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_futures_lock&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_futures_lock</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The sampler of the replay buffer.</span>
+
+<span class="sd">        The sampler must be an instance of :class:`~torchrl.data.replay_buffers.Sampler`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The writer of the replay buffer.</span>
+
+<span class="sd">        The writer must be an instance of :class:`~torchrl.data.replay_buffers.Writer`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">storage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The storage of the replay buffer.</span>
+
+<span class="sd">        The storage must be an instance of :class:`~torchrl.data.replay_buffers.Storage`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span></div>
 
 
 <div class="viewcode-block" id="PrioritizedReplayBuffer"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.PrioritizedReplayBuffer.html#torchrl.data.PrioritizedReplayBuffer">[docs]</a><span class="k">class</span> <span class="nc">PrioritizedReplayBuffer</span><span class="p">(</span><span class="n">ReplayBuffer</span><span class="p">):</span>
@@ -1853,6 +1888,8 @@
 <span class="sd">        ...     assert sample[&quot;renamed&quot;].shape == torch.Size([2, 5])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_collate_fn_val</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

@@ -466,7 +466,10 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="o">...</span></div>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">()&quot;</span></div>
 
 
 <div class="viewcode-block" id="RandomSampler"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.RandomSampler.html#torchrl.data.replay_buffers.RandomSampler">[docs]</a><span class="k">class</span> <span class="nc">RandomSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
@@ -624,7 +627,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">len_storage</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;len_storage&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;_sample_list&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;drop_last&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ran_out</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;_ran_out&quot;</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ran_out</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;_ran_out&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">perc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">len_storage</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">perc</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">perc</span><span class="si">:</span><span class="s2"> 4.4f</span><span class="si">}</span><span class="s2">% sampled)&quot;</span></div>
 
 
 <div class="viewcode-block" id="PrioritizedSampler"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.PrioritizedSampler.html#torchrl.data.replay_buffers.PrioritizedSampler">[docs]</a><span class="k">class</span> <span class="nc">PrioritizedSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
@@ -713,6 +723,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(alpha=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span><span class="si">}</span><span class="s2">, beta=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="si">}</span><span class="s2">, eps=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_eps</span><span class="si">}</span><span class="s2">, reduction=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">max_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1147,6 +1160,16 @@
                 <span class="s2">&quot;Either num_slices or slice_len must be not None, and not both. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Got num_slices=</span><span class="si">{</span><span class="n">num_slices</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(num_slices=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;slice_len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;end_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;traj_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;truncated_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">truncated_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;strict_length=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_find_start_stop_traj</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at_capacity</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -1625,6 +1648,19 @@
         <span class="p">)</span>
         <span class="n">SamplerWithoutReplacement</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">perc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">len_storage</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;num_slices=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;slice_len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;end_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;traj_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;truncated_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">truncated_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;strict_length=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">perc</span><span class="si">}</span><span class="s2">% sampled)&quot;</span>
+        <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">SamplerWithoutReplacement</span><span class="o">.</span><span class="n">_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -1799,6 +1835,25 @@
             <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
             <span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">perc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sample_list</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">len_storage</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">perc</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;num_slices=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;slice_len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;end_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;traj_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;truncated_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">truncated_key</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;strict_length=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;alpha=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;beta=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beta</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;eps=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_eps</span><span class="si">}</span><span class="s2">,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">perc</span><span class="si">:</span><span class="s2"> 4.4f</span><span class="si">}</span><span class="s2">% filled)&quot;</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2157,7 +2212,7 @@
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">samplers</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;samplers=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_samplers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SamplerEnsemble(</span><span class="se">\n</span><span class="si">{</span><span class="n">samplers</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="se">\n</span><span class="si">{</span><span class="n">samplers</span><span class="si">}</span><span class="s2">)&quot;</span></div>
 </pre></div>
 
              </article>

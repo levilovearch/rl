@@ -416,6 +416,8 @@
 <div class="viewcode-block" id="Writer"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.Writer.html#torchrl.data.replay_buffers.Writer">[docs]</a><span class="k">class</span> <span class="nc">Writer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A ReplayBuffer base Writer class.&quot;&quot;&quot;</span>
 
+    <span class="n">_storage</span><span class="p">:</span> <span class="n">Storage</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -469,7 +471,10 @@
                 <span class="n">mesh</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">numel</span><span class="p">(),</span> <span class="mi">1</span><span class="p">),</span>
             <span class="p">],</span>
             <span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">()&quot;</span></div>
 
 
 <div class="viewcode-block" id="ImmutableDatasetWriter"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.ImmutableDatasetWriter.html#torchrl.data.replay_buffers.ImmutableDatasetWriter">[docs]</a><span class="k">class</span> <span class="nc">ImmutableDatasetWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
@@ -587,7 +592,10 @@
         <span class="k">if</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_cursor_value</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">cursor</span><span class="p">)</span>
             <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_cursor_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_cursor_value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(cursor=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="p">)</span><span class="si">}</span><span class="s2">, full_storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_is_full</span><span class="si">}</span><span class="s2">)&quot;</span></div>
 
 
 <div class="viewcode-block" id="TensorDictRoundRobinWriter"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.TensorDictRoundRobinWriter.html#torchrl.data.replay_buffers.TensorDictRoundRobinWriter">[docs]</a><span class="k">class</span> <span class="nc">TensorDictRoundRobinWriter</span><span class="p">(</span><span class="n">RoundRobinWriter</span><span class="p">):</span>
@@ -898,7 +906,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(cursor=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="p">)</span><span class="si">}</span><span class="s2">, full_storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">_is_full</span><span class="si">}</span><span class="s2">, rank_key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rank_key</span><span class="si">}</span><span class="s2">, reduction=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_reduction</span><span class="si">}</span><span class="s2">)&quot;</span></div>
 
 
 <div class="viewcode-block" id="WriterEnsemble"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.WriterEnsemble.html#torchrl.data.replay_buffers.WriterEnsemble">[docs]</a><span class="k">class</span> <span class="nc">WriterEnsemble</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
