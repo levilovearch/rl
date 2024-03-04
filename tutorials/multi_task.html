@@ -592,50 +592,41 @@ it will assume that we are in a multi-task setting.</p>
 <span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># should be different</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/pytorch/rl/docs/source/reference/generated/tutorials/multi_task.py&quot;</span>, line <span class="m">182</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/envs/common.py&quot;</span>, line <span class="m">2069</span>, in <span class="n">reset</span>
-<span class="w">    </span><span class="n">tensordict_reset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_contextlib.py&quot;</span>, line <span class="m">115</span>, in <span class="n">decorate_context</span>
-<span class="w">    </span><span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/envs/batched_envs.py&quot;</span>, line <span class="m">56</span>, in <span class="n">decorated_fun</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_start_workers</span><span class="p">()</span>
-  File <span class="nb">&quot;/pytorch/rl/torchrl/envs/batched_envs.py&quot;</span>, line <span class="m">1135</span>, in <span class="n">_start_workers</span>
-<span class="w">    </span><span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/process.py&quot;</span>, line <span class="m">121</span>, in <span class="n">start</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_popen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Popen</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/context.py&quot;</span>, line <span class="m">224</span>, in <span class="n">_Popen</span>
-<span class="w">    </span><span class="k">return</span> <span class="n">_default_context</span><span class="o">.</span><span class="n">get_context</span><span class="p">()</span><span class="o">.</span><span class="n">Process</span><span class="o">.</span><span class="n">_Popen</span><span class="p">(</span><span class="n">process_obj</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/context.py&quot;</span>, line <span class="m">284</span>, in <span class="n">_Popen</span>
-<span class="w">    </span><span class="k">return</span> <span class="n">Popen</span><span class="p">(</span><span class="n">process_obj</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/popen_spawn_posix.py&quot;</span>, line <span class="m">32</span>, in <span class="n">__init__</span>
-<span class="w">    </span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">process_obj</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/popen_fork.py&quot;</span>, line <span class="m">19</span>, in <span class="n">__init__</span>
-<span class="w">    </span><span class="bp">self</span><span class="o">.</span><span class="n">_launch</span><span class="p">(</span><span class="n">process_obj</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/popen_spawn_posix.py&quot;</span>, line <span class="m">47</span>, in <span class="n">_launch</span>
-<span class="w">    </span><span class="n">reduction</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">process_obj</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/multiprocessing/reduction.py&quot;</span>, line <span class="m">60</span>, in <span class="n">dump</span>
-<span class="w">    </span><span class="n">ForkingPickler</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">protocol</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/multiprocessing/reductions.py&quot;</span>, line <span class="m">295</span>, in <span class="n">reduce_tensor</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.nested._internal.nested_tensor</span> <span class="kn">import</span> <span class="n">NestedTensor</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/nested/_internal/nested_tensor.py&quot;</span>, line <span class="m">6</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.fx.experimental.symbolic_shapes</span> <span class="kn">import</span> <span class="n">has_free_symbols</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py&quot;</span>, line <span class="m">63</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">torch.utils._sympy.functions</span> <span class="kn">import</span> <span class="n">FloorDiv</span><span class="p">,</span> <span class="n">Mod</span><span class="p">,</span> <span class="n">IsNonOverlappingAndDenseIndicator</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">import</span> <span class="nn">sympy</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py&quot;</span>, line <span class="m">52</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">SympifyError</span><span class="p">,</span> <span class="n">cacheit</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Atom</span><span class="p">,</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">.expr</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">AtomicExpr</span><span class="p">,</span> <span class="n">UnevaluatedExpr</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py&quot;</span>, line <span class="m">4159</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">.mul</span> <span class="kn">import</span> <span class="n">Mul</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py&quot;</span>, line <span class="m">2193</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="kn">from</span> <span class="nn">.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
-  File <span class="nb">&quot;/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py&quot;</span>, line <span class="m">4567</span>, in <span class="n">&lt;module&gt;</span>
-<span class="w">    </span><span class="n">_sympy_converter</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">mpmath</span><span class="o">.</span><span class="n">rational</span><span class="o">.</span><span class="n">mpq</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))]</span> <span class="o">=</span> <span class="n">sympify_mpmath_mpq</span>
-<span class="gr">AttributeError</span>: <span class="n">module &#39;mpmath&#39; has no attribute &#39;rational&#39;</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
 </pre></div>
 </div>
 <p>Let’s pass the output through our network.</p>
@@ -651,23 +642,180 @@ it will assume that we are in a multi-task setting.</p>
 <span class="nb">print</span><span class="p">(</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">tdreset</span></a><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># next_observation has now been written</span>
 </pre></div>
 </div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: LazyStackedTensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            exclusive_fields={
+                0 -&gt;
+                    observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                1 -&gt;
+                    observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+            batch_size=torch.Size([2]),
+            device=cpu,
+            is_shared=False,
+            stack_dim=0),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: TensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            batch_size=torch.Size([]),
+            device=cpu,
+            is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+TensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: TensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            batch_size=torch.Size([]),
+            device=cpu,
+            is_shared=False),
+        observation: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    batch_size=torch.Size([]),
+    device=cpu,
+    is_shared=False)
+</pre></div>
+</div>
 </section>
 <section id="rollout">
 <h2>Rollout<a class="headerlink" href="#rollout" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.nn.TensorDictSequential.html#tensordict.nn.TensorDictSequential" title="tensordict.nn.TensorDictSequential" class="sphx-glr-backref-module-tensordict-nn sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seq</span></a><span class="p">,</span> <span class="n">return_contiguous</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first step: only the common keys are shown</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first step: only the common keys are shown</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">td_rollout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first env: the stand obs is present</span>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>LazyStackedTensorDict(
+    fields={
+        action: Tensor(shape=torch.Size([2, 21]), device=cpu, dtype=torch.float32, is_shared=False),
+        done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        hidden: Tensor(shape=torch.Size([2, 64]), device=cpu, dtype=torch.float32, is_shared=False),
+        next: LazyStackedTensorDict(
+            fields={
+                done: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+                reward: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.float64, is_shared=False),
+                terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+                truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+            exclusive_fields={
+                0 -&gt;
+                    observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+                1 -&gt;
+                    observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+            batch_size=torch.Size([2]),
+            device=cpu,
+            is_shared=False,
+            stack_dim=0),
+        observation: Tensor(shape=torch.Size([2, 67]), device=cpu, dtype=torch.float32, is_shared=False),
+        terminated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False),
+        truncated: Tensor(shape=torch.Size([2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},
+    exclusive_fields={
+        0 -&gt;
+            observation_stand: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False),
+        1 -&gt;
+            observation_walk: Tensor(shape=torch.Size([67]), device=cpu, dtype=torch.float32, is_shared=False)},
+    batch_size=torch.Size([2]),
+    device=cpu,
+    is_shared=False,
+    stack_dim=0)
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://pytorch.org/tensordict/reference/generated/tensordict.LazyStackedTensorDict.html#tensordict.LazyStackedTensorDict" title="tensordict.LazyStackedTensorDict" class="sphx-glr-backref-module-tensordict sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">td_rollout</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># tensordict of the first env: the stand obs is present</span>
 
 <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="k">del</span> <span class="n">env</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 31.178 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  564 MB</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 46.394 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  9 MB</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-multi-task-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/9b5fe5a65e76c28e02edf59221b0dc86/multi_task.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">multi_task.ipynb</span></code></a></p>

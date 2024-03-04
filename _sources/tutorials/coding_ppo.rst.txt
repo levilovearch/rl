@@ -940,38 +940,7 @@ return the policy and value losses.
 
 
 
-.. rst-class:: sphx-glr-script-out
 
-.. code-block:: pytb
-
-    Traceback (most recent call last):
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ppo.py", line 581, in <module>
-        optim = torch.optim.Adam(loss_module.parameters(), lr)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/adam.py", line 45, in __init__
-        super().__init__(params, defaults)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/optim/optimizer.py", line 284, in __init__
-        self.add_param_group(cast(dict, param_group))
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_compile.py", line 22, in inner
-        import torch._dynamo
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/__init__.py", line 2, in <module>
-        from . import convert_frame, eval_frame, resume_execution
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/_dynamo/convert_frame.py", line 31, in <module>
-        from torch.fx.experimental.symbolic_shapes import (
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
-        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
-        import sympy
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 52, in <module>
-        from .core import (sympify, SympifyError, cacheit, Basic, Atom,
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
-        from .expr import Expr, AtomicExpr, UnevaluatedExpr
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
-        from .mul import Mul
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
-        from .numbers import Rational
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
-        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
-    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -1072,6 +1041,17 @@ The steps include:
         scheduler.step()
 
 
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      0%|          | 0/10000 [00:00<?, ?it/s]     10%|█         | 1000/10000 [00:02<00:20, 445.30it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.0849 (init= 9.0849), step count (max): 12, lr policy:  0.0003:  10%|█         | 1000/10000 [00:02<00:20, 445.30it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.0849 (init= 9.0849), step count (max): 12, lr policy:  0.0003:  20%|██        | 2000/10000 [00:04<00:17, 449.34it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1074 (init= 9.0849), step count (max): 14, lr policy:  0.0003:  20%|██        | 2000/10000 [00:04<00:17, 449.34it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1074 (init= 9.0849), step count (max): 14, lr policy:  0.0003:  30%|███       | 3000/10000 [00:06<00:15, 453.92it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1496 (init= 9.0849), step count (max): 16, lr policy:  0.0003:  30%|███       | 3000/10000 [00:06<00:15, 453.92it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1496 (init= 9.0849), step count (max): 16, lr policy:  0.0003:  40%|████      | 4000/10000 [00:08<00:13, 457.62it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1897 (init= 9.0849), step count (max): 20, lr policy:  0.0002:  40%|████      | 4000/10000 [00:08<00:13, 457.62it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1897 (init= 9.0849), step count (max): 20, lr policy:  0.0002:  50%|█████     | 5000/10000 [00:10<00:10, 459.86it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1994 (init= 9.0849), step count (max): 23, lr policy:  0.0002:  50%|█████     | 5000/10000 [00:10<00:10, 459.86it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.1994 (init= 9.0849), step count (max): 23, lr policy:  0.0002:  60%|██████    | 6000/10000 [00:13<00:08, 464.18it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2265 (init= 9.0849), step count (max): 34, lr policy:  0.0001:  60%|██████    | 6000/10000 [00:13<00:08, 464.18it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2265 (init= 9.0849), step count (max): 34, lr policy:  0.0001:  70%|███████   | 7000/10000 [00:15<00:06, 467.36it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2499 (init= 9.0849), step count (max): 39, lr policy:  0.0001:  70%|███████   | 7000/10000 [00:15<00:06, 467.36it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2499 (init= 9.0849), step count (max): 39, lr policy:  0.0001:  80%|████████  | 8000/10000 [00:17<00:04, 458.22it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2442 (init= 9.0849), step count (max): 35, lr policy:  0.0001:  80%|████████  | 8000/10000 [00:17<00:04, 458.22it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2442 (init= 9.0849), step count (max): 35, lr policy:  0.0001:  90%|█████████ | 9000/10000 [00:19<00:02, 463.02it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2493 (init= 9.0849), step count (max): 33, lr policy:  0.0000:  90%|█████████ | 9000/10000 [00:19<00:02, 463.02it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2493 (init= 9.0849), step count (max): 33, lr policy:  0.0000: 100%|██████████| 10000/10000 [00:21<00:00, 465.77it/s]    eval cumulative reward:  129.6197 (init:  129.6197), eval step-count: 13, average reward= 9.2539 (init= 9.0849), step count (max): 40, lr policy:  0.0000: 100%|██████████| 10000/10000 [00:21<00:00, 465.77it/s]
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 676-683
 
 Results
@@ -1102,6 +1082,17 @@ trajectory is truncated.
     plt.show()
 
 
+
+
+.. image-sg:: /tutorials/images/sphx_glr_coding_ppo_001.png
+   :alt: training rewards (average), Max step count (training), Return (test), Max step count (test)
+   :srcset: /tutorials/images/sphx_glr_coding_ppo_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 699-719
 
 Conclusion and next steps
@@ -1128,9 +1119,9 @@ If you want to experiment with this tutorial a bit more, you can apply the follo
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 54.579 seconds)
+   **Total running time of the script:** (1 minutes 24.899 seconds)
 
-**Estimated memory usage:**  651 MB
+**Estimated memory usage:**  10 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ppo.py:

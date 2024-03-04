@@ -898,62 +898,7 @@ environment:
 
 
 
-.. rst-class:: sphx-glr-script-out
 
-.. code-block:: pytb
-
-    Traceback (most recent call last):
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 681, in <module>
-        parallel_env = parallel_env_constructor(
-      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 609, in parallel_env_constructor
-        env.transform[2].init_stats(3, cat_dim=1, reduce_dim=[0, 1])
-      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 2493, in init_stats
-        tensordict = parent.rollout(max_steps=num_iter)
-      File "/pytorch/rl/torchrl/envs/common.py", line 2487, in rollout
-        tensordict = self.reset()
-      File "/pytorch/rl/torchrl/envs/common.py", line 2069, in reset
-        tensordict_reset = self._reset(tensordict, **kwargs)
-      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 768, in _reset
-        tensordict_reset = self.base_env._reset(tensordict=tensordict, **kwargs)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_contextlib.py", line 115, in decorate_context
-        return func(*args, **kwargs)
-      File "/pytorch/rl/torchrl/envs/batched_envs.py", line 56, in decorated_fun
-        self._start_workers()
-      File "/pytorch/rl/torchrl/envs/batched_envs.py", line 1135, in _start_workers
-        process.start()
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/process.py", line 121, in start
-        self._popen = self._Popen(self)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/context.py", line 224, in _Popen
-        return _default_context.get_context().Process._Popen(process_obj)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/context.py", line 284, in _Popen
-        return Popen(process_obj)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/popen_spawn_posix.py", line 32, in __init__
-        super().__init__(process_obj)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/popen_fork.py", line 19, in __init__
-        self._launch(process_obj)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/popen_spawn_posix.py", line 47, in _launch
-        reduction.dump(process_obj, fp)
-      File "/pytorch/rl/env/lib/python3.8/multiprocessing/reduction.py", line 60, in dump
-        ForkingPickler(file, protocol).dump(obj)
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/multiprocessing/reductions.py", line 295, in reduce_tensor
-        from torch.nested._internal.nested_tensor import NestedTensor
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nested/_internal/nested_tensor.py", line 6, in <module>
-        from torch.fx.experimental.symbolic_shapes import has_free_symbols
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/fx/experimental/symbolic_shapes.py", line 63, in <module>
-        from torch.utils._sympy.functions import FloorDiv, Mod, IsNonOverlappingAndDenseIndicator
-      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/utils/_sympy/functions.py", line 1, in <module>
-        import sympy
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/__init__.py", line 52, in <module>
-        from .core import (sympify, SympifyError, cacheit, Basic, Atom,
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/__init__.py", line 9, in <module>
-        from .expr import Expr, AtomicExpr, UnevaluatedExpr
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/expr.py", line 4159, in <module>
-        from .mul import Mul
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/mul.py", line 2193, in <module>
-        from .numbers import Rational
-      File "/pytorch/rl/env/lib/python3.8/site-packages/sympy/core/numbers.py", line 4567, in <module>
-        _sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
-    AttributeError: module 'mpmath' has no attribute 'rational'
 
 
 
@@ -1057,6 +1002,12 @@ environment specs.
     )
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 782-788
 
 Exploration
@@ -1078,6 +1029,12 @@ Let's define the number of frames before OU noise reaches its minimum value
     ).to(device)
     if device == torch.device("cpu"):
         actor_model_explore.share_memory()
+
+
+
+
+
+
 
 
 
@@ -1135,6 +1092,12 @@ The total frames we will use during training should be around 1M.
     total_frames = 10_000  # 1_000_000
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 846-854
 
 The number of frames returned by the collector at each iteration of the outer
@@ -1169,6 +1132,12 @@ In other words, we expect batches from the collector to have a shape
         device=collector_device,
         exploration_type=ExplorationType.RANDOM,
     )
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 875-885
@@ -1210,6 +1179,12 @@ The following helper function builds this object:
 
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 907-908
 
 We will be recording the performance every 10 batch collected
@@ -1230,6 +1205,12 @@ We will be recording the performance every 10 batch collected
         RandomSampler,
         TensorDictReplayBuffer,
     )
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 922-935
@@ -1280,6 +1261,12 @@ hyperparameters:
 
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 963-964
 
 We'll store the replay buffer in a temporary directory on disk
@@ -1293,6 +1280,12 @@ We'll store the replay buffer in a temporary directory on disk
 
     tmpdir = tempfile.TemporaryDirectory()
     buffer_scratch_dir = tmpdir.name
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 971-992
@@ -1333,6 +1326,12 @@ Let's start with the number of frames stored in the buffer
     buffer_size = ceil_div(buffer_size, traj_len)
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1002-1003
 
 Prioritized replay buffer is disabled by default
@@ -1342,6 +1341,12 @@ Prioritized replay buffer is disabled by default
 .. code-block:: Python
 
     prb = False
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 1006-1008
@@ -1356,6 +1361,12 @@ collected. This is known as the update-to-data or ``UTD`` ratio:
     update_to_data = 64
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1011-1012
 
 We'll be feeding the loss with trajectories of length 25:
@@ -1365,6 +1376,12 @@ We'll be feeding the loss with trajectories of length 25:
 .. code-block:: Python
 
     random_crop_len = 25
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 1015-1019
@@ -1390,6 +1407,12 @@ adapt our batch-size to achieve the same number of update-per-frame ratio:
     )
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1031-1038
 
 Loss module construction
@@ -1412,6 +1435,12 @@ updater.
     loss_module = DDPGLoss(actor, qnet)
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1046-1047
 
 let's use the TD(lambda) estimator!
@@ -1421,6 +1450,12 @@ let's use the TD(lambda) estimator!
 .. code-block:: Python
 
     loss_module.make_value_estimator(ValueEstimators.TDLambda, gamma=gamma, lmbda=lmbda)
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 1050-1068
@@ -1454,6 +1489,12 @@ training loop.
     target_net_updater = SoftUpdate(loss_module, eps=1 - tau)
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1074-1078
 
 Optimizer
@@ -1475,6 +1516,12 @@ Finally, we will use the Adam optimizer for the policy and value network:
         loss_module.value_network_params.values(True, True), lr=1e-3, weight_decay=1e-2
     )
     total_collection_steps = total_frames // frames_per_batch
+
+
+
+
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 1090-1096
@@ -1577,6 +1624,35 @@ modules we need.
     del collector
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 1126, in <module>
+        loss_dict = loss_module(sampled_tensordict)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1527, in _wrapped_call_impl
+        return self._call_impl(*args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1577, in _call_impl
+        result = forward_call(*args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_contextlib.py", line 126, in decorate_context
+        return func(*args, **kwargs)
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 364, in _forward
+        loss_value, td_error, pred_val, target_value = self.loss_value(
+      File "/pytorch/rl/docs/source/reference/generated/tutorials/coding_ddpg.py", line 342, in _loss_value
+        with target_params.to_module(self.value_estimator):
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/utils.py", line 1167, in new_func
+        out = func(_self, *args, **kwargs)
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/base.py", line 597, in to_module
+        return self._to_module(
+      File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_td.py", line 407, in _to_module
+        child = __dict__["_modules"][key]
+    KeyError: 'module'
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 1183-1192
 
 Experiment results
@@ -1632,9 +1708,9 @@ To iterate further on this loss module we might consider:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 38.424 seconds)
+   **Total running time of the script:** (1 minutes 28.144 seconds)
 
-**Estimated memory usage:**  655 MB
+**Estimated memory usage:**  2842 MB
 
 
 .. _sphx_glr_download_tutorials_coding_ddpg.py:
