@@ -409,11 +409,17 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;e
 <li><p><strong>ends</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.2)"><em>torch.Tensor</em></a><em>, </em><em>optional</em>) – a 1d boolean tensor containing the end of run signals.
 To be used whenever the <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code> is expensive to get,
 or when this signal is readily available. Must be used with <code class="docutils literal notranslate"><span class="pre">cache_values=True</span></code>
-and cannot be used in conjunction with <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code>.</p></li>
+and cannot be used in conjunction with <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code>.
+If provided, it is assumed that the storage is at capacity and that
+if the last element of the <code class="docutils literal notranslate"><span class="pre">ends</span></code> tensor is <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+the same trajectory spans across end and beginning.</p></li>
 <li><p><strong>trajectories</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.2)"><em>torch.Tensor</em></a><em>, </em><em>optional</em>) – a 1d integer tensor containing the run ids.
 To be used whenever the <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code> is expensive to get,
 or when this signal is readily available. Must be used with <code class="docutils literal notranslate"><span class="pre">cache_values=True</span></code>
-and cannot be used in conjunction with <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code>.</p></li>
+and cannot be used in conjunction with <code class="docutils literal notranslate"><span class="pre">end_key</span></code> or <code class="docutils literal notranslate"><span class="pre">traj_key</span></code>.
+If provided, it is assumed that the storage is at capacity and that
+if the last element of the trajectory tensor is identical to the first,
+the same trajectory spans across end and beginning.</p></li>
 <li><p><strong>cache_values</strong> (<em>bool</em><em>, </em><em>optional</em>) – to be used with static datasets.
 Will cache the start and end signal of the trajectory.</p></li>
 <li><p><strong>truncated_key</strong> (<em>NestedKey</em><em>, </em><em>optional</em>) – If not <code class="docutils literal notranslate"><span class="pre">None</span></code>, this argument
@@ -425,7 +431,8 @@ instances (otherwise the truncated key is returned in the info dictionary
 returned by the <code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code> method).</p></li>
 <li><p><strong>strict_length</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <code class="docutils literal notranslate"><span class="pre">False</span></code>, trajectories of length
 shorter than <cite>slice_len</cite> (or <cite>batch_size // num_slices</cite>) will be
-allowed to appear in the batch.
+allowed to appear in the batch. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, trajectories shorted
+than required will be filtered out.
 Be mindful that this can result in effective <cite>batch_size</cite>  shorter
 than the one asked for! Trajectories can be split using
 <code class="xref py py-func docutils literal notranslate"><span class="pre">split_trajectories()</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
