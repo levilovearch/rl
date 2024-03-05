@@ -381,17 +381,18 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Type</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">DEVICE_TYPING</span>
 
-<span class="kn">from</span> <span class="nn">.exploration</span> <span class="kn">import</span> <span class="n">NoisyLazyLinear</span><span class="p">,</span> <span class="n">NoisyLinear</span>
+<span class="kn">from</span> <span class="nn">torchrl.modules.models.exploration</span> <span class="kn">import</span> <span class="n">NoisyLazyLinear</span><span class="p">,</span> <span class="n">NoisyLinear</span>
 
 <span class="n">LazyMapping</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">LazyLinear</span><span class="p">,</span>
@@ -446,6 +447,14 @@
 <span class="sd">    Args:</span>
 <span class="sd">        ndims_in (int): number of dimensions to be flattened.</span>
 <span class="sd">            default = 3</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules.models.utils import SquashDims</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; x = torch.randn(1, 2, 3, 4)</span>
+<span class="sd">        &gt;&gt;&gt; print(SquashDims()(x).shape)</span>
+<span class="sd">        torch.Size([1, 24])</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndims_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">):</span>
@@ -457,7 +466,7 @@
         <span class="k">return</span> <span class="n">value</span>
 
 
-<span class="k">def</span> <span class="nf">_find_depth</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="o">*</span><span class="n">list_or_ints</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_find_depth</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">list_or_ints</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Find depth based on a sequence of inputs and a depth indicator.</span>
 
 <span class="sd">    If the depth is None, it is inferred by the length of one (or more) matching</span>
@@ -484,7 +493,10 @@
 
 
 <span class="k">def</span> <span class="nf">create_on_device</span><span class="p">(</span>
-    <span class="n">module_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DEVICE_TYPING</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="n">module_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">DEVICE_TYPING</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new instance of :obj:`module_class` on :obj:`device`.</span>
 
@@ -501,8 +513,10 @@
     <span class="k">if</span> <span class="s2">&quot;device&quot;</span> <span class="ow">in</span> <span class="n">fullargspec</span><span class="o">.</span><span class="n">args</span> <span class="ow">or</span> <span class="s2">&quot;device&quot;</span> <span class="ow">in</span> <span class="n">fullargspec</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">module_class</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">module_class</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-        <span class="c1"># .to() is always available for nn.Module, and does nothing if the Module contains no parameters or buffers</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">module_class</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
 
 
 <span class="k">def</span> <span class="nf">_reset_parameters_recursive</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">warn_if_no_op</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

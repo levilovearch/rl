@@ -389,38 +389,55 @@
 <h1>ConvNet<a class="headerlink" href="#convnet" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchrl.modules.ConvNet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.modules.</span></span><span class="sig-name descname"><span class="pre">ConvNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">in_features:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">depth:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">num_cells:</span> <span class="pre">~typing.Optional[~typing.Union[~typing.Sequence,</span> <span class="pre">int]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">kernel_sizes:</span> <span class="pre">~typing.Union[~typing.Sequence[~typing.Union[int,</span> <span class="pre">~typing.Sequence[int]]],</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">strides:</span> <span class="pre">~typing.Union[~typing.Sequence,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">paddings:</span> <span class="pre">~typing.Union[~typing.Sequence,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">activation_class:</span> <span class="pre">~typing.Type[~torch.nn.modules.module.Module]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.activation.ELU'&gt;,</span> <span class="pre">activation_kwargs:</span> <span class="pre">~typing.Optional[dict]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">norm_class:</span> <span class="pre">~typing.Optional[~typing.Type[~torch.nn.modules.module.Module]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">norm_kwargs:</span> <span class="pre">~typing.Optional[dict]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">bias_last_layer:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">aggregator_class:</span> <span class="pre">~typing.Optional[~typing.Type[~torch.nn.modules.module.Module]]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torchrl.modules.models.utils.SquashDims'&gt;,</span> <span class="pre">aggregator_kwargs:</span> <span class="pre">~typing.Optional[dict]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">squeeze_output:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">device:</span> <span class="pre">~typing.Optional[~typing.Union[~torch.device,</span> <span class="pre">str,</span> <span class="pre">int]]</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/modules/models/models.html#ConvNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.ConvNet" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.modules.</span></span><span class="sig-name descname"><span class="pre">ConvNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">in_features:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">depth:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">num_cells:</span> <span class="pre">Sequence[int]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">kernel_sizes:</span> <span class="pre">Union[Sequence[int],</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">strides:</span> <span class="pre">Sequence[int]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">paddings:</span> <span class="pre">Sequence[int]</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">activation_class:</span> <span class="pre">Type[nn.Module]</span> <span class="pre">|</span> <span class="pre">Callable</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.activation.ELU'&gt;,</span> <span class="pre">activation_kwargs:</span> <span class="pre">dict</span> <span class="pre">|</span> <span class="pre">List[dict]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">norm_class:</span> <span class="pre">Type[nn.Module]</span> <span class="pre">|</span> <span class="pre">Callable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">norm_kwargs:</span> <span class="pre">dict</span> <span class="pre">|</span> <span class="pre">List[dict]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">bias_last_layer:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">aggregator_class:</span> <span class="pre">Type[nn.Module]</span> <span class="pre">|</span> <span class="pre">Callable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torchrl.modules.models.utils.SquashDims'&gt;,</span> <span class="pre">aggregator_kwargs:</span> <span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">squeeze_output:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">device:</span> <span class="pre">DEVICE_TYPING</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/modules/models/models.html#ConvNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.ConvNet" title="Permalink to this definition">¶</a></dt>
 <dd><p>A convolutional neural network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>in_features</strong> (<em>int</em><em>, </em><em>optional</em>) – number of input features;</p></li>
-<li><p><strong>depth</strong> (<em>int</em><em>, </em><em>optional</em>) – depth of the network. A depth of 1 will produce a single linear layer network with the
-desired input size, and with an output size equal to the last element of the num_cells argument.
-If no depth is indicated, the depth information should be contained in the num_cells argument (see below).
-If num_cells is an iterable and depth is indicated, both should match: len(num_cells) must be equal to
-the depth.</p></li>
-<li><p><strong>num_cells</strong> (<em>int</em><em> or </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – number of cells of every layer in between the input and output. If
-an integer is provided, every layer will have the same number of cells. If an iterable is provided,
-the linear layers out_features will match the content of num_cells.
-default: [32, 32, 32];</p></li>
-<li><p><strong>kernel_sizes</strong> (<em>int</em><em>, </em><em>Sequence</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Kernel size(s) of the conv network. If iterable, the length must match the
-depth, defined by the num_cells or depth arguments.</p></li>
-<li><p><strong>strides</strong> (<em>int</em><em> or </em><em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Stride(s) of the conv network. If iterable, the length must match the
-depth, defined by the num_cells or depth arguments.</p></li>
-<li><p><strong>activation_class</strong> (<em>Type</em><em>[</em><em>nn.Module</em><em>]</em>) – activation class to be used.
-default: nn.Tanh</p></li>
-<li><p><strong>activation_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – kwargs to be used with the activation class;</p></li>
-<li><p><strong>norm_class</strong> (<em>Type</em><em>, </em><em>optional</em>) – normalization class, if any;</p></li>
-<li><p><strong>norm_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – kwargs to be used with the normalization layers;</p></li>
-<li><p><strong>bias_last_layer</strong> (<em>bool</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the last Linear layer will have a bias parameter.
-default: True;</p></li>
-<li><p><strong>aggregator_class</strong> (<em>Type</em><em>[</em><em>nn.Module</em><em>]</em>) – aggregator to use at the end of the chain.
-default:  SquashDims;</p></li>
-<li><p><strong>aggregator_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – kwargs for the aggregator_class;</p></li>
-<li><p><strong>squeeze_output</strong> (<em>bool</em>) – whether the output should be squeezed of its singleton dimensions.
-default: False.</p></li>
-<li><p><strong>device</strong> (<em>Optional</em><em>[</em><em>DEVICE_TYPING</em><em>]</em>) – device to create the module on.</p></li>
+<li><p><strong>in_features</strong> (<em>int</em><em>, </em><em>optional</em>) – number of input features. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.LazyConv2d.html#torch.nn.LazyConv2d" title="(in PyTorch v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyConv2d</span></code></a> module is used for the first layer.;</p></li>
+<li><p><strong>depth</strong> (<em>int</em><em>, </em><em>optional</em>) – depth of the network. A depth of 1 will produce
+a single linear layer network with the desired input size, and
+with an output size equal to the last element of the num_cells
+argument.
+If no depth is indicated, the depth information should be contained
+in the <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> argument (see below).
+If <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> is an iterable and <code class="docutils literal notranslate"><span class="pre">depth</span></code> is indicated, both
+should match: <code class="docutils literal notranslate"><span class="pre">len(num_cells)</span></code> must be equal to the <code class="docutils literal notranslate"><span class="pre">depth</span></code>.</p></li>
+<li><p><strong>num_cells</strong> (<em>int</em><em> or </em><em>Sequence of int</em><em>, </em><em>optional</em>) – number of cells of
+every layer in between the input and output. If an integer is
+provided, every layer will have the same number of cells. If an
+iterable is provided, the linear layers <code class="docutils literal notranslate"><span class="pre">out_features</span></code> will match
+the content of num_cells. Defaults to <code class="docutils literal notranslate"><span class="pre">[32,</span> <span class="pre">32,</span> <span class="pre">32]</span></code>.</p></li>
+<li><p><strong>kernel_sizes</strong> (<em>int</em><em>, </em><em>sequence of int</em><em>, </em><em>optional</em>) – Kernel size(s) of the
+conv network. If iterable, the length must match the depth,
+defined by the <code class="docutils literal notranslate"><span class="pre">num_cells</span></code> or depth arguments.
+Defaults to <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
+<li><p><strong>strides</strong> (<em>int</em><em> or </em><em>sequence of int</em><em>, </em><em>optional</em>) – Stride(s) of the conv network. If
+iterable, the length must match the depth, defined by the
+<code class="docutils literal notranslate"><span class="pre">num_cells</span></code> or depth arguments. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><strong>activation_class</strong> (<em>Type</em><em>[</em><em>nn.Module</em><em>] or </em><em>callable</em><em>, </em><em>optional</em>) – activation
+class or constructor to be used.
+Defaults to <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html#torch.nn.Tanh" title="(in PyTorch v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tanh</span></code></a>.</p></li>
+<li><p><strong>activation_kwargs</strong> (<em>dict</em><em> or </em><em>list of dicts</em><em>, </em><em>optional</em>) – kwargs to be used
+with the activation class. A list of kwargs of length <code class="docutils literal notranslate"><span class="pre">depth</span></code>
+can also be passed, with one element per layer.</p></li>
+<li><p><strong>norm_class</strong> (<em>Type</em><em> or </em><em>callable</em><em>, </em><em>optional</em>) – normalization class or
+constructor, if any.</p></li>
+<li><p><strong>norm_kwargs</strong> (<em>dict</em><em> or </em><em>list of dicts</em><em>, </em><em>optional</em>) – kwargs to be used with
+the normalization layers. A list of kwargs of length <code class="docutils literal notranslate"><span class="pre">depth</span></code> can
+also be passed, with one element per layer.</p></li>
+<li><p><strong>bias_last_layer</strong> (<em>bool</em>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the last Linear layer will have a
+bias parameter. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>aggregator_class</strong> (<em>Type</em><em>[</em><em>nn.Module</em><em>] or </em><em>callable</em>) – aggregator class or
+constructor to use at the end of the chain.
+Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torchrl.modules.utils.models.SquashDims</span></code>;</p></li>
+<li><p><strong>aggregator_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – kwargs for the
+<code class="docutils literal notranslate"><span class="pre">aggregator_class</span></code>.</p></li>
+<li><p><strong>squeeze_output</strong> (<em>bool</em>) – whether the output should be squeezed of its
+singleton dimensions.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v2.2)"><em>torch.device</em></a><em>, </em><em>optional</em>) – device to create the module on.</p></li>
 </ul>
 </dd>
 </dl>
