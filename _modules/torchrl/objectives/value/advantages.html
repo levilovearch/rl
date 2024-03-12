@@ -542,7 +542,7 @@
     <span class="n">log_prob_key</span><span class="p">:</span> <span class="n">NestedKey</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="c1"># TODO: extend to handle time dimension (and vmap?)</span>
-    <span class="n">log_pi</span> <span class="o">=</span> <span class="n">actor_net</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">actor_net</span><span class="o">.</span><span class="n">in_keys</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_prob_key</span><span class="p">)</span>
+    <span class="n">log_pi</span> <span class="o">=</span> <span class="n">actor_net</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">actor_net</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_prob_key</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">log_pi</span>
 
 
