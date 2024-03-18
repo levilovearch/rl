@@ -958,34 +958,75 @@ promptly sampled with virtually no memory footprint.</p>
 the latest wheels are not published on PyPI. For OpenML, <a class="reference external" href="https://pypi.org/project/scikit-learn/">scikit-learn</a> and
 <a class="reference external" href="https://pypi.org/project/pandas">pandas</a> are required.</p>
 </div>
+<section id="transforming-datasets">
+<h3>Transforming datasets<a class="headerlink" href="#transforming-datasets" title="Permalink to this heading">¶</a></h3>
+<p>In many instances, the raw data isn’t going to be used as-is.
+The natural solution could be to pass a <a class="reference internal" href="generated/torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform" title="torchrl.envs.transforms.Transform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transform</span></code></a>
+instance to the dataset constructor and modify the sample on-the-fly. This will
+work but it will incur an extra runtime for the transform.
+If the transformations can be (at least a part) pre-applied to the dataset,
+a conisderable disk space and some incurred overhead at sampling time can be
+saved. To do this, the
+<a class="reference internal" href="generated/torchrl.data.datasets.BaseDatasetExperienceReplay.html#torchrl.data.datasets.BaseDatasetExperienceReplay.preprocess" title="torchrl.data.datasets.BaseDatasetExperienceReplay.preprocess"><code class="xref py py-meth docutils literal notranslate"><span class="pre">preprocess()</span></code></a> can be
+used. This method will run a per-sample preprocessing pipeline on each element
+of the dataset, and replace the existing dataset by its transformed version.</p>
+<p>Once transformed, re-creating the same dataset will produce another object with
+the same transformed storage (unless <code class="docutils literal notranslate"><span class="pre">download=&quot;force&quot;</span></code> is being used):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">RobosetExperienceReplay</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;FK1-v4(expert)/FK1_MicroOpenRandom_v2d-v4&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="s2">&quot;force&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;obs_norm&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;observation&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">func</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">num_workers</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">num_chunks</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">mp_start_method</span><span class="o">=</span><span class="s2">&quot;fork&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;obs_norm&quot;</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># re-recreating the dataset gives us the transformed version back.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">RobosetExperienceReplay</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;FK1-v4(expert)/FK1_MicroOpenRandom_v2d-v4&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;obs_norm&quot;</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
 <table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.AtariDQNExperienceReplay.html#torchrl.data.datasets.AtariDQNExperienceReplay" title="torchrl.data.datasets.AtariDQNExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AtariDQNExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.BaseDatasetExperienceReplay.html#torchrl.data.datasets.BaseDatasetExperienceReplay" title="torchrl.data.datasets.BaseDatasetExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseDatasetExperienceReplay</span></code></a>(*[, priority_key])</p></td>
+<td><p>Parent class for offline datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.AtariDQNExperienceReplay.html#torchrl.data.datasets.AtariDQNExperienceReplay" title="torchrl.data.datasets.AtariDQNExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AtariDQNExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
 <td><p>Atari DQN Experience replay class.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.D4RLExperienceReplay.html#torchrl.data.datasets.D4RLExperienceReplay" title="torchrl.data.datasets.D4RLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">D4RLExperienceReplay</span></code></a>(dataset_id, batch_size)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.D4RLExperienceReplay.html#torchrl.data.datasets.D4RLExperienceReplay" title="torchrl.data.datasets.D4RLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">D4RLExperienceReplay</span></code></a>(dataset_id, batch_size)</p></td>
 <td><p>An Experience replay class for D4RL.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.GenDGRLExperienceReplay.html#torchrl.data.datasets.GenDGRLExperienceReplay" title="torchrl.data.datasets.GenDGRLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenDGRLExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.GenDGRLExperienceReplay.html#torchrl.data.datasets.GenDGRLExperienceReplay" title="torchrl.data.datasets.GenDGRLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenDGRLExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
 <td><p>Gen-DGRL Experience Replay dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.MinariExperienceReplay.html#torchrl.data.datasets.MinariExperienceReplay" title="torchrl.data.datasets.MinariExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MinariExperienceReplay</span></code></a>(dataset_id, batch_size, *)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.MinariExperienceReplay.html#torchrl.data.datasets.MinariExperienceReplay" title="torchrl.data.datasets.MinariExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MinariExperienceReplay</span></code></a>(dataset_id, batch_size, *)</p></td>
 <td><p>Minari Experience replay dataset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.OpenMLExperienceReplay.html#torchrl.data.datasets.OpenMLExperienceReplay" title="torchrl.data.datasets.OpenMLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OpenMLExperienceReplay</span></code></a>(name, batch_size[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.OpenMLExperienceReplay.html#torchrl.data.datasets.OpenMLExperienceReplay" title="torchrl.data.datasets.OpenMLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OpenMLExperienceReplay</span></code></a>(name, batch_size[, ...])</p></td>
 <td><p>An experience replay for OpenML data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.OpenXExperienceReplay.html#torchrl.data.datasets.OpenXExperienceReplay" title="torchrl.data.datasets.OpenXExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OpenXExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.OpenXExperienceReplay.html#torchrl.data.datasets.OpenXExperienceReplay" title="torchrl.data.datasets.OpenXExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OpenXExperienceReplay</span></code></a>(dataset_id[, ...])</p></td>
 <td><p>Open X-Embodiment datasets experience replay.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.RobosetExperienceReplay.html#torchrl.data.datasets.RobosetExperienceReplay" title="torchrl.data.datasets.RobosetExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RobosetExperienceReplay</span></code></a>(dataset_id, ...[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.RobosetExperienceReplay.html#torchrl.data.datasets.RobosetExperienceReplay" title="torchrl.data.datasets.RobosetExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RobosetExperienceReplay</span></code></a>(dataset_id, ...[, ...])</p></td>
 <td><p>Roboset experience replay dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.VD4RLExperienceReplay.html#torchrl.data.datasets.VD4RLExperienceReplay" title="torchrl.data.datasets.VD4RLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VD4RLExperienceReplay</span></code></a>(dataset_id, batch_size, *)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.datasets.VD4RLExperienceReplay.html#torchrl.data.datasets.VD4RLExperienceReplay" title="torchrl.data.datasets.VD4RLExperienceReplay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VD4RLExperienceReplay</span></code></a>(dataset_id, batch_size, *)</p></td>
 <td><p>V-D4RL experience replay dataset.</p></td>
 </tr>
 </tbody>
 </table>
+</section>
 <section id="composing-datasets">
 <h3>Composing datasets<a class="headerlink" href="#composing-datasets" title="Permalink to this heading">¶</a></h3>
 <p>In offline RL, it is customary to work with more than one dataset at the same time.
@@ -1255,6 +1296,7 @@ efficient sampling.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#datasets">Datasets</a><ul>
+<li><a class="reference internal" href="#transforming-datasets">Transforming datasets</a></li>
 <li><a class="reference internal" href="#composing-datasets">Composing datasets</a></li>
 </ul>
 </li>

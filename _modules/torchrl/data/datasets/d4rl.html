@@ -385,6 +385,7 @@
 
 <span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">urllib</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -401,16 +402,16 @@
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">torchrl_logger</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.collectors.utils</span> <span class="kn">import</span> <span class="n">split_trajectories</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.datasets.common</span> <span class="kn">import</span> <span class="n">BaseDatasetExperienceReplay</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.datasets.d4rl_infos</span> <span class="kn">import</span> <span class="n">D4RL_DATASETS</span>
 
 <span class="kn">from</span> <span class="nn">torchrl.data.datasets.utils</span> <span class="kn">import</span> <span class="n">_get_root_dir</span>
-<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.replay_buffers</span> <span class="kn">import</span> <span class="n">TensorDictReplayBuffer</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.samplers</span> <span class="kn">import</span> <span class="n">Sampler</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.storages</span> <span class="kn">import</span> <span class="n">TensorStorage</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.writers</span> <span class="kn">import</span> <span class="n">ImmutableDatasetWriter</span><span class="p">,</span> <span class="n">Writer</span>
 
 
-<div class="viewcode-block" id="D4RLExperienceReplay"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.datasets.D4RLExperienceReplay.html#torchrl.data.datasets.D4RLExperienceReplay">[docs]</a><span class="k">class</span> <span class="nc">D4RLExperienceReplay</span><span class="p">(</span><span class="n">TensorDictReplayBuffer</span><span class="p">):</span>
+<div class="viewcode-block" id="D4RLExperienceReplay"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.datasets.D4RLExperienceReplay.html#torchrl.data.datasets.D4RLExperienceReplay">[docs]</a><span class="k">class</span> <span class="nc">D4RLExperienceReplay</span><span class="p">(</span><span class="n">BaseDatasetExperienceReplay</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An Experience replay class for D4RL.</span>
 
 <span class="sd">    To install D4RL, follow the instructions on the</span>
@@ -557,6 +558,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">from_env</span> <span class="o">=</span> <span class="n">from_env</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">download</span> <span class="o">==</span> <span class="s2">&quot;force&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">download</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_downloaded</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">download</span> <span class="o">==</span> <span class="s2">&quot;force&quot;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">direct_download</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">terminate_on_end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># we use the default of d4rl</span>
@@ -611,6 +615,14 @@
             <span class="n">prefetch</span><span class="o">=</span><span class="n">prefetch</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_path_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_path</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_dataset_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

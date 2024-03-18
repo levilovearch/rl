@@ -399,8 +399,8 @@
 
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">PersistentTensorDict</span><span class="p">,</span> <span class="n">TensorDict</span>
 <span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">KeyDependentDefaultDict</span><span class="p">,</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">torchrl_logger</span>
+<span class="kn">from</span> <span class="nn">torchrl.data.datasets.common</span> <span class="kn">import</span> <span class="n">BaseDatasetExperienceReplay</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.datasets.utils</span> <span class="kn">import</span> <span class="n">_get_root_dir</span>
-<span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.replay_buffers</span> <span class="kn">import</span> <span class="n">TensorDictReplayBuffer</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.samplers</span> <span class="kn">import</span> <span class="n">Sampler</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.storages</span> <span class="kn">import</span> <span class="n">TensorStorage</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.writers</span> <span class="kn">import</span> <span class="n">ImmutableDatasetWriter</span><span class="p">,</span> <span class="n">Writer</span>
@@ -434,7 +434,7 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="MinariExperienceReplay"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.datasets.MinariExperienceReplay.html#torchrl.data.datasets.MinariExperienceReplay">[docs]</a><span class="k">class</span> <span class="nc">MinariExperienceReplay</span><span class="p">(</span><span class="n">TensorDictReplayBuffer</span><span class="p">):</span>
+<div class="viewcode-block" id="MinariExperienceReplay"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.datasets.MinariExperienceReplay.html#torchrl.data.datasets.MinariExperienceReplay">[docs]</a><span class="k">class</span> <span class="nc">MinariExperienceReplay</span><span class="p">(</span><span class="n">BaseDatasetExperienceReplay</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Minari Experience replay dataset.</span>
 
 <span class="sd">    Learn more about Minari on their website: https://minari.farama.org/</span>
@@ -452,7 +452,7 @@
 <span class="sd">            `&lt;root&gt;/&lt;dataset_id&gt;`. If none is provided, it defaults to</span>
 <span class="sd">            ``~/.cache/torchrl/minari`.</span>
 <span class="sd">        download (bool or str, optional): Whether the dataset should be downloaded if</span>
-<span class="sd">            not found. Defaults to ``True``. Download can also be passed as &quot;force&quot;,</span>
+<span class="sd">            not found. Defaults to ``True``. Download can also be passed as ``&quot;force&quot;``,</span>
 <span class="sd">            in which case the downloaded data will be overwritten.</span>
 <span class="sd">        sampler (Sampler, optional): the sampler to be used. If none is provided</span>
 <span class="sd">            a default RandomSampler() will be used.</span>
@@ -564,7 +564,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span> <span class="o">==</span> <span class="s2">&quot;force&quot;</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">download</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_downloaded</span><span class="p">()):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span> <span class="o">==</span> <span class="s2">&quot;force&quot;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">):</span>
+                        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">:</span>
                         <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
@@ -602,17 +603,17 @@
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">data_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">data_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_trajs</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span> <span class="o">+</span> <span class="s2">&quot;_split&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path_root</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">data_path_root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">data_path_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metadata_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">metadata_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_id</span> <span class="o">/</span> <span class="s2">&quot;env_metadata.json&quot;</span>
 
     <span class="k">def</span> <span class="nf">_download_and_preproc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
