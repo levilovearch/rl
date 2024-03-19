@@ -909,9 +909,11 @@
 <span class="sd">    and returns the most pessimistic value prediction between clipped and non-clipped options.</span>
 <span class="sd">    It also computes the clip fraction.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">state_value_clipped</span> <span class="o">=</span> <span class="n">old_state_value</span> <span class="o">+</span> <span class="p">(</span><span class="n">state_value</span> <span class="o">-</span> <span class="n">old_state_value</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span>
-        <span class="o">-</span><span class="n">clip_value</span><span class="p">,</span> <span class="n">clip_value</span>
-    <span class="p">)</span>
+    <span class="n">pre_clipped</span> <span class="o">=</span> <span class="n">state_value</span> <span class="o">-</span> <span class="n">old_state_value</span>
+    <span class="n">clipped</span> <span class="o">=</span> <span class="n">pre_clipped</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">-</span><span class="n">clip_value</span><span class="p">,</span> <span class="n">clip_value</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">clip_fraction</span> <span class="o">=</span> <span class="p">(</span><span class="n">pre_clipped</span> <span class="o">!=</span> <span class="n">clipped</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">state_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">state_value_clipped</span> <span class="o">=</span> <span class="n">old_state_value</span> <span class="o">+</span> <span class="n">clipped</span>
     <span class="n">loss_value_clipped</span> <span class="o">=</span> <span class="n">distance_loss</span><span class="p">(</span>
         <span class="n">target_return</span><span class="p">,</span>
         <span class="n">state_value_clipped</span><span class="p">,</span>
@@ -919,10 +921,6 @@
     <span class="p">)</span>
     <span class="c1"># Chose the most pessimistic value prediction between clipped and non-clipped</span>
     <span class="n">loss_value</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">loss_value</span><span class="p">,</span> <span class="n">loss_value_clipped</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="n">clip_fraction</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">state_value</span> <span class="o">/</span> <span class="n">old_state_value</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">clip_value</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">clip_value</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
-        <span class="p">)</span>
     <span class="k">return</span> <span class="n">loss_value</span><span class="p">,</span> <span class="n">clip_fraction</span>
 </pre></div>
 
