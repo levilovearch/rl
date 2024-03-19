@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Actor &mdash; torchrl main documentation</title>
+  <title>MultiStepActorWrapper &mdash; torchrl main documentation</title>
   
 
   
@@ -39,8 +39,8 @@
   <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="MultiStepActorWrapper" href="torchrl.modules.tensordict_module.MultiStepActorWrapper.html" />
-    <link rel="prev" title="torchrl.modules package" href="../modules.html" />
+    <link rel="next" title="SafeModule" href="torchrl.modules.tensordict_module.SafeModule.html" />
+    <link rel="prev" title="Actor" href="torchrl.modules.tensordict_module.Actor.html" />
   <!-- Google Analytics -->
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117752657-2"></script>
@@ -332,13 +332,13 @@
         
           <li><a href="../modules.html">torchrl.modules package</a> &gt;</li>
         
-      <li>Actor</li>
+      <li>MultiStepActorWrapper</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/reference/generated/torchrl.modules.tensordict_module.Actor.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/reference/generated/torchrl.modules.tensordict_module.MultiStepActorWrapper.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -359,7 +359,7 @@
 
         
           <div class="pytorch-call-to-action-links">
-            <div id="tutorial-type">reference/generated/torchrl.modules.tensordict_module.Actor</div>
+            <div id="tutorial-type">reference/generated/torchrl.modules.tensordict_module.MultiStepActorWrapper</div>
 
             <div id="google-colab-link">
               <img class="call-to-action-img" src="../../_static/images/pytorch-colab.svg"/>
@@ -385,76 +385,124 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="actor">
-<h1>Actor<a class="headerlink" href="#actor" title="Permalink to this heading">¶</a></h1>
+  <section id="multistepactorwrapper">
+<h1>MultiStepActorWrapper<a class="headerlink" href="#multistepactorwrapper" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.Actor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.modules.tensordict_module.</span></span><span class="sig-name descname"><span class="pre">Actor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/modules/tensordict_module/actors.html#Actor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.tensordict_module.Actor" title="Permalink to this definition">¶</a></dt>
-<dd><p>General class for deterministic actors in RL.</p>
-<p>The Actor class comes with default values for the out_keys (<code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;]</span></code>)
-and if the spec is provided but not as a
-<a class="reference internal" href="torchrl.data.CompositeSpec.html#torchrl.data.CompositeSpec" title="torchrl.data.CompositeSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompositeSpec</span></code></a> object, it will be
-automatically translated into <code class="docutils literal notranslate"><span class="pre">spec</span> <span class="pre">=</span> <span class="pre">CompositeSpec(action=spec)</span></code>.</p>
+<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.MultiStepActorWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.modules.tensordict_module.</span></span><span class="sig-name descname"><span class="pre">MultiStepActorWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchrl/modules/tensordict_module/actors.html#MultiStepActorWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.tensordict_module.MultiStepActorWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper around a multi-action actor.</p>
+<p>This class enables macros to be executed in an environment.
+The actor action(s) entry must have an additional time dimension to
+be consumed. It must be placed adjacent to the last dimension of the
+input tensordict (i.e. at <code class="docutils literal notranslate"><span class="pre">tensordict.ndim</span></code>).</p>
+<p>The action entry keys are retrieved automatically from the actor if
+not provided using a simple heuristic (any nested key ending with the
+<code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code> string).</p>
+<p>An <code class="docutils literal notranslate"><span class="pre">&quot;is_init&quot;</span></code> entry must also be present in the input tensordict
+to track which and when the current collection should be interrupted
+because a “done” state has been encountered. Unlike <code class="docutils literal notranslate"><span class="pre">action_keys</span></code>,
+this key must be unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>module</strong> (<em>nn.Module</em>) – a <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></a> used to map the input to
-the output parameter space.</p></li>
-<li><p><strong>in_keys</strong> (<em>iterable of str</em><em>, </em><em>optional</em>) – keys to be read from input
-tensordict and passed to the module. If it
-contains more than one element, the values will be passed in the
-order given by the in_keys iterable.
-Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;observation&quot;]</span></code>.</p></li>
-<li><p><strong>out_keys</strong> (<em>iterable of str</em>) – keys to be written to the input tensordict.
-The length of out_keys must match the
-number of tensors returned by the embedded module. Using <code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span></code> as a
-key avoid writing tensor to output.
-Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;action&quot;]</span></code>.</p></li>
+<li><p><strong>actor</strong> (<em>TensorDictModuleBase</em>) – An actor.</p></li>
+<li><p><strong>n_steps</strong> (<em>int</em>) – the number of actions the actor outputs at once
+(lookahead window).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>spec</strong> (<a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec" title="torchrl.data.TensorSpec"><em>TensorSpec</em></a><em>, </em><em>optional</em>) – Keyword-only argument.
-Specs of the output tensor. If the module
-outputs multiple output tensors,
-spec characterize the space of the first output tensor.</p></li>
-<li><p><strong>safe</strong> (<em>bool</em>) – Keyword-only argument.
-If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the value of the output is checked against the
-input spec. Out-of-domain sampling can
-occur because of exploration policies or numerical under/overflow
-issues. If this value is out of bounds, it is projected back onto the
-desired space using the <a class="reference internal" href="torchrl.data.TensorSpec.html#torchrl.data.TensorSpec.project" title="torchrl.data.TensorSpec.project"><code class="xref py py-meth docutils literal notranslate"><span class="pre">project()</span></code></a>
-method. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>action_keys</strong> (<em>list of NestedKeys</em><em>, </em><em>optional</em>) – the action keys from
+the environment. Can be retrieved from <code class="docutils literal notranslate"><span class="pre">env.action_keys</span></code>.
+Defaults to all <code class="docutils literal notranslate"><span class="pre">out_keys</span></code> of the <code class="docutils literal notranslate"><span class="pre">actor</span></code> which end
+with the <code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code> string.</p></li>
+<li><p><strong>init_key</strong> (<em>NestedKey</em><em>, </em><em>optional</em>) – the key of the entry indicating
+when the environment has gone through a reset.
+Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;is_init&quot;</span></code> which is the <code class="docutils literal notranslate"><span class="pre">out_key</span></code> from the
+<a class="reference internal" href="torchrl.envs.transforms.InitTracker.html#torchrl.envs.transforms.InitTracker" title="torchrl.envs.transforms.InitTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">InitTracker</span></code></a> transform.</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDict</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">UnboundedContinuousTensorSpec</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules</span> <span class="kn">import</span> <span class="n">Actor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">({</span><span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)},</span> <span class="p">[</span><span class="mi">3</span><span class="p">,])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">action_spec</span> <span class="o">=</span> <span class="n">UnboundedContinuousTensorSpec</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">module</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">td_module</span> <span class="o">=</span> <span class="n">Actor</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">spec</span><span class="o">=</span><span class="n">action_spec</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">td_module</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch.nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.actors</span> <span class="kn">import</span> <span class="n">MultiStepActorWrapper</span><span class="p">,</span> <span class="n">Actor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.envs</span> <span class="kn">import</span> <span class="n">CatFrames</span><span class="p">,</span> <span class="n">GymEnv</span><span class="p">,</span> <span class="n">TransformedEnv</span><span class="p">,</span> <span class="n">SerialEnv</span><span class="p">,</span> <span class="n">InitTracker</span><span class="p">,</span> <span class="n">Compose</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">TensorDictSequential</span> <span class="k">as</span> <span class="n">Seq</span><span class="p">,</span> <span class="n">TensorDictModule</span> <span class="k">as</span> <span class="n">Mod</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time_steps</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_obs</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_action</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Transforms a CatFrames in a stack of frames</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">reshape_cat</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">unflatten</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">time_steps</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># an actor that reads `time_steps` frames and outputs one action per frame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># (actions are conditioned on the observation of `time_steps` in the past)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">actor_base</span> <span class="o">=</span> <span class="n">Seq</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">Mod</span><span class="p">(</span><span class="n">reshape_cat</span><span class="p">,</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs_cat&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs_cat_reshape&quot;</span><span class="p">]),</span>
+<span class="gp">... </span>    <span class="n">Mod</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_action</span><span class="p">),</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs_cat_reshape&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">])</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Wrap the actor to dispatch the actions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">actor</span> <span class="o">=</span> <span class="n">MultiStepActorWrapper</span><span class="p">(</span><span class="n">actor_base</span><span class="p">,</span> <span class="n">n_steps</span><span class="o">=</span><span class="n">time_steps</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">SerialEnv</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">GymEnv</span><span class="p">(</span><span class="s2">&quot;CartPole-v1&quot;</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="n">Compose</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">InitTracker</span><span class="p">(),</span>
+<span class="gp">... </span>        <span class="n">CatFrames</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="n">time_steps</span><span class="p">,</span> <span class="n">in_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">],</span> <span class="n">out_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs_cat&quot;</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">actor</span><span class="p">,</span> <span class="n">break_when_any_done</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="go">TensorDict(</span>
 <span class="go">    fields={</span>
-<span class="go">        action: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
-<span class="go">        observation: Tensor(shape=torch.Size([3, 4]), device=cpu, dtype=torch.float32, is_shared=False)},</span>
-<span class="go">    batch_size=torch.Size([3]),</span>
-<span class="go">    device=None,</span>
+<span class="go">        action: Tensor(shape=torch.Size([5, 100, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        action_orig: Tensor(shape=torch.Size([5, 100, 6, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        counter: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="go">        done: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        is_init: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        next: TensorDict(</span>
+<span class="go">            fields={</span>
+<span class="go">                done: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                is_init: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                obs_cat: Tensor(shape=torch.Size([5, 100, 24]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">                observation: Tensor(shape=torch.Size([5, 100, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">                reward: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">                terminated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">                truncated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">            batch_size=torch.Size([5, 100]),</span>
+<span class="go">            device=cpu,</span>
+<span class="go">            is_shared=False),</span>
+<span class="go">        obs_cat: Tensor(shape=torch.Size([5, 100, 24]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        observation: Tensor(shape=torch.Size([5, 100, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="go">        terminated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="go">        truncated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="go">    batch_size=torch.Size([5, 100]),</span>
+<span class="go">    device=cpu,</span>
 <span class="go">    is_shared=False)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">))</span>
-<span class="go">tensor([[-1.3635, -0.0340,  0.1476, -1.3911],</span>
-<span class="go">        [-0.1664,  0.5455,  0.2247, -0.4583],</span>
-<span class="go">        [-0.2916,  0.2160,  0.5337, -0.5193]], grad_fn=&lt;AddmmBackward0&gt;)</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.MultiStepActorWrapper.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensordict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/tensordict/reference/generated/tensordict.TensorDictBase.html#tensordict.TensorDictBase" title="(in tensordict vmain (0.4.0 ))"><span class="pre">TensorDictBase</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/modules/tensordict_module/actors.html#MultiStepActorWrapper.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.modules.tensordict_module.MultiStepActorWrapper.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchrl.modules.tensordict_module.MultiStepActorWrapper.init_key">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchrl.modules.tensordict_module.MultiStepActorWrapper.init_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>The indicator of the initial step for a given element of the batch.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -467,10 +515,10 @@ method. Default is <code class="docutils literal notranslate"><span class="pre">
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchrl.modules.tensordict_module.MultiStepActorWrapper.html" class="btn btn-neutral float-right" title="MultiStepActorWrapper" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchrl.modules.tensordict_module.SafeModule.html" class="btn btn-neutral float-right" title="SafeModule" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="../modules.html" class="btn btn-neutral" title="torchrl.modules package" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchrl.modules.tensordict_module.Actor.html" class="btn btn-neutral" title="Actor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -502,7 +550,7 @@ method. Default is <code class="docutils literal notranslate"><span class="pre">
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Actor</a></li>
+<li><a class="reference internal" href="#">MultiStepActorWrapper</a></li>
 </ul>
 
             </div>

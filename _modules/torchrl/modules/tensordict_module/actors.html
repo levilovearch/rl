@@ -381,8 +381,10 @@
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the MIT license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
@@ -394,10 +396,11 @@
     <span class="n">TensorDictModuleWrapper</span><span class="p">,</span>
     <span class="n">TensorDictSequential</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">NestedKey</span>
+<span class="kn">from</span> <span class="nn">tensordict.utils</span> <span class="kn">import</span> <span class="n">expand_as_right</span><span class="p">,</span> <span class="n">NestedKey</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Categorical</span>
 
+<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_replace_last</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">CompositeSpec</span><span class="p">,</span> <span class="n">TensorSpec</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">_process_action_space_spec</span>
 <span class="kn">from</span> <span class="nn">torchrl.modules.tensordict_module.common</span> <span class="kn">import</span> <span class="n">DistributionalDQNnet</span><span class="p">,</span> <span class="n">SafeModule</span>
@@ -2484,6 +2487,260 @@
         <span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">actor_head</span><span class="p">,</span> <span class="n">value_head</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiStepActorWrapper"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.MultiStepActorWrapper.html#torchrl.modules.MultiStepActorWrapper">[docs]</a><span class="k">class</span> <span class="nc">MultiStepActorWrapper</span><span class="p">(</span><span class="n">TensorDictModuleBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper around a multi-action actor.</span>
+
+<span class="sd">    This class enables macros to be executed in an environment.</span>
+<span class="sd">    The actor action(s) entry must have an additional time dimension to</span>
+<span class="sd">    be consumed. It must be placed adjacent to the last dimension of the</span>
+<span class="sd">    input tensordict (i.e. at ``tensordict.ndim``).</span>
+
+<span class="sd">    The action entry keys are retrieved automatically from the actor if</span>
+<span class="sd">    not provided using a simple heuristic (any nested key ending with the</span>
+<span class="sd">    ``&quot;action&quot;`` string).</span>
+
+<span class="sd">    An ``&quot;is_init&quot;`` entry must also be present in the input tensordict</span>
+<span class="sd">    to track which and when the current collection should be interrupted</span>
+<span class="sd">    because a &quot;done&quot; state has been encountered. Unlike ``action_keys``,</span>
+<span class="sd">    this key must be unique.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        actor (TensorDictModuleBase): An actor.</span>
+<span class="sd">        n_steps (int): the number of actions the actor outputs at once</span>
+<span class="sd">            (lookahead window).</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        action_keys (list of NestedKeys, optional): the action keys from</span>
+<span class="sd">            the environment. Can be retrieved from ``env.action_keys``.</span>
+<span class="sd">            Defaults to all ``out_keys`` of the ``actor`` which end</span>
+<span class="sd">            with the ``&quot;action&quot;`` string.</span>
+<span class="sd">        init_key (NestedKey, optional): the key of the entry indicating</span>
+<span class="sd">            when the environment has gone through a reset.</span>
+<span class="sd">            Defaults to ``&quot;is_init&quot;`` which is the ``out_key`` from the</span>
+<span class="sd">            :class:`~torchrl.envs.transforms.InitTracker` transform.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import torch.nn</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules.tensordict_module.actors import MultiStepActorWrapper, Actor</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import CatFrames, GymEnv, TransformedEnv, SerialEnv, InitTracker, Compose</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict.nn import TensorDictSequential as Seq, TensorDictModule as Mod</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; time_steps = 6</span>
+<span class="sd">        &gt;&gt;&gt; n_obs = 4</span>
+<span class="sd">        &gt;&gt;&gt; n_action = 2</span>
+<span class="sd">        &gt;&gt;&gt; batch = 5</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Transforms a CatFrames in a stack of frames</span>
+<span class="sd">        &gt;&gt;&gt; def reshape_cat(data: torch.Tensor):</span>
+<span class="sd">        ...     return data.unflatten(-1, (time_steps, n_obs))</span>
+<span class="sd">        &gt;&gt;&gt; # an actor that reads `time_steps` frames and outputs one action per frame</span>
+<span class="sd">        &gt;&gt;&gt; # (actions are conditioned on the observation of `time_steps` in the past)</span>
+<span class="sd">        &gt;&gt;&gt; actor_base = Seq(</span>
+<span class="sd">        ...     Mod(reshape_cat, in_keys=[&quot;obs_cat&quot;], out_keys=[&quot;obs_cat_reshape&quot;]),</span>
+<span class="sd">        ...     Mod(torch.nn.Linear(n_obs, n_action), in_keys=[&quot;obs_cat_reshape&quot;], out_keys=[&quot;action&quot;])</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; # Wrap the actor to dispatch the actions</span>
+<span class="sd">        &gt;&gt;&gt; actor = MultiStepActorWrapper(actor_base, n_steps=time_steps)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; env = TransformedEnv(</span>
+<span class="sd">        ...     SerialEnv(batch, lambda: GymEnv(&quot;CartPole-v1&quot;)),</span>
+<span class="sd">        ...     Compose(</span>
+<span class="sd">        ...         InitTracker(),</span>
+<span class="sd">        ...         CatFrames(N=time_steps, in_keys=[&quot;observation&quot;], out_keys=[&quot;obs_cat&quot;], dim=-1)</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; print(env.rollout(100, policy=actor, break_when_any_done=False))</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([5, 100, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                action_orig: Tensor(shape=torch.Size([5, 100, 6, 2]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                counter: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.int32, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                is_init: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        is_init: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        obs_cat: Tensor(shape=torch.Size([5, 100, 24]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        observation: Tensor(shape=torch.Size([5, 100, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        truncated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([5, 100]),</span>
+<span class="sd">                    device=cpu,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                obs_cat: Tensor(shape=torch.Size([5, 100, 24]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                observation: Tensor(shape=torch.Size([5, 100, 4]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                truncated: Tensor(shape=torch.Size([5, 100, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([5, 100]),</span>
+<span class="sd">            device=cpu,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">actor</span><span class="p">:</span> <span class="n">TensorDictModuleBase</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">action_keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">init_key</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_keys</span> <span class="o">=</span> <span class="n">action_keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_key</span> <span class="o">=</span> <span class="n">init_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span> <span class="o">=</span> <span class="n">n_steps</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actor</span> <span class="o">=</span> <span class="n">actor</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">in_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">in_keys</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">init_key</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">out_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">out_keys</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_actor_keys_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">counter_key</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_and_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">action_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_keys</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">action_key_orig</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">action_key</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">action_key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_orig&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">action_key_orig</span> <span class="o">=</span> <span class="n">action_key</span> <span class="o">+</span> <span class="s2">&quot;_orig&quot;</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+    <span class="n">_NO_INIT_ERR</span> <span class="o">=</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+        <span class="s2">&quot;Cannot initialize the wrapper with partial is_init signal.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">):</span>
+        <span class="n">is_init</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;No init key was passed to the batched action wrapper.&quot;</span><span class="p">)</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counter_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">counter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">is_init</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+        <span class="n">is_init</span> <span class="o">=</span> <span class="n">is_init</span> <span class="o">|</span> <span class="p">(</span><span class="n">counter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_init</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="n">is_init</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">tensordict_filtered</span> <span class="o">=</span> <span class="n">tensordict</span><span class="p">[</span><span class="n">is_init</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">(</span><span class="n">tensordict_filtered</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">action_key</span><span class="p">,</span> <span class="n">action_key_orig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actor_keys_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">action_computed</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">action_orig</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">action_orig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_init</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                        <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NO_INIT_ERR</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">is_init_expand</span> <span class="o">=</span> <span class="n">expand_as_right</span><span class="p">(</span><span class="n">is_init</span><span class="p">,</span> <span class="n">action_orig</span><span class="p">)</span>
+                    <span class="n">action_computed</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_scatter</span><span class="p">(</span>
+                        <span class="n">action_orig</span><span class="p">,</span> <span class="n">is_init_expand</span><span class="p">,</span> <span class="n">action_computed</span>
+                    <span class="p">)</span>
+                <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">,</span> <span class="n">action_computed</span><span class="p">)</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;counter&quot;</span><span class="p">,</span> <span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiStepActorWrapper.forward"><a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.tensordict_module.MultiStepActorWrapper.html#torchrl.modules.MultiStepActorWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">action_key</span><span class="p">,</span> <span class="n">action_key_orig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actor_keys_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># get orig</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">parent_td</span> <span class="o">=</span> <span class="n">tensordict</span>
+                <span class="n">action_entry</span> <span class="o">=</span> <span class="n">parent_td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">parent_td</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">action_entry</span> <span class="o">=</span> <span class="n">parent_td</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">action_key_orig</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">action_entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NO_INIT_ERR</span>
+            <span class="k">if</span> <span class="n">action_entry</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">parent_td</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The action&#39;s time dimension (dim=</span><span class="si">{</span><span class="n">parent_td</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">) doesn&#39;t match the n_steps argument (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2">). &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The action shape was </span><span class="si">{</span><span class="n">action_entry</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">base_idx</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="n">parent_td</span><span class="o">.</span><span class="n">ndim</span>
+            <span class="n">cur_action</span> <span class="o">=</span> <span class="n">action_entry</span><span class="p">[</span><span class="n">base_idx</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)]</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">action_key</span><span class="p">,</span> <span class="n">cur_action</span><span class="p">)</span>
+            <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+                <span class="n">action_key_orig</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">action_entry</span><span class="p">,</span> <span class="n">shifts</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">parent_td</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">action_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]:</span>
+        <span class="n">action_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_action_keys&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">action_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">ends_with_action</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;action&quot;</span>
+                <span class="k">return</span> <span class="n">key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;action&quot;</span>
+
+            <span class="n">action_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">out_keys</span> <span class="k">if</span> <span class="n">ends_with_action</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_action_keys&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">action_keys</span>
+        <span class="k">return</span> <span class="n">action_keys</span>
+
+    <span class="nd">@action_keys</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">action_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_actor_keys_map_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_action_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">unravel_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_actor_keys_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">,</span> <span class="n">NestedKey</span><span class="p">]:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_actor_keys_map_values&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">_replace_last</span><span class="p">(</span><span class="n">action_key</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action_key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">action_key_orig</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">action_key</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">action_key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_orig&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">action_key_orig</span> <span class="o">=</span> <span class="n">action_key</span> <span class="o">+</span> <span class="s2">&quot;_orig&quot;</span>
+                <span class="k">return</span> <span class="n">action_key_orig</span>
+
+            <span class="n">val</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">_replace_last</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_keys</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_actor_keys_map_values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">init_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedKey</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The indicator of the initial step for a given element of the batch.&quot;&quot;&quot;</span>
+        <span class="n">init_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_init_key&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_key</span> <span class="o">=</span> <span class="s2">&quot;is_init&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_key</span>
+        <span class="k">return</span> <span class="n">init_key</span>
+
+    <span class="nd">@init_key</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">init_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only a single init_key can be passed.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_key</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">counter_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_replace_last</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_key</span><span class="p">,</span> <span class="s2">&quot;counter&quot;</span><span class="p">)</span></div>
 </pre></div>
 
              </article>
