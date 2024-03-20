@@ -215,7 +215,7 @@ change the ``collate_fn`` since the default expects numerical data):
 
  .. code-block:: none
 
-    [0, 0, 'a']
+    ['b', 0, 'a']
 
 
 
@@ -338,15 +338,15 @@ Let us sample from the buffer, and print the data:
 
  .. code-block:: none
 
-    samples tensor([[ 4,  5,  6,  7],
+    samples tensor([[ 8,  9, 10, 11],
+            [ 0,  1,  2,  3],
+            [ 0,  1,  2,  3],
             [ 8,  9, 10, 11],
-            [ 4,  5,  6,  7],
-            [ 8,  9, 10, 11],
-            [ 8,  9, 10, 11]]) tensor([[ 5,  6,  7,  8,  9],
+            [ 0,  1,  2,  3]]) tensor([[10, 11, 12, 13, 14],
+            [ 0,  1,  2,  3,  4],
+            [ 0,  1,  2,  3,  4],
             [10, 11, 12, 13, 14],
-            [ 5,  6,  7,  8,  9],
-            [10, 11, 12, 13, 14],
-            [10, 11, 12, 13, 14]])
+            [ 0,  1,  2,  3,  4]])
 
 
 
@@ -376,16 +376,16 @@ A :class:`~torchrl.data.LazyMemmapStorage` is created in the same manner:
  .. code-block:: none
 
     The buffer has 3 elements
-    samples: a= tensor([[4, 5, 6, 7],
-            [0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [0, 1, 2, 3],
-            [4, 5, 6, 7]]) 
-    ('b', 'c'): tensor([[5, 6, 7, 8, 9],
-            [0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9],
-            [0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9]])
+    samples: a= tensor([[ 0,  1,  2,  3],
+            [ 8,  9, 10, 11],
+            [ 4,  5,  6,  7],
+            [ 8,  9, 10, 11],
+            [ 0,  1,  2,  3]]) 
+    ('b', 'c'): tensor([[ 0,  1,  2,  3,  4],
+            [10, 11, 12, 13, 14],
+            [ 5,  6,  7,  8,  9],
+            [10, 11, 12, 13, 14],
+            [ 0,  1,  2,  3,  4]])
 
 
 
@@ -419,8 +419,8 @@ We can also customize the storage location on disk:
  .. code-block:: none
 
     The buffer has 3 elements
-    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpicqm7ufu'>/a.memmap
-    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpicqm7ufu'>/b/c.memmap
+    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmprh944cyc'>/a.memmap
+    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmprh944cyc'>/b/c.memmap
 
 
 
@@ -511,7 +511,7 @@ Let us have a look at these indices:
 
  .. code-block:: none
 
-    tensor([0, 1, 0, 2, 1, 0, 2, 0, 1, 1, 1, 0])
+    tensor([2, 1, 2, 1, 1, 1, 2, 2, 2, 1, 0, 0])
 
 
 
@@ -1204,7 +1204,7 @@ higher indices should occur more frequently:
  .. code-block:: none
 
 
-    (array([ 38.,  33.,  82.,  55.,  79., 147.,  73., 187.,  99., 231.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([ 40.,  28.,  85.,  67.,  52., 161.,  82., 177., 116., 216.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1260,7 +1260,7 @@ Now, higher indices should occur less frequently:
  .. code-block:: none
 
 
-    (array([231.,  98., 200.,  84.,  73., 125.,  69.,  88.,  28.,  28.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([230.,  97., 189.,  88.,  73., 145.,  47.,  96.,  23.,  36.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1698,29 +1698,29 @@ the end:
     Traceback (most recent call last):
       File "/pytorch/rl/docs/source/reference/generated/tutorials/rb_tutorial.py", line 794, in <module>
         s = rb.sample(1)  # the buffer has only one element
-      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 1104, in sample
+      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 1106, in sample
         data, info = super().sample(batch_size, return_info=True)
-      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 597, in sample
+      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 600, in sample
         ret = self._sample(batch_size)
       File "/pytorch/rl/torchrl/data/replay_buffers/utils.py", line 50, in decorated_fun
         output = fun(self, *args, **kwargs)
-      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 1144, in _sample
+      File "/pytorch/rl/torchrl/data/replay_buffers/replay_buffers.py", line 1146, in _sample
         data = self._transform(data)
       File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1527, in _wrapped_call_impl
         return self._call_impl(*args, **kwargs)
       File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1536, in _call_impl
         return forward_call(*args, **kwargs)
-      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 976, in forward
+      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 1036, in forward
         tensordict = t(tensordict)
       File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1527, in _wrapped_call_impl
         return self._call_impl(*args, **kwargs)
       File "/pytorch/rl/env/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1536, in _call_impl
         return forward_call(*args, **kwargs)
-      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 2888, in forward
+      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 2968, in forward
         return self.unfolding(tensordict)
       File "/pytorch/rl/env/lib/python3.8/site-packages/tensordict/_contextlib.py", line 126, in decorate_context
         return func(*args, **kwargs)
-      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 3013, in unfolding
+      File "/pytorch/rl/torchrl/envs/transforms/transforms.py", line 3093, in unfolding
         reps = torch.stack(reps)
     RuntimeError: stack expects a non-empty TensorList
 
@@ -1825,9 +1825,9 @@ Next steps
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 51.139 seconds)
+   **Total running time of the script:** (2 minutes 41.932 seconds)
 
-**Estimated memory usage:**  4051 MB
+**Estimated memory usage:**  2813 MB
 
 
 .. _sphx_glr_download_tutorials_rb_tutorial.py:
