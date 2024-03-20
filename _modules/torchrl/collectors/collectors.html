@@ -885,6 +885,13 @@
             <span class="c1"># we we did not receive an env device, we use the device of the env</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">device</span>
 
+        <span class="c1"># If the storing device is not the same as the policy device, we have</span>
+        <span class="c1"># no guarantee that the &quot;next&quot; entry from the policy will be on the</span>
+        <span class="c1"># same device as the collector metadata.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cast_to_env_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_to_policy_device</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">device</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span>
+        <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">max_frames_per_traj</span> <span class="o">=</span> <span class="p">(</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">max_frames_per_traj</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_frames_per_traj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="p">)</span>
@@ -1302,7 +1309,7 @@
                             <span class="n">policy_output</span><span class="p">,</span> <span class="n">keys_to_update</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_policy_output_keys</span>
                         <span class="p">)</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_to_policy_device</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_to_env_device</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">env_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

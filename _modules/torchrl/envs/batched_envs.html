@@ -674,19 +674,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_single_task</span> <span class="o">=</span> <span class="nb">callable</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">):</span>
             <span class="n">create_env_fn</span> <span class="o">=</span> <span class="p">[</span><span class="n">create_env_fn</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_workers</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;num_workers and len(create_env_fn) mismatch, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">share_individual_td</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_task</span>
-            <span class="p">):</span>  <span class="c1"># then it has been explicitly set by the user</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;share_individual_td must be set to None or True when using multi-task batched environments&quot;</span>
-                <span class="p">)</span>
-            <span class="n">share_individual_td</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_workers</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;num_workers and len(create_env_fn) mismatch, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="n">create_env_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">create_env_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">create_env_kwargs</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">create_env_kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">create_env_kwargs</span> <span class="o">=</span> <span class="p">[</span>
@@ -701,7 +693,8 @@
         <span class="k">if</span> <span class="n">pin_memory</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;pin_memory for batched envs is deprecated&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">share_individual_td</span><span class="p">)</span>
+        <span class="c1"># if share_individual_td is None, we will assess later if the output can be stacked</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="o">=</span> <span class="n">share_individual_td</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_share_memory</span> <span class="o">=</span> <span class="n">shared_memory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_memmap</span> <span class="o">=</span> <span class="n">memmap</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_step_when_done</span> <span class="o">=</span> <span class="n">allow_step_when_done</span>
@@ -744,6 +737,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
                 <span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="o">*</span><span class="n">meta_data</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">n_tasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span> <span class="o">=</span> <span class="p">[]</span>
@@ -751,6 +746,16 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">get_env_metadata</span><span class="p">(</span><span class="n">create_env_fn</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">create_env_kwargs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                 <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">share_individual_td</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">_stackable</span><span class="p">(</span>
+                    <span class="o">*</span><span class="p">[</span><span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span> <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">share_individual_td</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;share_individual_td=False was provided but share_individual_td must &quot;</span>
+                        <span class="s2">&quot;be True to accomodate non-stackable tensors.&quot;</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span> <span class="o">=</span> <span class="n">share_individual_td</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_properties</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">update_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -863,9 +868,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">done_spec</span> <span class="o">=</span> <span class="n">output_spec</span><span class="p">[</span><span class="s2">&quot;full_done_spec&quot;</span><span class="p">]</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_dummy_env_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span> <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">],</span> <span class="mi">0</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span> <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">],</span> <span class="mi">0</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">meta_data</span><span class="o">.</span><span class="n">tensordict</span> <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">],</span> <span class="mi">0</span>
+                <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_locked</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">batch_locked</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">has_lazy_inputs</span> <span class="o">=</span> <span class="n">contains_lazy_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span><span class="p">)</span>
 
@@ -882,14 +892,11 @@
 
     <span class="k">def</span> <span class="nf">_create_td</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates self.shared_tensordict_parent, a TensorDict used to store the most recent observations.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_task</span><span class="p">:</span>
-            <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;batched environment base tensordict has the wrong shape&quot;</span>
-                <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_tensordict</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;batched environment base tensordict has the wrong shape&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_task</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_env_input_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
@@ -904,6 +911,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_env_obs_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_env_output_keys</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_keys</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># this is only possible if _single_task=False</span>
             <span class="n">env_input_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">meta_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="s2">&quot;input_spec&quot;</span><span class="p">,</span> <span class="s2">&quot;full_state_spec&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -956,7 +964,7 @@
         <span class="c1"># output keys after step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_selected_step_keys</span> <span class="o">=</span> <span class="p">{</span><span class="n">unravel_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_output_keys</span><span class="p">}</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_task</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_individual_td</span><span class="p">:</span>
             <span class="n">shared_tensordict_parent</span> <span class="o">=</span> <span class="n">shared_tensordict_parent</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
                 <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_keys</span><span class="p">,</span>
                 <span class="o">*</span><span class="p">(</span><span class="n">unravel_key</span><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_output_keys</span><span class="p">),</span>
@@ -1186,10 +1194,19 @@
                 <span class="n">tensordict_</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="n">_td</span> <span class="o">=</span> <span class="n">_env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">tensordict</span><span class="o">=</span><span class="n">tensordict_</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span>
-                <span class="n">_td</span><span class="p">,</span>
-                <span class="n">keys_to_update</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_reset_keys_filt</span><span class="p">),</span>
-            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shared_tensordicts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">update_</span><span class="p">(</span>
+                    <span class="n">_td</span><span class="p">,</span>
+                    <span class="n">keys_to_update</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_selected_reset_keys_filt</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;no_grad mode&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Cannot update a view of a tensordict when gradients are required. &quot;</span>
+                        <span class="s2">&quot;To collect gradient across sub-environments, please set the &quot;</span>
+                        <span class="s2">&quot;share_individual_td argument to True.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">raise</span>
         <span class="n">selected_output_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected_reset_keys_filt</span>
         <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
 
@@ -2080,6 +2097,15 @@
 
 <span class="k">def</span> <span class="nf">_filter_empty</span><span class="p">(</span><span class="n">tensordict</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_stackable</span><span class="p">(</span><span class="o">*</span><span class="n">tensordicts</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ls</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="p">(</span><span class="o">*</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">stack_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ls</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">ls</span><span class="o">.</span><span class="n">_has_exclusive_keys</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
 
 <span class="c1"># Create an alias for possible imports</span>
