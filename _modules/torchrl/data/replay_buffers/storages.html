@@ -1906,6 +1906,8 @@
 
 
 <span class="k">def</span> <span class="nf">_flip_list</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">_data</span><span class="p">)</span> <span class="k">for</span> <span class="n">_data</span> <span class="ow">in</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">flat_data</span><span class="p">,</span> <span class="n">flat_specs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">tree_flatten</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">])</span>
     <span class="n">flat_data</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">flat_data</span><span class="p">)</span>
     <span class="n">stacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">flat_data</span><span class="p">]</span>
