@@ -401,7 +401,7 @@
 
 <span class="kn">from</span> <span class="nn">torchrl._extension</span> <span class="kn">import</span> <span class="n">EXTENSION_WARNING</span>
 
-<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_replace_last</span>
+<span class="kn">from</span> <span class="nn">torchrl._utils</span> <span class="kn">import</span> <span class="n">_replace_last</span><span class="p">,</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.storages</span> <span class="kn">import</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">StorageEnsemble</span><span class="p">,</span> <span class="n">TensorStorage</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.replay_buffers.utils</span> <span class="kn">import</span> <span class="n">_is_int</span>
 
@@ -433,7 +433,7 @@
 
     <span class="k">def</span> <span class="nf">update_priority</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">priority</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
     <span class="k">def</span> <span class="nf">mark_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -600,7 +600,7 @@
         <span class="k">if</span> <span class="n">storage</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">storage</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="c1"># we &#39;always&#39; return the indices. The &#39;drop_last&#39; just instructs the</span>
-        <span class="c1"># sampler to turn to &#39;ran_out = True` whenever the next sample</span>
+        <span class="c1"># sampler to turn to `ran_out = True` whenever the next sample</span>
         <span class="c1"># will be too short. This will be read by the replay buffer</span>
         <span class="c1"># as a signal for an early break of the __iter__().</span>
         <span class="k">return</span> <span class="n">index</span><span class="p">,</span> <span class="p">{}</span>
@@ -856,7 +856,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">priority</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span>
-        <span class="c1"># we need to reshape priority if it has more than one elements or if it has</span>
+        <span class="c1"># we need to reshape priority if it has more than one element or if it has</span>
         <span class="c1"># a different shape than index</span>
         <span class="k">if</span> <span class="n">priority</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">priority</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -1016,7 +1016,25 @@
 <span class="sd">            if the last element of the trajectory tensor is identical to the first,</span>
 <span class="sd">            the same trajectory spans across end and beginning.</span>
 <span class="sd">        cache_values (bool, optional): to be used with static datasets.</span>
-<span class="sd">            Will cache the start and end signal of the trajectory.</span>
+<span class="sd">            Will cache the start and end signal of the trajectory. This can be safely used even</span>
+<span class="sd">            if the trajectory indices change during calls to :class:`~torchrl.data.ReplayBuffer.extend`</span>
+<span class="sd">            as this operation will erase the cache.</span>
+
+<span class="sd">            .. warning:: ``cache_values=True`` will not work if the sampler is used with a</span>
+<span class="sd">                storage that is extended by another buffer. For instance:</span>
+
+<span class="sd">                    &gt;&gt;&gt; buffer0 = ReplayBuffer(storage=storage,</span>
+<span class="sd">                    ...     sampler=SliceSampler(num_slices=8, cache_values=True),</span>
+<span class="sd">                    ...     writer=ImmutableWriter())</span>
+<span class="sd">                    &gt;&gt;&gt; buffer1 = ReplayBuffer(storage=storage,</span>
+<span class="sd">                    ...     sampler=other_sampler)</span>
+<span class="sd">                    &gt;&gt;&gt; # Wrong! Does not erase the buffer from the sampler of buffer0</span>
+<span class="sd">                    &gt;&gt;&gt; buffer1.extend(data)</span>
+
+<span class="sd">            .. warning:: ``cache_values=True`` will not work as expected if the buffer is</span>
+<span class="sd">                shared between processes and one process is responsible for writing</span>
+<span class="sd">                and one process for sampling, as erasing the cache can only be done locally.</span>
+
 <span class="sd">        truncated_key (NestedKey, optional): If not ``None``, this argument</span>
 <span class="sd">            indicates where a truncated signal should be written in the output</span>
 <span class="sd">            data. This is used to indicate to value estimators where the provided</span>
@@ -1031,6 +1049,10 @@
 <span class="sd">            Be mindful that this can result in effective `batch_size`  shorter</span>
 <span class="sd">            than the one asked for! Trajectories can be split using</span>
 <span class="sd">            :func:`~torchrl.collectors.split_trajectories`. Defaults to ``True``.</span>
+<span class="sd">        compile (bool or dict of kwargs, optional): if ``True``, the bottleneck of</span>
+<span class="sd">            the :meth:`~sample` method will be compiled with :func:`~torch.compile`.</span>
+<span class="sd">            Keyword arguments can also be passed to torch.compile with this arg.</span>
+<span class="sd">            Defaults to ``False``.</span>
 
 <span class="sd">    .. note:: To recover the trajectory splits in the storage,</span>
 <span class="sd">        :class:`~torchrl.data.replay_buffers.samplers.SliceSampler` will first</span>
@@ -1109,6 +1131,7 @@
         <span class="n">cache_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">truncated_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;truncated&quot;</span><span class="p">),</span>
         <span class="n">strict_length</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="nb">compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span> <span class="o">=</span> <span class="n">num_slices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span> <span class="o">=</span> <span class="n">slice_len</span>
@@ -1163,6 +1186,31 @@
                 <span class="s2">&quot;Either num_slices or slice_len must be not None, and not both. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Got num_slices=</span><span class="si">{</span><span class="n">num_slices</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">compile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">compile</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">compile</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">get_spawning_popen</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_values</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;It seems you are sharing a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> across processes with&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;cache_values=True. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;While this isn&#39;t forbidden and could perfectly work if your dataset &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;is unaltered on both processes, remember that calling extend/add on&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;one process will NOT erase the cache on another process&#39;s sampler, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;which will cause synchronization issues.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_values</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -1174,8 +1222,8 @@
             <span class="sa">f</span><span class="s2">&quot;strict_length=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_find_start_stop_traj</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at_capacity</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_find_start_stop_traj</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at_capacity</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">trajectory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># slower</span>
             <span class="c1"># _, stop_idx = torch.unique_consecutive(trajectory, return_counts=True)</span>
@@ -1214,6 +1262,10 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Expected the end-of-trajectory signal to be at least 1-dimensional.&quot;</span>
             <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_end_to_start_stop</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_end_to_start_stop</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
         <span class="c1"># Using transpose ensures the start and stop are sorted the same way</span>
         <span class="n">stop_idx</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
         <span class="n">stop_idx</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">stop_idx</span><span class="p">[:,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
@@ -1238,30 +1290,33 @@
         <span class="n">lengths</span><span class="p">[</span><span class="n">lengths</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">lengths</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">length</span>
         <span class="k">return</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">stop_idx</span><span class="p">,</span> <span class="n">lengths</span>
 
+    <span class="k">def</span> <span class="nf">_start_to_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">st</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ndims</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">ndim</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">ndims</span><span class="p">:</span>
+            <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">arange</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">arange</span><span class="p">)]</span> <span class="o">*</span> <span class="n">ndims</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arange</span> <span class="o">=</span> <span class="n">arange</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">arange</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="c1"># we do this to make sure that we&#39;re not broadcasting the start</span>
+            <span class="c1"># wrong as a tensor with shape [N] can&#39;t be expanded to [N, 1]</span>
+            <span class="c1"># without getting an error</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">arange</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arange</span> <span class="o">+</span> <span class="n">st</span>
+
     <span class="k">def</span> <span class="nf">_tensor_slices_from_startend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">storage_length</span><span class="p">):</span>
         <span class="c1"># start is a 2d tensor resulting from nonzero()</span>
         <span class="c1"># seq_length is a 1d tensor indicating the desired length of each sequence</span>
 
-        <span class="k">def</span> <span class="nf">_start_to_end</span><span class="p">(</span><span class="n">st</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">ndims</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">ndim</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">arange</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">arange</span><span class="p">)]</span> <span class="o">*</span> <span class="n">ndims</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">arange</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-                <span class="c1"># we do this to make sure that we&#39;re not broadcasting the start</span>
-                <span class="c1"># wrong as a tensor with shape [N] can&#39;t be expanded to [N, 1]</span>
-                <span class="c1"># without getting an error</span>
-                <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">arange</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">arange</span> <span class="o">+</span> <span class="n">st</span>
-
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seq_length</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">_start_to_end</span><span class="p">(</span><span class="n">_start</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">seq_length</span><span class="p">)</span> <span class="k">for</span> <span class="n">_start</span> <span class="ow">in</span> <span class="n">start</span><span class="p">]</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_start_to_end</span><span class="p">(</span><span class="n">_start</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">seq_length</span><span class="p">)</span> <span class="k">for</span> <span class="n">_start</span> <span class="ow">in</span> <span class="n">start</span><span class="p">]</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># when padding is needed</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="n">_start_to_end</span><span class="p">(</span><span class="n">_start</span><span class="p">,</span> <span class="n">_seq_len</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_start_to_end</span><span class="p">(</span><span class="n">_start</span><span class="p">,</span> <span class="n">_seq_len</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">_start</span><span class="p">,</span> <span class="n">_seq_len</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">)</span>
                 <span class="p">]</span>
             <span class="p">)</span>
@@ -1324,14 +1379,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">batch_size</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The batch-size must be divisible by the number of slices, got batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> and num_slices=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The batch-size must be divisible by the number of slices, got &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> and num_slices=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
             <span class="n">seq_length</span> <span class="o">=</span> <span class="n">batch_size</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span>
             <span class="n">num_slices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_slices</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">batch_size</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The batch-size must be divisible by the slice length, got batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The batch-size must be divisible by the slice length, got &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;batch_size=</span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2"> and slice_len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
             <span class="n">seq_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span>
             <span class="n">num_slices</span> <span class="o">=</span> <span class="n">batch_size</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_len</span>
@@ -1372,8 +1429,8 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="c1"># start_idx and stop_idx are 2d tensors organized like a non-zero</span>
 
-        <span class="k">def</span> <span class="nf">get_traj_idx</span><span class="p">(</span><span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">lengths</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">num_slices</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="n">lengths</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">get_traj_idx</span><span class="p">(</span><span class="n">maxval</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">maxval</span><span class="p">,</span> <span class="p">(</span><span class="n">num_slices</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="n">lengths</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">lengths</span> <span class="o">&lt;</span> <span class="n">seq_length</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strict_length</span><span class="p">:</span>
@@ -1392,7 +1449,7 @@
                 <span class="n">stop_idx</span> <span class="o">=</span> <span class="n">stop_idx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="n">traj_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">(</span><span class="n">lengths</span><span class="o">=</span><span class="n">lengths_idx</span><span class="p">)</span>
+                    <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">(</span><span class="n">lengths_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Here we must filter out the indices that correspond to trajectories</span>
                     <span class="c1"># we don&#39;t want to keep. That could potentially lead to an empty sample.</span>
@@ -1415,7 +1472,7 @@
                 <span class="n">lengths</span> <span class="o">=</span> <span class="n">lengths_idx</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">traj_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">()</span>
+                    <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">(</span><span class="n">lengths</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">num_slices</span> <span class="o">=</span> <span class="n">traj_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -1423,10 +1480,29 @@
                 <span class="n">seq_length</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">traj_idx</span><span class="p">]</span><span class="o">.</span><span class="n">clamp_max</span><span class="p">(</span><span class="n">seq_length</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">traj_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">()</span>
+                <span class="n">traj_idx</span> <span class="o">=</span> <span class="n">get_traj_idx</span><span class="p">(</span><span class="n">lengths</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">num_slices</span> <span class="o">=</span> <span class="n">traj_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_index</span><span class="p">(</span>
+            <span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">,</span>
+            <span class="n">start_idx</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
+            <span class="n">stop_idx</span><span class="o">=</span><span class="n">stop_idx</span><span class="p">,</span>
+            <span class="n">num_slices</span><span class="o">=</span><span class="n">num_slices</span><span class="p">,</span>
+            <span class="n">seq_length</span><span class="o">=</span><span class="n">seq_length</span><span class="p">,</span>
+            <span class="n">storage_length</span><span class="o">=</span><span class="n">storage_length</span><span class="p">,</span>
+            <span class="n">traj_idx</span><span class="o">=</span><span class="n">traj_idx</span><span class="p">,</span>
+        <span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_get_index</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lengths</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">start_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">stop_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">seq_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_slices</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">storage_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">traj_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
         <span class="n">relative_starts</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">num_slices</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">lengths</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
@@ -1507,12 +1583,7 @@
         <span class="k">return</span> <span class="p">{}</span>
 
     <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="o">...</span>
-
-    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
-        <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">return</span> <span class="n">state</span></div>
+        <span class="o">...</span></div>
 
 
 <div class="viewcode-block" id="SliceSamplerWithoutReplacement"><a class="viewcode-back" href="../../../../reference/generated/torchrl.data.replay_buffers.SliceSamplerWithoutReplacement.html#torchrl.data.replay_buffers.SliceSamplerWithoutReplacement">[docs]</a><span class="k">class</span> <span class="nc">SliceSamplerWithoutReplacement</span><span class="p">(</span><span class="n">SliceSampler</span><span class="p">,</span> <span class="n">SamplerWithoutReplacement</span><span class="p">):</span>
@@ -1561,6 +1632,10 @@
 <span class="sd">            :func:`~torchrl.collectors.split_trajectories`. Defaults to ``True``.</span>
 <span class="sd">        shuffle (bool, optional): if ``False``, the order of the trajectories</span>
 <span class="sd">            is not shuffled. Defaults to ``True``.</span>
+<span class="sd">        compile (bool or dict of kwargs, optional): if ``True``, the bottleneck of</span>
+<span class="sd">            the :meth:`~sample` method will be compiled with :func:`~torch.compile`.</span>
+<span class="sd">            Keyword arguments can also be passed to torch.compile with this arg.</span>
+<span class="sd">            Defaults to ``False``.</span>
 
 <span class="sd">    .. note:: To recover the trajectory splits in the storage,</span>
 <span class="sd">        :class:`~torchrl.data.replay_buffers.samplers.SliceSamplerWithoutReplacement` will first</span>
@@ -1635,6 +1710,7 @@
         <span class="n">truncated_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;truncated&quot;</span><span class="p">),</span>
         <span class="n">strict_length</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="nb">compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">SliceSampler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -1647,6 +1723,7 @@
             <span class="n">strict_length</span><span class="o">=</span><span class="n">strict_length</span><span class="p">,</span>
             <span class="n">ends</span><span class="o">=</span><span class="n">ends</span><span class="p">,</span>
             <span class="n">trajectories</span><span class="o">=</span><span class="n">trajectories</span><span class="p">,</span>
+            <span class="nb">compile</span><span class="o">=</span><span class="nb">compile</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">SamplerWithoutReplacement</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">)</span>
 
@@ -1755,7 +1832,25 @@
 <span class="sd">            or when this signal is readily available. Must be used with ``cache_values=True``</span>
 <span class="sd">            and cannot be used in conjunction with ``end_key`` or ``traj_key``.</span>
 <span class="sd">        cache_values (bool, optional): to be used with static datasets.</span>
-<span class="sd">            Will cache the start and end signal of the trajectory.</span>
+<span class="sd">            Will cache the start and end signal of the trajectory. This can be safely used even</span>
+<span class="sd">            if the trajectory indices change during calls to :class:`~torchrl.data.ReplayBuffer.extend`</span>
+<span class="sd">            as this operation will erase the cache.</span>
+
+<span class="sd">            .. warning:: ``cache_values=True`` will not work if the sampler is used with a</span>
+<span class="sd">                storage that is extended by another buffer. For instance:</span>
+
+<span class="sd">                    &gt;&gt;&gt; buffer0 = ReplayBuffer(storage=storage,</span>
+<span class="sd">                    ...     sampler=SliceSampler(num_slices=8, cache_values=True),</span>
+<span class="sd">                    ...     writer=ImmutableWriter())</span>
+<span class="sd">                    &gt;&gt;&gt; buffer1 = ReplayBuffer(storage=storage,</span>
+<span class="sd">                    ...     sampler=other_sampler)</span>
+<span class="sd">                    &gt;&gt;&gt; # Wrong! Does not erase the buffer from the sampler of buffer0</span>
+<span class="sd">                    &gt;&gt;&gt; buffer1.extend(data)</span>
+
+<span class="sd">            .. warning:: ``cache_values=True`` will not work as expected if the buffer is</span>
+<span class="sd">                shared between processes and one process is responsible for writing</span>
+<span class="sd">                and one process for sampling, as erasing the cache can only be done locally.</span>
+
 <span class="sd">        truncated_key (NestedKey, optional): If not ``None``, this argument</span>
 <span class="sd">            indicates where a truncated signal should be written in the output</span>
 <span class="sd">            data. This is used to indicate to value estimators where the provided</span>
@@ -1770,6 +1865,10 @@
 <span class="sd">            Be mindful that this can result in effective `batch_size`  shorter</span>
 <span class="sd">            than the one asked for! Trajectories can be split using</span>
 <span class="sd">            :func:`~torchrl.collectors.split_trajectories`. Defaults to ``True``.</span>
+<span class="sd">        compile (bool or dict of kwargs, optional): if ``True``, the bottleneck of</span>
+<span class="sd">            the :meth:`~sample` method will be compiled with :func:`~torch.compile`.</span>
+<span class="sd">            Keyword arguments can also be passed to torch.compile with this arg.</span>
+<span class="sd">            Defaults to ``False``.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import torch</span>
@@ -1826,6 +1925,7 @@
         <span class="n">cache_values</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">truncated_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="s2">&quot;truncated&quot;</span><span class="p">),</span>
         <span class="n">strict_length</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="nb">compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">SliceSampler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -1838,6 +1938,7 @@
             <span class="n">strict_length</span><span class="o">=</span><span class="n">strict_length</span><span class="p">,</span>
             <span class="n">ends</span><span class="o">=</span><span class="n">ends</span><span class="p">,</span>
             <span class="n">trajectories</span><span class="o">=</span><span class="n">trajectories</span><span class="p">,</span>
+            <span class="nb">compile</span><span class="o">=</span><span class="nb">compile</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">PrioritizedSampler</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -1872,6 +1973,10 @@
         <span class="n">state</span> <span class="o">=</span> <span class="n">SliceSampler</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PrioritizedSampler</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PrioritizedSampler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SliceSampler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">:</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
         <span class="c1"># Sample `batch_size` indices representing the start of a slice.</span>
         <span class="c1"># The sampling is based on a weight vector.</span>
@@ -1891,7 +1996,7 @@
             <span class="c1"># make seq_length a tensor with values clamped by lengths</span>
             <span class="n">seq_length</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">traj_idx</span><span class="p">]</span><span class="o">.</span><span class="n">clamp_max</span><span class="p">(</span><span class="n">seq_length</span><span class="p">)</span>
 
-        <span class="c1"># build a list of index that we dont want to sample: all the steps at a `seq_length` distance of</span>
+        <span class="c1"># build a list of index that we don&#39;t want to sample: all the steps at a `seq_length` distance of</span>
         <span class="c1"># the end the trajectory, with the end of trajectory (`stop_idx`) included</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seq_length</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
@@ -2055,7 +2160,7 @@
 <span class="sd">      The indices provided in the info dictionary are placed in a :class:`~tensordict.TensorDict` with</span>
 <span class="sd">      keys ``index`` and ``buffer_ids`` that allow the upper :class:`~torchrl.data.ReplayBufferEnsemble`</span>
 <span class="sd">      and :class:`~torchrl.data.StorageEnsemble` objects to retrieve the data.</span>
-<span class="sd">      This format is different than with other samplers which usually return indices</span>
+<span class="sd">      This format is different from with other samplers which usually return indices</span>
 <span class="sd">      as regular tensors.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>

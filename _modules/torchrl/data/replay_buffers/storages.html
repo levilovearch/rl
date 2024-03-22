@@ -961,16 +961,16 @@
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">get_spawning_popen</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
             <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_len_value&quot;</span><span class="p">]</span>
-            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;len__context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span>
+            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;len__context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">length</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
             <span class="c1"># check that the storage is initialized</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Cannot share a storage of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> between processed if &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot share a storage of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> between processes if &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;it has not been initialized yet. Populate the buffer with &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;some data in the main process before passing it to the other &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;subprocesses (or create the buffer explicitely with a TensorStorage).&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;subprocesses (or create the buffer explicitly with a TensorStorage).&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># check that the content is shared, otherwise tell the user we can&#39;t help</span>
