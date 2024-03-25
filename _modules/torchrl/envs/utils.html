@@ -505,6 +505,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">keep_other</span> <span class="o">=</span> <span class="n">keep_other</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">exclude_action</span> <span class="o">=</span> <span class="n">exclude_action</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_next</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_keys</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude_reward</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_next</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_keys</span>
@@ -513,8 +514,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude_action</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_keys</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_keys</span>
         <span class="k">if</span> <span class="n">keep_other</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_keys</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_keys</span>
+
+        <span class="n">reset_keys</span> <span class="o">=</span> <span class="p">{</span><span class="n">_replace_last</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;_reset&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reset_keys</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_keys</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repr_key_list_as_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repr_key_list_as_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys_from_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repr_key_list_as_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys_from_next</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validated</span> <span class="o">=</span> <span class="kc">None</span>
@@ -534,23 +545,26 @@
                 <span class="o">+</span> <span class="p">[</span><span class="n">unravel_key</span><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_keys</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="n">actual</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">validated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span> <span class="o">==</span> <span class="n">actual</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validated</span> <span class="o">=</span> <span class="n">expected</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span> <span class="o">==</span> <span class="n">expected</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="s2">&quot;The expected key set and actual key set differ. &quot;</span>
                     <span class="s2">&quot;This will work but with a slower throughput than &quot;</span>
                     <span class="s2">&quot;when the specs match exactly the actual key set &quot;</span>
                     <span class="s2">&quot;in the data. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Expected - Actual keys=</span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">actual</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Actual - Expected keys=</span><span class="si">{</span><span class="n">actual</span><span class="o">-</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">Expected keys</span><span class="se">}}</span><span class="s2">-</span><span class="se">{{</span><span class="s2">Actual keys</span><span class="se">}}</span><span class="s2">=</span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">actual</span><span class="si">}</span><span class="s2">, </span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">Actual keys</span><span class="se">}}</span><span class="s2">-</span><span class="se">{{</span><span class="s2">Expected keys</span><span class="se">}}</span><span class="s2">=</span><span class="si">{</span><span class="n">actual</span><span class="o">-</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_repr_key_list_as_tree</span><span class="p">(</span><span class="n">key_list</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Represents the keys as a tree to facilitate iteration.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
         <span class="n">key_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(())</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">}</span>
-        <span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span><span class="n">key_dict</span><span class="p">)</span>
+        <span class="n">td</span> <span class="o">=</span> <span class="n">TensorDict</span><span class="p">(</span><span class="n">key_dict</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([]))</span>
         <span class="k">return</span> <span class="n">tree_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
 
     <span class="nd">@classmethod</span>
@@ -580,6 +594,36 @@
             <span class="n">data_out</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data_out</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_exclude</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">nested_key_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data_in</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">TensorDictBase</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copies the entries if they&#39;re not part of the list of keys to exclude.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_in</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">data_in</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">td</span><span class="p">,</span> <span class="n">td_out</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_in</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">tensordicts</span><span class="p">):</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_exclude</span><span class="p">(</span><span class="n">nested_key_dict</span><span class="p">,</span> <span class="n">td</span><span class="p">,</span> <span class="n">td_out</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="n">has_set</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_in</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">subdict</span> <span class="o">=</span> <span class="n">nested_key_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">NO_DEFAULT</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">subdict</span> <span class="ow">is</span> <span class="n">NO_DEFAULT</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_tensor_collection</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">has_set</span> <span class="ow">and</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">data_in</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">has_set</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">subdict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_exclude</span><span class="p">(</span><span class="n">subdict</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_set</span> <span class="ow">and</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">out</span> <span class="o">=</span> <span class="n">data_in</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">has_set</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">has_set</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span>
+
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">LazyStackedTensorDict</span><span class="p">):</span>
             <span class="n">out</span> <span class="o">=</span> <span class="n">LazyStackedTensorDict</span><span class="o">.</span><span class="n">lazy_stack</span><span class="p">(</span>
@@ -589,12 +633,16 @@
             <span class="k">return</span> <span class="n">out</span>
 
         <span class="n">next_td</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">_get_str</span><span class="p">(</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">tensordict</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_grab_and_place</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_other</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclude</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_from_root</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_grab_and_place</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys_from_root</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_grab_and_place</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys_from_next</span><span class="p">,</span> <span class="n">next_td</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">out</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">next_td</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
             <span class="n">total_key</span> <span class="o">=</span> <span class="p">()</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_other</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
