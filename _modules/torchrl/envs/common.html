@@ -851,6 +851,35 @@
     <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndimension</span><span class="p">()</span>
 
+<div class="viewcode-block" id="EnvBase.append_transform"><a class="viewcode-back" href="../../../reference/generated/torchrl.envs.EnvBase.html#torchrl.envs.EnvBase.append_transform">[docs]</a>    <span class="k">def</span> <span class="nf">append_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">transform</span><span class="p">:</span> <span class="s2">&quot;Transform&quot;</span>  <span class="c1"># noqa: F821</span>
+        <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">TensorDictBase</span><span class="p">],</span> <span class="n">TensorDictBase</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a transformed environment where the callable/transform passed is applied.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transform (Transform or Callable[[TensorDictBase], TensorDictBase]): the transform to apply</span>
+<span class="sd">                to the environment.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from torchrl.envs import GymEnv</span>
+<span class="sd">            &gt;&gt;&gt; import torch</span>
+<span class="sd">            &gt;&gt;&gt; env = GymEnv(&quot;CartPole-v1&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; loc = 0.5</span>
+<span class="sd">            &gt;&gt;&gt; scale = 1.0</span>
+<span class="sd">            &gt;&gt;&gt; transform = lambda data: data.set(&quot;observation&quot;, (data.get(&quot;observation&quot;) - loc)/scale)</span>
+<span class="sd">            &gt;&gt;&gt; env = env.append_transform(transform=transform)</span>
+<span class="sd">            &gt;&gt;&gt; print(env)</span>
+<span class="sd">            TransformedEnv(</span>
+<span class="sd">                env=GymEnv(env=CartPole-v1, batch_size=torch.Size([]), device=cpu),</span>
+<span class="sd">                transform=_CallableTransform(keys=[]))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.transforms</span> <span class="kn">import</span> <span class="n">TransformedEnv</span>
+
+        <span class="k">return</span> <span class="n">TransformedEnv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span></div>
+
     <span class="c1"># Parent specs: input and output spec.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">input_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
