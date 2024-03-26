@@ -215,7 +215,7 @@ change the ``collate_fn`` since the default expects numerical data):
 
  .. code-block:: none
 
-    ['a', 0, 'a']
+    ['a', 'a', 'b']
 
 
 
@@ -338,15 +338,15 @@ Let us sample from the buffer, and print the data:
 
  .. code-block:: none
 
-    samples tensor([[0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [4, 5, 6, 7],
-            [4, 5, 6, 7],
-            [0, 1, 2, 3]]) tensor([[0, 1, 2, 3, 4],
-            [5, 6, 7, 8, 9],
-            [5, 6, 7, 8, 9],
-            [5, 6, 7, 8, 9],
-            [0, 1, 2, 3, 4]])
+    samples tensor([[ 4,  5,  6,  7],
+            [ 4,  5,  6,  7],
+            [ 0,  1,  2,  3],
+            [ 8,  9, 10, 11],
+            [ 0,  1,  2,  3]]) tensor([[ 5,  6,  7,  8,  9],
+            [ 5,  6,  7,  8,  9],
+            [ 0,  1,  2,  3,  4],
+            [10, 11, 12, 13, 14],
+            [ 0,  1,  2,  3,  4]])
 
 
 
@@ -376,15 +376,15 @@ A :class:`~torchrl.data.LazyMemmapStorage` is created in the same manner:
  .. code-block:: none
 
     The buffer has 3 elements
-    samples: a= tensor([[ 8,  9, 10, 11],
+    samples: a= tensor([[ 0,  1,  2,  3],
+            [ 8,  9, 10, 11],
             [ 4,  5,  6,  7],
-            [ 4,  5,  6,  7],
-            [ 4,  5,  6,  7],
+            [ 0,  1,  2,  3],
             [ 0,  1,  2,  3]]) 
-    ('b', 'c'): tensor([[10, 11, 12, 13, 14],
+    ('b', 'c'): tensor([[ 0,  1,  2,  3,  4],
+            [10, 11, 12, 13, 14],
             [ 5,  6,  7,  8,  9],
-            [ 5,  6,  7,  8,  9],
-            [ 5,  6,  7,  8,  9],
+            [ 0,  1,  2,  3,  4],
             [ 0,  1,  2,  3,  4]])
 
 
@@ -419,8 +419,8 @@ We can also customize the storage location on disk:
  .. code-block:: none
 
     The buffer has 3 elements
-    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpzgvt30ig'>/a.memmap
-    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpzgvt30ig'>/b/c.memmap
+    the 'a' tensor is stored in <TemporaryDirectory '/tmp/tmpyhn_orfu'>/a.memmap
+    the ('b', 'c') tensor is stored in <TemporaryDirectory '/tmp/tmpyhn_orfu'>/b/c.memmap
 
 
 
@@ -511,7 +511,7 @@ Let us have a look at these indices:
 
  .. code-block:: none
 
-    tensor([0, 1, 1, 0, 1, 2, 1, 2, 0, 0, 1, 1])
+    tensor([0, 0, 1, 1, 2, 0, 1, 0, 2, 1, 2, 2])
 
 
 
@@ -1204,7 +1204,7 @@ higher indices should occur more frequently:
  .. code-block:: none
 
 
-    (array([ 34.,  35.,  93.,  47.,  74., 139.,  87., 185.,  95., 235.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([ 39.,  33., 101.,  47.,  64., 122., 101., 197., 109., 211.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1260,7 +1260,7 @@ Now, higher indices should occur less frequently:
  .. code-block:: none
 
 
-    (array([217., 101., 173.,  82.,  72., 137.,  58., 109.,  37.,  38.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
+    (array([223., 100., 193.,  75.,  87., 125.,  69., 101.,  26.,  25.]), array([ 1. ,  2.4,  3.8,  5.2,  6.6,  8. ,  9.4, 10.8, 12.2, 13.6, 15. ]), <BarContainer object of 10 artists>)
 
 
 
@@ -1825,9 +1825,9 @@ Next steps
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 41.689 seconds)
+   **Total running time of the script:** (2 minutes 53.162 seconds)
 
-**Estimated memory usage:**  2928 MB
+**Estimated memory usage:**  4474 MB
 
 
 .. _sphx_glr_download_tutorials_rb_tutorial.py:
