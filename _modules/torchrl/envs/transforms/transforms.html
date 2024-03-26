@@ -435,7 +435,7 @@
     <span class="n">TensorSpec</span><span class="p">,</span>
     <span class="n">UnboundedContinuousTensorSpec</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_EnvPostInit</span><span class="p">,</span> <span class="n">EnvBase</span><span class="p">,</span> <span class="n">make_tensordict</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_do_nothing</span><span class="p">,</span> <span class="n">_EnvPostInit</span><span class="p">,</span> <span class="n">EnvBase</span><span class="p">,</span> <span class="n">make_tensordict</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.transforms</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.transforms.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_get_reset</span><span class="p">,</span>
@@ -736,6 +736,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms the device of the parent env.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">device</span></div>
 
+<div class="viewcode-block" id="Transform.transform_env_batch_size"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform.transform_env_batch_size">[docs]</a>    <span class="k">def</span> <span class="nf">transform_env_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms the batch-size of the parent env.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">batch_size</span></div>
+
 <div class="viewcode-block" id="Transform.transform_output_spec"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.Transform.html#torchrl.envs.transforms.Transform.transform_output_spec">[docs]</a>    <span class="k">def</span> <span class="nf">transform_output_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_spec</span><span class="p">:</span> <span class="n">CompositeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompositeSpec</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms the output spec such that the resulting spec matches transform mapping.</span>
 
@@ -1016,6 +1020,8 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">transform_env_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_env</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_env</span><span class="o">.</span><span class="n">batch_size</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="c1"># during init, the base_env is not yet defined</span>
@@ -1111,7 +1117,6 @@
 
             <span class="c1"># remove cached key values, but not _input_spec</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
-
             <span class="n">output_spec</span> <span class="o">=</span> <span class="n">output_spec</span><span class="o">.</span><span class="n">unlock_</span><span class="p">()</span>
             <span class="n">output_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">transform_output_spec</span><span class="p">(</span><span class="n">output_spec</span><span class="p">)</span>
             <span class="n">output_spec</span><span class="o">.</span><span class="n">lock_</span><span class="p">()</span>
@@ -1431,6 +1436,11 @@
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">transform_env_device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">device</span></div>
+
+<div class="viewcode-block" id="Compose.transform_env_batch_size"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.Compose.html#torchrl.envs.transforms.Compose.transform_env_batch_size">[docs]</a>    <span class="k">def</span> <span class="nf">transform_env_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">transform_env_batch_size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">batch_size</span></div>
 
 <div class="viewcode-block" id="Compose.transform_input_spec"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.Compose.html#torchrl.envs.transforms.Compose.transform_input_spec">[docs]</a>    <span class="k">def</span> <span class="nf">transform_input_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">:</span> <span class="n">TensorSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
@@ -4144,11 +4154,20 @@
         <span class="n">device</span><span class="p">,</span>
         <span class="n">orig_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">orig_device</span><span class="p">)</span> <span class="k">if</span> <span class="n">orig_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">orig_device</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">_do_nothing</span>
 
     <span class="k">def</span> <span class="nf">set_container</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Transform</span><span class="p">,</span> <span class="n">EnvBase</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -4165,10 +4184,14 @@
 
 <div class="viewcode-block" id="DeviceCastTransform.forward"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.DeviceCastTransform.html#torchrl.envs.transforms.DeviceCastTransform.forward">[docs]</a>    <span class="nd">@dispatch</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;in_keys&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;out_keys&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">:</span> <span class="n">TensorDictBase</span>
@@ -4178,11 +4201,30 @@
 
     <span class="k">def</span> <span class="nf">_inv_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
         <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
-        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">tensordict</span>
-            <span class="k">return</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">orig_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span> <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">parent</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">if</span> <span class="n">orig_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">orig_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">tensordict</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sync_orig_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sync_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_sync_orig_device_val&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sync_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_device</span> <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">parent</span><span class="o">.</span><span class="n">device</span>
+            <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+                <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+                <span class="k">elif</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device</span>
+        <span class="k">return</span> <span class="n">sync_func</span>
 
 <div class="viewcode-block" id="DeviceCastTransform.transform_input_spec"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.DeviceCastTransform.html#torchrl.envs.transforms.DeviceCastTransform.transform_input_spec">[docs]</a>    <span class="k">def</span> <span class="nf">transform_input_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">:</span> <span class="n">TensorSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorSpec</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span></div>
@@ -7620,6 +7662,212 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">:</span> <span class="n">TensorDictBase</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call</span><span class="p">(</span><span class="n">tensordict_reset</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BatchSizeTransform"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.BatchSizeTransform.html#torchrl.envs.transforms.BatchSizeTransform">[docs]</a><span class="k">class</span> <span class="nc">BatchSizeTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A transform to modify the batch-size of an environmt.</span>
+
+<span class="sd">    This transform has two distinct usages: it can be used to set the</span>
+<span class="sd">    batch-size for non-batch-locked (e.g. stateless) environments to</span>
+<span class="sd">    enable data collection using data collectors. It can also be used</span>
+<span class="sd">    to modify the batch-size of an environment (e.g. squeeze, unsqueeze or</span>
+<span class="sd">    reshape).</span>
+
+<span class="sd">    This transform modifies the environment batch-size to match the one provided.</span>
+<span class="sd">    It expects the parent environment batch-size to be expandable to the</span>
+<span class="sd">    provided one.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        batch_size (torch.Size or equivalent, optional): the new batch-size of the environment.</span>
+<span class="sd">            Exclusive with ``reshape_fn``.</span>
+<span class="sd">        reshape_fn (callable, optional): a callable to modify the environment batch-size.</span>
+<span class="sd">            Exclusive with ``batch_size``.</span>
+
+<span class="sd">            .. note:: Currently, transformations involving</span>
+<span class="sd">                ``reshape``, ``flatten``, ``unflatten``, ``squeeze`` and ``unsqueeze``</span>
+<span class="sd">                are supported. If another reshape operation is required, please submit</span>
+<span class="sd">                a feature request on TorchRL github.</span>
+
+<span class="sd">        reset_func (callable, optional): a function that produces a reset tensordict.</span>
+<span class="sd">            The signature must match ``Callable[[TensorDictBase, TensorDictBase], TensorDictBase]``</span>
+<span class="sd">            where the first input argument is the optional tensordict passed to the</span>
+<span class="sd">            environment during the call to :meth:`~EnvBase.reset` and the second</span>
+<span class="sd">            is the output of ``TransformedEnv.base_env.reset``. It can also support an</span>
+<span class="sd">            optional ``env`` keyword argument if ``env_kwarg=True``.</span>
+<span class="sd">        env_kwarg (bool, optional): if ``True``, ``reset_func`` must support a</span>
+<span class="sd">            ``env`` keyword argument. Defaults to ``False``. The env passed will</span>
+<span class="sd">            be the env accompanied by its transform.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # Changing the batch-size with a function</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.envs import GymEnv</span>
+<span class="sd">        &gt;&gt;&gt; base_env = GymEnv(&quot;CartPole-v1&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; env = TransformedEnv(base_env, BatchSizeTransform(reshape_fn=lambda data: data.reshape(1, 1)))</span>
+<span class="sd">        &gt;&gt;&gt; env.rollout(4)</span>
+<span class="sd">        &gt;&gt;&gt; # Setting the shape of a stateless environment</span>
+<span class="sd">        &gt;&gt;&gt; class MyEnv(EnvBase):</span>
+<span class="sd">        ...     batch_locked = False</span>
+<span class="sd">        ...     def __init__(self):</span>
+<span class="sd">        ...         super().__init__()</span>
+<span class="sd">        ...         self.observation_spec = CompositeSpec(observation=UnboundedContinuousTensorSpec(3))</span>
+<span class="sd">        ...         self.reward_spec = UnboundedContinuousTensorSpec(1)</span>
+<span class="sd">        ...         self.action_spec = UnboundedContinuousTensorSpec(1)</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     def _reset(self, tensordict: TensorDictBase, **kwargs) -&gt; TensorDictBase:</span>
+<span class="sd">        ...         tensordict_batch_size = tensordict.batch_size if tensordict is not None else torch.Size([])</span>
+<span class="sd">        ...         result = self.observation_spec.rand(tensordict_batch_size)</span>
+<span class="sd">        ...         result.update(self.full_done_spec.zero(tensordict_batch_size))</span>
+<span class="sd">        ...         return result</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     def _step(</span>
+<span class="sd">        ...         self,</span>
+<span class="sd">        ...         tensordict: TensorDictBase,</span>
+<span class="sd">        ...     ) -&gt; TensorDictBase:</span>
+<span class="sd">        ...         result = self.observation_spec.rand(tensordict.batch_size)</span>
+<span class="sd">        ...         result.update(self.full_done_spec.zero(tensordict.batch_size))</span>
+<span class="sd">        ...         result.update(self.full_reward_spec.zero(tensordict.batch_size))</span>
+<span class="sd">        ...         return result</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     def _set_seed(self, seed: Optional[int]):</span>
+<span class="sd">        ...         pass</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; env = TransformedEnv(MyEnv(), BatchSizeTransform([5]))</span>
+<span class="sd">        &gt;&gt;&gt; assert env.batch_size == torch.Size([5])</span>
+<span class="sd">        &gt;&gt;&gt; assert env.rollout(10).shape == torch.Size([5, 10])</span>
+
+<span class="sd">    The ``reset_func`` can create a tensordict with the desired batch-size, allowing for</span>
+<span class="sd">    a fine-grained reset call:</span>
+
+<span class="sd">        &gt;&gt;&gt; def reset_func(tensordict, tensordict_reset, env):</span>
+<span class="sd">        ...     result = env.observation_spec.rand()</span>
+<span class="sd">        ...     result.update(env.full_done_spec.zero())</span>
+<span class="sd">        ...     assert result.batch_size != torch.Size([])</span>
+<span class="sd">        ...     return result</span>
+<span class="sd">        &gt;&gt;&gt; env = TransformedEnv(MyEnv(), BatchSizeTransform([5], reset_func=reset_func, env_kwarg=True))</span>
+<span class="sd">        &gt;&gt;&gt; print(env.rollout(2))</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        observation: Tensor(shape=torch.Size([5, 2, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([5, 2]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                observation: Tensor(shape=torch.Size([5, 2, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([5, 2]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+
+<span class="sd">    This transform can be used to deploy non-batch-locked environments within data</span>
+<span class="sd">    collectors:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torchrl.collectors import SyncDataCollector</span>
+<span class="sd">        &gt;&gt;&gt; collector = SyncDataCollector(env, lambda td: env.rand_action(td), frames_per_batch=10, total_frames=-1)</span>
+<span class="sd">        &gt;&gt;&gt; for data in collector:</span>
+<span class="sd">        ...     print(data)</span>
+<span class="sd">        ...     break</span>
+<span class="sd">        TensorDict(</span>
+<span class="sd">            fields={</span>
+<span class="sd">                action: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                collector: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        traj_ids: Tensor(shape=torch.Size([5, 2]), device=cpu, dtype=torch.int64, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([5, 2]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                done: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                next: TensorDict(</span>
+<span class="sd">                    fields={</span>
+<span class="sd">                        done: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False),</span>
+<span class="sd">                        observation: Tensor(shape=torch.Size([5, 2, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        reward: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                        terminated: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">                    batch_size=torch.Size([5, 2]),</span>
+<span class="sd">                    device=None,</span>
+<span class="sd">                    is_shared=False),</span>
+<span class="sd">                observation: Tensor(shape=torch.Size([5, 2, 3]), device=cpu, dtype=torch.float32, is_shared=False),</span>
+<span class="sd">                terminated: Tensor(shape=torch.Size([5, 2, 1]), device=cpu, dtype=torch.bool, is_shared=False)},</span>
+<span class="sd">            batch_size=torch.Size([5, 2]),</span>
+<span class="sd">            device=None,</span>
+<span class="sd">            is_shared=False)</span>
+<span class="sd">        &gt;&gt;&gt; collector.shutdown()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_ENV_ERR</span> <span class="o">=</span> <span class="s2">&quot;BatchSizeTransform.</span><span class="si">{}</span><span class="s2"> requires a parent env.&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reshape_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">TensorDictBase</span><span class="p">],</span> <span class="n">TensorDictBase</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reset_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">TensorDictBase</span><span class="p">],</span> <span class="n">TensorDictBase</span><span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">env_kwarg</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">reshape_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;One and only one of batch_size OR reshape_fn must be provided.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span> <span class="o">=</span> <span class="n">reshape_fn</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span> <span class="o">=</span> <span class="n">reshape_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_func</span> <span class="o">=</span> <span class="n">reset_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_kwarg</span> <span class="o">=</span> <span class="n">env_kwarg</span>
+
+    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">:</span> <span class="n">TensorDictBase</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_kwarg</span><span class="p">:</span>
+                <span class="n">tensordict_reset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_func</span><span class="p">(</span>
+                    <span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tensordict_reset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset_func</span><span class="p">(</span><span class="n">tensordict</span><span class="p">,</span> <span class="n">tensordict_reset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tensordict_reset</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span><span class="p">(</span><span class="n">tensordict_reset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tensordict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span>
+
+    <span class="n">forward</span> <span class="o">=</span> <span class="n">_call</span>
+
+    <span class="k">def</span> <span class="nf">_inv_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">parent_batch_size</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">batch_size</span>
+                <span class="n">tensordict</span> <span class="o">=</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">parent_batch_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span>
+
+<div class="viewcode-block" id="BatchSizeTransform.transform_env_batch_size"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.BatchSizeTransform.html#torchrl.envs.transforms.BatchSizeTransform.transform_env_batch_size">[docs]</a>    <span class="k">def</span> <span class="nf">transform_env_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;meta&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="BatchSizeTransform.transform_output_spec"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.BatchSizeTransform.html#torchrl.envs.transforms.BatchSizeTransform.transform_output_spec">[docs]</a>    <span class="k">def</span> <span class="nf">transform_output_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_spec</span><span class="p">:</span> <span class="n">CompositeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompositeSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">output_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span><span class="p">(</span><span class="n">output_spec</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BatchSizeTransform.transform_input_spec"><a class="viewcode-back" href="../../../../reference/generated/torchrl.envs.transforms.BatchSizeTransform.html#torchrl.envs.transforms.BatchSizeTransform.transform_input_spec">[docs]</a>    <span class="k">def</span> <span class="nf">transform_input_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">:</span> <span class="n">CompositeSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompositeSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reshape_fn</span><span class="p">(</span><span class="n">input_spec</span><span class="p">)</span></div></div>
 </pre></div>
 
              </article>

@@ -544,7 +544,13 @@
                 <span class="o">+</span> <span class="p">[</span><span class="n">unravel_key</span><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span><span class="p">]</span>
                 <span class="o">+</span> <span class="p">[</span><span class="n">unravel_key</span><span class="p">((</span><span class="s2">&quot;next&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_keys</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">actual</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+            <span class="k">def</span> <span class="nf">_is_reset</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">NestedKey</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;_reset&quot;</span>
+                <span class="k">return</span> <span class="n">key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;_reset&quot;</span>
+
+            <span class="n">actual</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">tensordict</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_reset</span><span class="p">(</span><span class="n">key</span><span class="p">)}</span>
             <span class="n">expected</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validated</span> <span class="o">=</span> <span class="n">expected</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span> <span class="o">==</span> <span class="n">expected</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated</span><span class="p">:</span>
@@ -591,7 +597,9 @@
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_grab_and_place</span><span class="p">(</span><span class="n">subdict</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">val_out</span><span class="p">)</span>
-            <span class="n">data_out</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">data_out</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">data_out</span>
 
     <span class="nd">@classmethod</span>
@@ -843,7 +851,9 @@
                 <span class="n">new_val</span> <span class="o">=</span> <span class="n">dest</span><span class="o">.</span><span class="n">_get_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">new_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">new_val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
-                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span>
+                        <span class="n">k</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
                 <span class="n">source</span> <span class="o">=</span> <span class="n">val</span>
                 <span class="n">dest</span> <span class="o">=</span> <span class="n">new_val</span>
             <span class="k">else</span><span class="p">:</span>
@@ -851,7 +861,7 @@
                     <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">clone</span><span class="p">:</span>
                     <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># This is a temporary solution to understand if a key is heterogeneous</span>
         <span class="c1"># while not having performance impact when the exception is not raised</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -883,12 +893,16 @@
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">non_empty_local</span><span class="p">:</span>
                     <span class="c1"># dest.set(key, new_val)</span>
-                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span>
+                        <span class="n">key</span><span class="p">,</span> <span class="n">new_val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
                 <span class="n">non_empty</span> <span class="o">=</span> <span class="n">non_empty_local</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">non_empty</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="c1"># dest.set(key, val)</span>
-                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">dest</span><span class="o">.</span><span class="n">_set_str</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
         <span class="c1"># This is a temporary solution to understand if a key is heterogeneous</span>
         <span class="c1"># while not having performance impact when the exception is not raised</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>

@@ -428,7 +428,7 @@
 <span class="kn">from</span> <span class="nn">torchrl.collectors.utils</span> <span class="kn">import</span> <span class="n">split_trajectories</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.tensor_specs</span> <span class="kn">import</span> <span class="n">TensorSpec</span>
 <span class="kn">from</span> <span class="nn">torchrl.data.utils</span> <span class="kn">import</span> <span class="n">CloudpickleWrapper</span><span class="p">,</span> <span class="n">DEVICE_TYPING</span>
-<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">EnvBase</span>
+<span class="kn">from</span> <span class="nn">torchrl.envs.common</span> <span class="kn">import</span> <span class="n">_do_nothing</span><span class="p">,</span> <span class="n">EnvBase</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.transforms</span> <span class="kn">import</span> <span class="n">StepCounter</span><span class="p">,</span> <span class="n">TransformedEnv</span>
 <span class="kn">from</span> <span class="nn">torchrl.envs.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_aggregate_end_of_traj</span><span class="p">,</span>
@@ -851,8 +851,45 @@
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span> <span class="o">=</span> <span class="n">storing_device</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+            <span class="c1"># Cuda handles sync</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_storage</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_storage</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_storage</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Non supported device&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_storage</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="o">=</span> <span class="n">env_device</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+            <span class="c1"># Cuda handles sync</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_env</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_env</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_env</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Non supported device&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_env</span> <span class="o">=</span> <span class="n">_do_nothing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span> <span class="o">=</span> <span class="n">policy_device</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+            <span class="c1"># Cuda handles sync</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_policy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_policy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">synchronize</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_policy</span> <span class="o">=</span> <span class="n">_do_nothing</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Non supported device&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_policy</span> <span class="o">=</span> <span class="n">_do_nothing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
         <span class="c1"># Check if we need to cast things from device to device</span>
         <span class="c1"># If the policy has a None device and the env too, no need to cast (we don&#39;t know</span>
@@ -882,7 +919,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">EnvBase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># we we did not receive an env device, we use the device of the env</span>
+            <span class="c1"># we did not receive an env device, we use the device of the env</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">device</span>
 
         <span class="c1"># If the storing device is not the same as the policy device, we have</span>
@@ -1294,6 +1331,7 @@
                             <span class="n">policy_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span>
                             <span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_policy</span><span class="p">()</span>
                         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="c1"># we know the tensordict has a device otherwise we would not be here</span>
                             <span class="c1"># we can pass this, clear_device_ must have been called earlier</span>
@@ -1312,6 +1350,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_to_env_device</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">env_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_env</span><span class="p">()</span>
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="c1"># we know the tensordict has a device otherwise we would not be here</span>
                         <span class="c1"># we can pass this, clear_device_ must have been called earlier</span>
@@ -1333,6 +1372,7 @@
                     <span class="n">tensordicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storing_device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                     <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_storage</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">tensordicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shuttle</span><span class="p">)</span>
 
@@ -1378,16 +1418,6 @@
                             <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_final_rollout</span><span class="p">,</span>
                         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_rollout</span></div>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_update_device_wise</span><span class="p">(</span><span class="n">tensor0</span><span class="p">,</span> <span class="n">tensor1</span><span class="p">):</span>
-        <span class="c1"># given 2 tensors, returns tensor0 if their identity matches,</span>
-        <span class="c1"># or a copy of tensor1 on the device of tensor0 otherwise</span>
-        <span class="k">if</span> <span class="n">tensor1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tensor1</span> <span class="ow">is</span> <span class="n">tensor0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">tensor0</span>
-        <span class="k">if</span> <span class="n">tensor1</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">tensor0</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">tensor1</span>
-        <span class="k">return</span> <span class="n">tensor1</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">tensor0</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SyncDataCollector.reset"><a class="viewcode-back" href="../../../reference/generated/torchrl.collectors.collectors.SyncDataCollector.html#torchrl.collectors.collectors.SyncDataCollector.reset">[docs]</a>    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
