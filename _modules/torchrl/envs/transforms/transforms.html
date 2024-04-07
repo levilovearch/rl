@@ -4184,7 +4184,7 @@
             <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
             <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">synchronize</span>
             <span class="k">elif</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_sync_device</span> <span class="o">=</span> <span class="n">_do_nothing</span>
         <span class="k">else</span><span class="p">:</span>
@@ -4280,7 +4280,7 @@
                 <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
                 <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mps</span><span class="o">.</span><span class="n">synchronize</span>
                 <span class="k">elif</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_sync_orig_device_val</span> <span class="o">=</span> <span class="n">_do_nothing</span>
             <span class="k">else</span><span class="p">:</span>
