@@ -402,14 +402,14 @@ In wrapped <code class="docutils literal notranslate"><span class="pre">pettingz
 If the number of agents during the task varies, please set <code class="docutils literal notranslate"><span class="pre">use_mask=True</span></code>.
 <code class="docutils literal notranslate"><span class="pre">&quot;mask&quot;</span></code> will be provided
 as an output in each group and should be used to mask out dead agents.
-The environment will be reset as soon as one agent is done.</p>
+The environment will be reset as soon as one agent is done (unless <code class="docutils literal notranslate"><span class="pre">done_on_any</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p>
 <p>For wrapping <code class="docutils literal notranslate"><span class="pre">pettingzoo.AECEnv</span></code> provide the name of your petting zoo task (in the <code class="docutils literal notranslate"><span class="pre">task</span></code> argument)
 and specify <code class="docutils literal notranslate"><span class="pre">parallel=False</span></code>. This will construct the <code class="docutils literal notranslate"><span class="pre">pettingzoo.AECEnv</span></code> version of that task
 and wrap it for torchrl.
 In wrapped <code class="docutils literal notranslate"><span class="pre">pettingzoo.AECEnv</span></code>, at each step only one agent will act.
 For this reason, it is compulsory to set <code class="docutils literal notranslate"><span class="pre">use_mask=True</span></code> for this type of environment.
 <code class="docutils literal notranslate"><span class="pre">&quot;mask&quot;</span></code> will be provided as an output for each group and can be used to mask out non-acting agents.
-The environment will be reset only when all agents are done.</p>
+The environment will be reset only when all agents are done (unless <code class="docutils literal notranslate"><span class="pre">done_on_any</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>).</p>
 <p>If there are any unavailable actions for an agent,
 the environment will also automatically update the mask of its <code class="docutils literal notranslate"><span class="pre">action_spec</span></code> and output an <code class="docutils literal notranslate"><span class="pre">&quot;action_mask&quot;</span></code>
 for each group to reflect the latest available actions. This should be passed to a masked distribution during
@@ -469,6 +469,9 @@ for <code class="docutils literal notranslate"><span class="pre">pettingzoo.Para
 <li><p><strong>categorical_actions</strong> (<em>bool</em><em>, </em><em>optional</em>) – if the enviornments actions are discrete, whether to transform
 them to categorical or one-hot.</p></li>
 <li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – the seed.  Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>done_on_any</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the environment’s done keys are set by aggregating the agent keys
+using <code class="docutils literal notranslate"><span class="pre">any()</span></code> (when <code class="docutils literal notranslate"><span class="pre">True</span></code>) or <code class="docutils literal notranslate"><span class="pre">all()</span></code> (when <code class="docutils literal notranslate"><span class="pre">False</span></code>). Default (<code class="docutils literal notranslate"><span class="pre">None</span></code>) is to use <code class="docutils literal notranslate"><span class="pre">any()</span></code> for
+parallel environments and <code class="docutils literal notranslate"><span class="pre">all()</span></code> for AEC ones.</p></li>
 </ul>
 </dd>
 </dl>

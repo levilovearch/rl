@@ -388,6 +388,7 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">packaging</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">TensorDictBase</span>
 
@@ -469,12 +470,12 @@
 <span class="sd">    If the number of agents during the task varies, please set ``use_mask=True``.</span>
 <span class="sd">    ``&quot;mask&quot;`` will be provided</span>
 <span class="sd">    as an output in each group and should be used to mask out dead agents.</span>
-<span class="sd">    The environment will be reset as soon as one agent is done.</span>
+<span class="sd">    The environment will be reset as soon as one agent is done (unless ``done_on_any`` is ``False``).</span>
 
 <span class="sd">    In wrapped ``pettingzoo.AECEnv``, at each step only one agent will act.</span>
 <span class="sd">    For this reason, it is compulsory to set ``use_mask=True`` for this type of environment.</span>
 <span class="sd">    ``&quot;mask&quot;`` will be provided as an output for each group and can be used to mask out non-acting agents.</span>
-<span class="sd">    The environment will be reset only when all agents are done.</span>
+<span class="sd">    The environment will be reset only when all agents are done (unless ``done_on_any`` is ``True``).</span>
 
 <span class="sd">    If there are any unavailable actions for an agent,</span>
 <span class="sd">    the environment will also automatically update the mask of its ``action_spec`` and output an ``&quot;action_mask&quot;``</span>
@@ -535,6 +536,9 @@
 <span class="sd">        categorical_actions (bool, optional): if the enviornments actions are discrete, whether to transform</span>
 <span class="sd">            them to categorical or one-hot.</span>
 <span class="sd">        seed (int, optional): the seed. Defaults to ``None``.</span>
+<span class="sd">        done_on_any (bool, optional): whether the environment&#39;s done keys are set by aggregating the agent keys</span>
+<span class="sd">            using ``any()`` (when ``True``) or ``all()`` (when ``False``). Default (``None``) is to use ``any()`` for</span>
+<span class="sd">            parallel environments and ``all()`` for AEC ones.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; # Parallel env</span>
@@ -583,6 +587,7 @@
         <span class="n">use_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">categorical_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">done_on_any</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -593,6 +598,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span> <span class="o">=</span> <span class="n">use_mask</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">categorical_actions</span> <span class="o">=</span> <span class="n">categorical_actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done_on_any</span> <span class="o">=</span> <span class="n">done_on_any</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">allow_done_after_reset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -644,6 +650,13 @@
     <span class="p">):</span>
         <span class="kn">import</span> <span class="nn">pettingzoo</span>
 
+        <span class="k">if</span> <span class="n">packaging</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">pettingzoo</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span><span class="o">.</span><span class="n">base_version</span> <span class="o">!=</span> <span class="s2">&quot;1.24.3&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;PettingZoo in TorchRL is tested using version == 1.24.3 , &quot;</span>
+                <span class="s2">&quot;If you are using a different version and are experiencing compatibility issues,&quot;</span>
+                <span class="s2">&quot;please raise an issue in the TorchRL github.&quot;</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">pettingzoo</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">ParallelEnv</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;For AEC environments you need to set use_mask=True&quot;</span><span class="p">)</span>
@@ -662,6 +675,9 @@
             <span class="s2">&quot;pettingzoo.utils.env.AECEnv&quot;</span><span class="p">,</span>  <span class="c1"># noqa: F821</span>
         <span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Set default for done on any or all</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_on_any</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">done_on_any</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span>
 
         <span class="c1"># Create and check group map</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -961,7 +977,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="p">:</span>
             <span class="p">(</span>
                 <span class="n">observation_dict</span><span class="p">,</span>
@@ -1030,16 +1045,33 @@
                                 <span class="n">value</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span>
                             <span class="p">)</span>
 
-                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_action_mask</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_mask</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Dead agent </span><span class="si">{</span><span class="n">agent</span><span class="si">}</span><span class="s2"> not found in step observation but still available in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                    <span class="c1"># Dead agent</span>
+                    <span class="n">terminated</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">terminations_dict</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span> <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">terminations_dict</span> <span class="k">else</span> <span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">truncated</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">truncations_dict</span><span class="p">[</span><span class="n">agent</span><span class="p">]</span> <span class="k">if</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">truncations_dict</span> <span class="k">else</span> <span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">done</span> <span class="o">=</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span>
+                    <span class="n">group_done</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">done</span>
+                    <span class="n">group_terminated</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">terminated</span>
+                    <span class="n">group_truncated</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">truncated</span>
+
+                <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Dead agent, if we are not masking it out, this is not allowed</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s2">&quot;Dead agents found in the environment,&quot;</span>
-                        <span class="s2">&quot; you need to set use_action_mask=True to allow this.&quot;</span>
+                        <span class="s2">&quot; you need to set use_mask=True to allow this.&quot;</span>
                     <span class="p">)</span>
 
         <span class="c1"># set done values</span>
         <span class="n">done</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregate_done</span><span class="p">(</span>
-            <span class="n">tensordict_out</span><span class="p">,</span> <span class="n">use_any</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel</span>
+            <span class="n">tensordict_out</span><span class="p">,</span> <span class="n">use_any</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">done_on_any</span>
         <span class="p">)</span>
 
         <span class="n">tensordict_out</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
@@ -1052,7 +1084,7 @@
         <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">use_any</span> <span class="k">else</span> <span class="kc">True</span>
         <span class="n">terminated</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">use_any</span> <span class="k">else</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">done_keys</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>  <span class="c1"># Only look at group keys</span>
                 <span class="k">if</span> <span class="n">use_any</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;done&quot;</span><span class="p">:</span>
                         <span class="n">done</span> <span class="o">=</span> <span class="n">done</span> <span class="o">|</span> <span class="n">tensordict_out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
@@ -1098,7 +1130,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
-
         <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">agents</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_selection</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">:</span>
                 <span class="n">agent_index</span> <span class="o">=</span> <span class="n">agents</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="o">.</span><span class="n">agent_selection</span><span class="p">)</span>
@@ -1126,7 +1157,6 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_action_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">td</span><span class="p">,</span> <span class="n">observation_dict</span><span class="p">,</span> <span class="n">info_dict</span><span class="p">):</span>
-
         <span class="c1"># Since we remove the action_mask keys we need to copy the data</span>
         <span class="n">observation_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">observation_dict</span><span class="p">)</span>
         <span class="n">info_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">info_dict</span><span class="p">)</span>
@@ -1200,7 +1230,7 @@
 <span class="sd">    If the number of agents during the task varies, please set ``use_mask=True``.</span>
 <span class="sd">    ``&quot;mask&quot;`` will be provided</span>
 <span class="sd">    as an output in each group and should be used to mask out dead agents.</span>
-<span class="sd">    The environment will be reset as soon as one agent is done.</span>
+<span class="sd">    The environment will be reset as soon as one agent is done (unless ``done_on_any`` is ``False``).</span>
 
 <span class="sd">    For wrapping ``pettingzoo.AECEnv`` provide the name of your petting zoo task (in the ``task`` argument)</span>
 <span class="sd">    and specify ``parallel=False``. This will construct the ``pettingzoo.AECEnv`` version of that task</span>
@@ -1208,7 +1238,7 @@
 <span class="sd">    In wrapped ``pettingzoo.AECEnv``, at each step only one agent will act.</span>
 <span class="sd">    For this reason, it is compulsory to set ``use_mask=True`` for this type of environment.</span>
 <span class="sd">    ``&quot;mask&quot;`` will be provided as an output for each group and can be used to mask out non-acting agents.</span>
-<span class="sd">    The environment will be reset only when all agents are done.</span>
+<span class="sd">    The environment will be reset only when all agents are done (unless ``done_on_any`` is ``True``).</span>
 
 <span class="sd">    If there are any unavailable actions for an agent,</span>
 <span class="sd">    the environment will also automatically update the mask of its ``action_spec`` and output an ``&quot;action_mask&quot;``</span>
@@ -1271,6 +1301,9 @@
 <span class="sd">        categorical_actions (bool, optional): if the enviornments actions are discrete, whether to transform</span>
 <span class="sd">            them to categorical or one-hot.</span>
 <span class="sd">        seed (int, optional): the seed.  Defaults to ``None``.</span>
+<span class="sd">        done_on_any (bool, optional): whether the environment&#39;s done keys are set by aggregating the agent keys</span>
+<span class="sd">            using ``any()`` (when ``True``) or ``all()`` (when ``False``). Default (``None``) is to use ``any()`` for</span>
+<span class="sd">            parallel environments and ``all()`` for AEC ones.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; # Parallel env</span>
@@ -1309,6 +1342,7 @@
         <span class="n">use_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">categorical_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">done_on_any</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_has_pettingzoo</span><span class="p">:</span>
@@ -1323,6 +1357,7 @@
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;use_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">use_mask</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;categorical_actions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">categorical_actions</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;done_on_any&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">done_on_any</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
